@@ -14,21 +14,24 @@ public class GrappleController : MonoBehaviour
     public float spring = 70f;
     public float damper = 7f;
     public float massScale = 4.5f;
+    public float pullForce = 4.5f;
 
     private SpringJoint joint;
     private Vector3 grapplePoint;
+    private Rigidbody rb;
 
     void Start()
     {
+        rb = GetComponent<Rigidbody>();
         lineRenderer = Instantiate(lineRendererPrefab);
         lineRenderer.positionCount = 0;
     }
 
     void Update()
     {
-        // 줄 시각화 업데이트
         if (joint != null)
         {
+            MoveTowardToTarget();
             DrawRope();
         }
         else if (lineRenderer != null)
@@ -71,6 +74,12 @@ public class GrappleController : MonoBehaviour
         {
             Destroy(joint);
         }
+    }
+
+    private void MoveTowardToTarget()
+    {
+        Vector3 dir = (grapplePoint - transform.position).normalized;
+        rb.AddForce(dir * pullForce, ForceMode.Acceleration);
     }
 
     private void DrawRope()
