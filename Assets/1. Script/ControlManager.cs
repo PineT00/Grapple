@@ -15,6 +15,7 @@ public class ControlManager : MonoBehaviour
 
     public CharacterContoller characterController;
     public ThirdPersonCameraController thirdPersonCameraController;
+    public GrappleController grappleController;
 
     public ControlType currentControlType = ControlType.None;
 
@@ -72,11 +73,14 @@ public class ControlManager : MonoBehaviour
         {
             if (IsPointerOverUI(Mouse.current.position.ReadValue())) return;
 
+            grappleController.OnGrapple();
+
         }
         else
         {
             if (IsPointerOverUI(Mouse.current.position.ReadValue())) return;
 
+            grappleController.OnRelease();
         }
     }
 

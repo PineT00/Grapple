@@ -6,7 +6,7 @@ public class ThirdPersonCameraController : MonoBehaviour
 {
     [Header("Target Setup")]
     public Transform followTarget;
-    public Transform aimTarget;
+    public CinemachineCamera cinemachineCam;
 
     [Header("Rotation Settings")]
     public float mouseSensitivity = 1.5f;
@@ -16,31 +16,31 @@ public class ThirdPersonCameraController : MonoBehaviour
     private float yaw;
     private float pitch;
 
-    private CinemachineCamera cinemachineCam;
+
 
     void Awake()
     {
-        cinemachineCam = GetComponent<CinemachineCamera>();
+        followTarget = transform;
+        
+        if (cinemachineCam == null)
+        {
+            cinemachineCam = FindAnyObjectByType<CinemachineCamera>();
+        }
 
-        if (followTarget == null) Debug.LogError("No FollowTarget");
-        if (aimTarget == null) Debug.LogError("No AimTarget");
+        if (followTarget == null)
+        {
+            Debug.LogError("No FollowTarget");
+        }
+        else
+        {
+            cinemachineCam.Follow = followTarget;   
+        }
     }
 
     void FixedUpdate()
     {
         Quaternion cameraRotation = Quaternion.Euler(pitch, yaw, 0f);
-
-        aimTarget.rotation = cameraRotation;
         followTarget.rotation = cameraRotation;
-    }
-
-    void LateUpdate()
-    {
-        if (cinemachineCam != null)
-        {
-            cinemachineCam.Follow = followTarget;
-            cinemachineCam.LookAt = aimTarget;
-        }
     }
 
     public void OnLook(InputAction.CallbackContext context)

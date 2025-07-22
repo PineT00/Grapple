@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -8,12 +9,10 @@ public class CharacterContoller : MonoBehaviour
     public float moveForce = 30f;
     public float maxSpeed = 5f;
     public float jumpForce = 7f;
+    public float turnSpeed = 5f;
     public float groundCheckDistance = 0.2f;
     public LayerMask groundLayer;
-
-    [Header("References")]
-    public Transform orientation; // 카메라의 y축 기준 정렬을 위해 사용
-
+    public Transform camTarget;
     private Rigidbody rb;
     private Vector2 moveInput;
 
@@ -25,6 +24,7 @@ public class CharacterContoller : MonoBehaviour
     void FixedUpdate()
     {
         HandleMovement();
+        directionCheck();
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -50,21 +50,37 @@ public class CharacterContoller : MonoBehaviour
     {
         Vector3 inputDirection = new Vector3(moveInput.x, 0f, moveInput.y);
 
-        if (orientation != null)
-        {
-            inputDirection = orientation.forward * moveInput.y + orientation.right * moveInput.x;
-            inputDirection.y = 0;
-        }
+        Vector3 worldDirection = camTarget.TransformDirection(inputDirection);
+        worldDirection = Vector3.ProjectOnPlane(worldDirection, Vector3.up);
 
-        if (rb.linearVelocity.magnitude < maxSpeed)
-        {
-            rb.AddForce(inputDirection.normalized * moveForce, ForceMode.Force);
-        }
+        Vector3 targetVelocity = worldDirection.normalized * maxSpeed;
 
-        if (inputDirection.sqrMagnitude > 0.01f)
+        Vector3 horizontalVelocity = rb.linearVelocity;
+        horizontalVelocity.y = 0f;
+
+        Vector3 velocityChange = targetVelocity - horizontalVelocity;
+        velocityChange.y = 0f;
+
+        rb.AddForce(velocityChange * moveForce, ForceMode.Acceleration);
+    }
+
+    private void directionCheck()
+    {
+        float yCurrent = transform.rotation.eulerAngles.y;
+        float yTarget = camTarget.rotation.eulerAngles.y;
+
+        float diff = Mathf.DeltaAngle(yCurrent, yTarget);
+
+        if (Mathf.Abs(diff) > 0.1f)
         {
-            Quaternion targetRot = Quaternion.LookRotation(inputDirection);
-            rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRot, 10f * Time.fixedDeltaTime));
+            float dynamicTurnSpeed = Mathf.Abs(diff) * turnSpeed;
+            Quaternion targetRotation = Quaternion.Euler(0f, yTarget, 0f);
+
+            rb.MoveRotation(Quaternion.RotateTowards(
+                transform.rotation,
+                targetRotation,
+                dynamicTurnSpeed * Time.fixedDeltaTime
+            ));
         }
     }
 
