@@ -1,13 +1,21 @@
-using System;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.InputSystem;
+
+public enum PlayerState
+{
+    Walking,
+    Swinging,
+    gliding,
+}
+
 
 public class CharacterContoller : MonoBehaviour
 {
     [Header("Settings")]
     public float moveForce = 30f;
     public float maxSpeed = 5f;
+    public float swingMoveForce = 10f;
+
     public float jumpForce = 7f;
     public float turnSpeed = 5f;
     public float groundCheckDistance = 0.2f;
@@ -15,10 +23,13 @@ public class CharacterContoller : MonoBehaviour
     public Transform camTarget;
     private Rigidbody rb;
     private Vector2 moveInput;
+    private PlayerState currState;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        currState = PlayerState.Walking;
+        Cursor.lockState = CursorLockMode.Confined;
     }
 
     void FixedUpdate()
@@ -45,23 +56,45 @@ public class CharacterContoller : MonoBehaviour
             }
         }
     }
+    public void SetPlayerState(PlayerState state)
+    {
+        currState = state;
+    }
 
     void HandleMovement()
     {
-        Vector3 inputDirection = new Vector3(moveInput.x, 0f, moveInput.y);
+        if (moveInput.sqrMagnitude < 0.1f)
+            return;
 
+        Vector3 inputDirection = new Vector3(moveInput.x, 0f, moveInput.y);
         Vector3 worldDirection = camTarget.TransformDirection(inputDirection);
         worldDirection = Vector3.ProjectOnPlane(worldDirection, Vector3.up);
 
-        Vector3 targetVelocity = worldDirection.normalized * maxSpeed;
+        float currForce = 0f;
 
-        Vector3 horizontalVelocity = rb.linearVelocity;
-        horizontalVelocity.y = 0f;
+        switch (currState)
+        {
+            case PlayerState.Walking:
+            {
+                Vector3 targetVelocity = worldDirection.normalized * maxSpeed;
+                Vector3 horizontalVelocity = rb.linearVelocity;
+                horizontalVelocity.y = 0f;
 
-        Vector3 velocityChange = targetVelocity - horizontalVelocity;
-        velocityChange.y = 0f;
+                Vector3 velocityChange = targetVelocity - horizontalVelocity;
+                velocityChange.y = 0f;
 
-        rb.AddForce(velocityChange * moveForce, ForceMode.Acceleration);
+                currForce = moveForce;
+                rb.AddForce(velocityChange * currForce, ForceMode.Acceleration);
+                break;
+            }
+            case PlayerState.Swinging:
+            {
+                // 단순히 방향으로 힘을 더해주는 방식
+                currForce = swingMoveForce;
+                rb.AddForce(worldDirection.normalized * currForce, ForceMode.Force);
+                break;
+            }
+        }
     }
 
     private void directionCheck()
