@@ -21,13 +21,16 @@ public class CharacterContoller : MonoBehaviour
     public float groundCheckDistance = 0.2f;
     public LayerMask groundLayer;
     public Transform camTarget;
-    private Rigidbody rb;
+    public Rigidbody rb;
     private Vector2 moveInput;
     private PlayerState currState;
 
     void Awake()
     {
-        rb = GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            rb = GetComponent<Rigidbody>();
+        }
         currState = PlayerState.Walking;
         Cursor.lockState = CursorLockMode.Confined;
     }
