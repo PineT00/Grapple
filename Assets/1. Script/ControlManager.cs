@@ -13,7 +13,7 @@ public class ControlManager : MonoBehaviour
     }
     public static ControlManager Instance;
 
-    public CharacterContoller characterController;
+    public RagdollCharacterController characterController;
     public ThirdPersonCameraController thirdPersonCameraController;
     public GrappleController grappleController;
 
@@ -28,7 +28,7 @@ public class ControlManager : MonoBehaviour
     {
         if(characterController == null)
         {
-            characterController = FindAnyObjectByType<CharacterContoller>();
+            characterController = FindAnyObjectByType<RagdollCharacterController>();
         }
     }
 

@@ -3,12 +3,14 @@ using UnityEngine;
 public class GrappleController : MonoBehaviour
 {
     [Header("필수")]
+    public Rigidbody rb;
     public Camera cam;
+    public Transform bodyTrans;
     public Transform firePoint;
     public LayerMask grappleLayerMask;
     public LineRenderer lineRendererPrefab;
     private LineRenderer lineRenderer;
-    private CharacterContoller characterContoller;
+    private RagdollCharacterController characterContoller;
 
     [Header("파라미터")]
     public float maxRayDistance = 30f;
@@ -17,16 +19,17 @@ public class GrappleController : MonoBehaviour
     public float massScale = 4.5f;
     public float pullForce = 4.5f;
 
-    private SpringJoint joint;
     private Vector3 grapplePoint;
-    private Rigidbody rb;
     private bool isGrappling = false;
-    public float maxRope = 0f;
+    private float maxRope = 0f;
 
     void Start()
     {
-        characterContoller = GetComponent<CharacterContoller>();
-        rb = GetComponent<Rigidbody>();
+        if(rb == null)
+        {
+            rb = GetComponent<Rigidbody>();
+        }
+        characterContoller = GetComponent<RagdollCharacterController>();
         lineRenderer = Instantiate(lineRendererPrefab);
         lineRenderer.positionCount = 0;
     }
@@ -47,7 +50,7 @@ public class GrappleController : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, grappleLayerMask))
         {
             grapplePoint = hit.point;
-            maxRope = Vector3.Distance(transform.position, hit.point);
+            maxRope = Vector3.Distance(bodyTrans.position, hit.point);
             isGrappling = true;
             if (lineRenderer != null)
             {
@@ -61,10 +64,6 @@ public class GrappleController : MonoBehaviour
 
     public void OnRelease()
     {
-        if (joint != null)
-        {
-            Destroy(joint);
-        }
         isGrappling = false;
         lineRenderer.positionCount = 0;
         characterContoller.SetPlayerState(PlayerState.Walking);
@@ -73,17 +72,14 @@ public class GrappleController : MonoBehaviour
 
     private void MoveTowardToTarget()
     {
-        float restLength = maxRope * 0.2f; // "느슨한 상태" 길이
-        float distance = Vector3.Distance(transform.position, grapplePoint);
+        float restLength = maxRope * 0.2f;
+        float distance = Vector3.Distance(bodyTrans.position, grapplePoint);
         float stretch = distance - restLength;
 
         if (stretch > 0f)
         {
-            // Hook이 자연 길이보다 늘어났을 때만 탄성력 발생
-            Vector3 dir = (grapplePoint - transform.position).normalized;
-            // Hook 힘 곡선 (선형/제곱/조절 가능)
+            Vector3 dir = (grapplePoint - bodyTrans.position).normalized;
             float springForce = pullForce * stretch; // 선형
-            // float springForce = pullForce * stretch * stretch; // 제곱(더 팽팽하게)
             rb.AddForce(dir * springForce, ForceMode.Acceleration);
         }
     }
