@@ -74,12 +74,12 @@ public class GrappleController : MonoBehaviour
     {
         float restLength = maxRope * 0.2f;
         float distance = Vector3.Distance(bodyTrans.position, grapplePoint);
-        float stretch = distance - restLength;
+        float stretch = (distance - restLength) * 0.5f;
 
         if (stretch > 0f)
         {
             Vector3 dir = (grapplePoint - bodyTrans.position).normalized;
-            float springForce = pullForce * stretch; // 선형
+            float springForce = pullForce * stretch;
             rb.AddForce(dir * springForce, ForceMode.Acceleration);
         }
     }

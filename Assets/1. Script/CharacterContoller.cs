@@ -25,6 +25,7 @@ public class CharacterContoller : MonoBehaviour
     private Vector2 moveInput;
     private PlayerState currState;
 
+
     void Awake()
     {
         if (rb == null)
@@ -33,12 +34,15 @@ public class CharacterContoller : MonoBehaviour
         }
         currState = PlayerState.Walking;
         Cursor.lockState = CursorLockMode.Confined;
+
+
     }
 
     void FixedUpdate()
     {
         HandleMovement();
         directionCheck();
+
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -78,25 +82,25 @@ public class CharacterContoller : MonoBehaviour
         switch (currState)
         {
             case PlayerState.Walking:
-            {
-                Vector3 targetVelocity = worldDirection.normalized * maxSpeed;
-                Vector3 horizontalVelocity = rb.linearVelocity;
-                horizontalVelocity.y = 0f;
+                {
+                    Vector3 targetVelocity = worldDirection.normalized * maxSpeed;
+                    Vector3 horizontalVelocity = rb.linearVelocity;
+                    horizontalVelocity.y = 0f;
 
-                Vector3 velocityChange = targetVelocity - horizontalVelocity;
-                velocityChange.y = 0f;
+                    Vector3 velocityChange = targetVelocity - horizontalVelocity;
+                    velocityChange.y = 0f;
 
-                currForce = moveForce;
-                rb.AddForce(velocityChange * currForce, ForceMode.Acceleration);
-                break;
-            }
+                    currForce = moveForce;
+                    rb.AddForce(velocityChange * currForce, ForceMode.Acceleration);
+                    break;
+                }
             case PlayerState.Swinging:
-            {
-                // 단순히 방향으로 힘을 더해주는 방식
-                currForce = swingMoveForce;
-                rb.AddForce(worldDirection.normalized * currForce, ForceMode.Force);
-                break;
-            }
+                {
+                    // 단순히 방향으로 힘을 더해주는 방식
+                    currForce = swingMoveForce;
+                    rb.AddForce(worldDirection.normalized * currForce, ForceMode.Force);
+                    break;
+                }
         }
     }
 
@@ -125,4 +129,6 @@ public class CharacterContoller : MonoBehaviour
         Vector3 origin = transform.position + Vector3.up * 0.1f;
         return Physics.Raycast(origin, Vector3.down, groundCheckDistance + 0.1f, groundLayer);
     }
+
+
 }

@@ -8,6 +8,7 @@ public class RagdollCharacterController : MonoBehaviour
     public Transform camTarget;
     public Rigidbody mainRb;
     public Transform bodyTrans;
+    public ConfigurableJoint mainJoint;
 
     [Header("Settings")]
     public float moveForce = 30f;
@@ -21,6 +22,20 @@ public class RagdollCharacterController : MonoBehaviour
     private Vector2 moveInput;
     private PlayerState currState;
 
+
+    [Header("좌/우 다리 조인트")]
+    public ConfigurableJoint leftHipJoint;
+    public ConfigurableJoint rightHipJoint;
+    public Quaternion leftInitialRotation;
+    public Quaternion rightInitialRotation;
+
+    [Header("스텝 설정")]
+    public float stepAngle = 30f; // 다리를 내미는 각도
+    public float stepDuration = 0.3f;
+
+    private float stepTimer = 0f;
+    private bool isLeftStep = true;
+
     void Awake()
     {
         if (mainRb == null)
@@ -29,13 +44,22 @@ public class RagdollCharacterController : MonoBehaviour
         }
         currState = PlayerState.Walking;
         Cursor.lockState = CursorLockMode.Confined;
+        //leftInitialRotation = leftHipJoint.transform.localRotation;
+        //rightInitialRotation = rightHipJoint.transform.localRotation;
     }
 
     void FixedUpdate()
     {
-        MaintainBalance();
         HandleMovement();
         directionCheck();
+
+        stepTimer += Time.fixedDeltaTime;
+        if (stepTimer >= stepDuration)
+        {
+            stepTimer = 0f;
+            DoStep();
+            isLeftStep = !isLeftStep;
+        }
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -70,8 +94,6 @@ public class RagdollCharacterController : MonoBehaviour
         Vector3 worldDirection = camTarget.TransformDirection(inputDirection);
         worldDirection = Vector3.ProjectOnPlane(worldDirection, Vector3.up);
 
-        float currForce = 0f;
-
         switch (currState)
         {
             case PlayerState.Walking:
@@ -83,15 +105,13 @@ public class RagdollCharacterController : MonoBehaviour
                     Vector3 velocityChange = targetVelocity - horizontalVelocity;
                     velocityChange.y = 0f;
 
-                    currForce = moveForce;
-                    mainRb.AddForce(velocityChange * currForce, ForceMode.Acceleration);
+                    mainRb.AddForce(velocityChange * moveForce, ForceMode.Acceleration);
                     break;
                 }
             case PlayerState.Swinging:
                 {
-                    // 단순히 방향으로 힘을 더해주는 방식
-                    currForce = swingMoveForce;
-                    mainRb.AddForce(worldDirection.normalized * currForce, ForceMode.Force);
+                    // 단순히 방향으로 힘을 더해주기
+                    mainRb.AddForce(worldDirection.normalized * swingMoveForce, ForceMode.Acceleration);
                     break;
                 }
         }
@@ -106,39 +126,8 @@ public class RagdollCharacterController : MonoBehaviour
 
         if (Mathf.Abs(diff) > 0.1f)
         {
-            float dynamicTurnSpeed = Mathf.Abs(diff) * turnSpeed;
-            Quaternion targetRotation = Quaternion.Euler(0f, yTarget, 0f);
-
-            mainRb.MoveRotation(Quaternion.RotateTowards(
-                bodyTrans.rotation,
-                targetRotation,
-                dynamicTurnSpeed * Time.fixedDeltaTime
-            ));
-        }
-    }
-
-    private void MaintainBalance()
-    {
-        if (currState != PlayerState.Walking) return;
-
-        Vector3 origin = mainRb.worldCenterOfMass;
-        Ray ray = new Ray(origin, Vector3.down);
-
-        float desiredHeight = 1.0f; // 원하는 지면과의 거리
-        float springStrength = 100f;
-        float damping = 10f;
-
-        if (Physics.Raycast(ray, out RaycastHit hit, desiredHeight, groundLayer))
-        {
-            float distance = hit.distance;
-            float displacement = desiredHeight - distance;
-
-            Vector3 velocity = mainRb.linearVelocity;
-            float verticalVelocity = Vector3.Dot(Vector3.up, velocity);
-
-            float springForce = displacement * springStrength - verticalVelocity * damping;
-
-            mainRb.AddForce(Vector3.up * springForce, ForceMode.Force);
+            Quaternion targetRotation = Quaternion.Euler(0f, -yTarget, 0f);
+            mainJoint.targetRotation = targetRotation;
         }
     }
 
@@ -146,5 +135,25 @@ public class RagdollCharacterController : MonoBehaviour
     {
         Vector3 origin = bodyTrans.position + Vector3.up * 0.1f;
         return Physics.Raycast(origin, Vector3.down, groundCheckDistance + 0.1f, groundLayer);
+    }
+    
+    
+
+    void DoStep()
+    {
+        // 앞쪽으로 뻗는 회전값 (local 기준)
+        Quaternion forwardRot = Quaternion.Euler(-stepAngle, 0f, 0f);
+        Quaternion neutralRot = Quaternion.identity;
+
+        if (isLeftStep)
+        {
+            leftHipJoint.targetRotation = Quaternion.Inverse(leftInitialRotation) * forwardRot;
+            rightHipJoint.targetRotation = Quaternion.Inverse(rightInitialRotation) * neutralRot;
+        }
+        else
+        {
+            leftHipJoint.targetRotation = Quaternion.Inverse(leftInitialRotation) * neutralRot;
+            rightHipJoint.targetRotation = Quaternion.Inverse(rightInitialRotation) * forwardRot;
+        }
     }
 }

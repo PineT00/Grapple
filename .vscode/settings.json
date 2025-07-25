@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Grapple.sln"
+    "dotnet.defaultSolution": "GrappleGit.sln"
 }
