@@ -3648,7 +3648,7 @@ CapsuleCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6808784861031873961}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 0e6bc110cb8066a4b950a272c430dba5, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -3660,10 +3660,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.048998334
-  m_Height: 0.19599333
+  m_Radius: 0.05
+  m_Height: 0.2
   m_Direction: 1
-  m_Center: {x: 0, y: 0.09799667, z: 0}
+  m_Center: {x: 0, y: 0.1, z: 0}
 --- !u!54 &968799460
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -5748,7 +5748,7 @@ CapsuleCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8496773617549667543}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 0e6bc110cb8066a4b950a272c430dba5, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -5760,10 +5760,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.048621614
-  m_Height: 0.19448645
+  m_Radius: 0.05
+  m_Height: 0.2
   m_Direction: 1
-  m_Center: {x: 0, y: 0.09724323, z: 0}
+  m_Center: {x: 0, y: 0.1, z: 0}
 --- !u!1 &2119749795
 GameObject:
   m_ObjectHideFlags: 0
@@ -5895,6 +5895,7 @@ GameObject:
   - component: {fileID: 968799460}
   - component: {fileID: 1917698541071093313}
   - component: {fileID: 1917698541071093314}
+  - component: {fileID: 1917698541071093315}
   m_Layer: 6
   m_Name: Hips
   m_TagString: Untagged
@@ -6581,6 +6582,29 @@ MonoBehaviour:
   targetLimb: {fileID: 307922768}
   joint: {fileID: 0}
   isMirror: 0
+--- !u!136 &1917698541071093315
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 159518411054536170}
+  m_Material: {fileID: 13400000, guid: 0a69faa42bc91a248a0f17586c1e0350, type: 2}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.15
+  m_Height: 0.4
+  m_Direction: 1
+  m_Center: {x: 0, y: -0.26, z: 0}
 --- !u!4 &1978948015803965666
 Transform:
   m_ObjectHideFlags: 0
@@ -7580,7 +7604,6 @@ GameObject:
   - component: {fileID: 8679757491139526149}
   - component: {fileID: 8679757491139526150}
   - component: {fileID: 8679757491139526151}
-  - component: {fileID: 8679757491139526152}
   m_Layer: 0
   m_Name: Ragdoll
   m_TagString: Untagged
@@ -9122,27 +9145,6 @@ MonoBehaviour:
   damper: 8
   massScale: 3
   pullForce: 10
---- !u!114 &8679757491139526152
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5436741564144718803}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8c60c939adb834a48bfb4cfe5e5889bf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  hoverHeight: 2.8
-  hoverForce: 150
-  damping: 5
-  raycastLength: 3
-  gravity: 20
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 1
-  rb: {fileID: 968799460}
 --- !u!4 &8733670187911265998
 Transform:
   m_ObjectHideFlags: 0
