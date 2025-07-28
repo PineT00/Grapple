@@ -13,9 +13,10 @@ public class ControlManager : MonoBehaviour
     }
     public static ControlManager Instance;
 
-    public RagdollCharacterController characterController;
+    public Transform playerTransform;
     public ThirdPersonCameraController thirdPersonCameraController;
-    public GrappleController grappleController;
+    private RagdollCharacterController characterController;
+    private GrappleController grappleController;
 
     public ControlType currentControlType = ControlType.None;
 
@@ -26,10 +27,8 @@ public class ControlManager : MonoBehaviour
 
     private void Start()
     {
-        if(characterController == null)
-        {
-            characterController = FindAnyObjectByType<RagdollCharacterController>();
-        }
+        characterController = playerTransform.GetComponent<RagdollCharacterController>();
+        grappleController = playerTransform.GetComponent<GrappleController>();
     }
 
     public void OnMove(InputAction.CallbackContext context)

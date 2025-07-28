@@ -4168,7 +4168,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1548952940
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4185,7 +4185,7 @@ MonoBehaviour:
   - {fileID: 379281785}
   areaSize: {x: 200, y: 100, z: 200}
   setUp_Y_Pos: 0
-  spawnCount: 20
+  spawnCount: 10
   minScale: 10
   maxScale: 20
   randRotation: 0
@@ -5319,9 +5319,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a42d0e0808c8eec4ea1949f2ffd79a51, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  characterController: {fileID: 8679757491139526150}
+  playerTransform: {fileID: 2563297373908335322}
   thirdPersonCameraController: {fileID: 640423030}
-  grappleController: {fileID: 8679757491139526151}
   currentControlType: 0
 --- !u!1 &1916019096
 GameObject:
@@ -5475,6 +5474,8 @@ MonoBehaviour:
   damper: 8
   massScale: 3
   pullForce: 10
+  reelSpeed: 25
+  arrivalThreshold: 1.5
 --- !u!114 &1928468871
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5500,12 +5501,6 @@ MonoBehaviour:
   jumpForce: 60
   turnSpeed: 10
   groundCheckDistance: 0.5
-  leftHipJoint: {fileID: 0}
-  rightHipJoint: {fileID: 0}
-  leftInitialRotation: {x: 0, y: 0, z: 0, w: 0}
-  rightInitialRotation: {x: 0, y: 0, z: 0, w: 0}
-  stepAngle: 30
-  stepDuration: 0.3
 --- !u!95 &1928468872
 Animator:
   serializedVersion: 7
@@ -6316,7 +6311,7 @@ ConfigurableJoint:
   m_XMotion: 0
   m_YMotion: 0
   m_ZMotion: 0
-  m_AngularXMotion: 1
+  m_AngularXMotion: 2
   m_AngularYMotion: 2
   m_AngularZMotion: 2
   m_LinearLimitSpring:
@@ -6601,10 +6596,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.15
-  m_Height: 0.4
+  m_Radius: 0.2
+  m_Height: 1
   m_Direction: 1
-  m_Center: {x: 0, y: -0.26, z: 0}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!4 &1978948015803965666
 Transform:
   m_ObjectHideFlags: 0
@@ -7605,7 +7600,7 @@ GameObject:
   - component: {fileID: 8679757491139526150}
   - component: {fileID: 8679757491139526151}
   m_Layer: 0
-  m_Name: Ragdoll
+  m_Name: RagdollPlayer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9114,12 +9109,6 @@ MonoBehaviour:
   jumpForce: 120
   turnSpeed: 10
   groundCheckDistance: 0.5
-  leftHipJoint: {fileID: 8355264795394179417}
-  rightHipJoint: {fileID: 5658358639876697958}
-  leftInitialRotation: {x: 0.00087342574, y: 0.0008719024, z: 0.0008719023, w: 0.9999989}
-  rightInitialRotation: {x: 0.00087342545, y: 0.00087190233, z: 0.00087190233, w: 0.9999989}
-  stepAngle: 30
-  stepDuration: 0.3
 --- !u!114 &8679757491139526151
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9141,10 +9130,12 @@ MonoBehaviour:
     m_Bits: 1
   lineRendererPrefab: {fileID: 3632720800341118414, guid: 52154fd2e9579914ea7b278d64854a03, type: 3}
   maxRayDistance: 70
-  spring: 10
-  damper: 8
+  spring: 100
+  damper: 5
   massScale: 3
   pullForce: 10
+  reelSpeed: 25
+  arrivalThreshold: 0.5
 --- !u!4 &8733670187911265998
 Transform:
   m_ObjectHideFlags: 0
@@ -9357,10 +9348,10 @@ SceneRoots:
   - {fileID: 298348012}
   - {fileID: 939819604}
   - {fileID: 80011700}
-  - {fileID: 1866880114}
   - {fileID: 2119749799}
   - {fileID: 97698300}
   - {fileID: 1548952941}
   - {fileID: 379281789}
   - {fileID: 2563297373908335322}
+  - {fileID: 1866880114}
   - {fileID: 1928468873}
