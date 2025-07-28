@@ -6316,7 +6316,7 @@ ConfigurableJoint:
   m_XMotion: 0
   m_YMotion: 0
   m_ZMotion: 0
-  m_AngularXMotion: 2
+  m_AngularXMotion: 1
   m_AngularYMotion: 2
   m_AngularZMotion: 2
   m_LinearLimitSpring:
@@ -6330,7 +6330,7 @@ ConfigurableJoint:
     spring: 0
     damper: 0
   m_LowAngularXLimit:
-    limit: 0
+    limit: -40
     bounciness: 0
     contactDistance: 0
   m_HighAngularXLimit:
@@ -6373,13 +6373,13 @@ ConfigurableJoint:
   m_RotationDriveMode: 0
   m_AngularXDrive:
     serializedVersion: 4
-    positionSpring: 1000
+    positionSpring: 20
     positionDamper: 5
     maximumForce: 3.4028233e+38
     useAcceleration: 0
   m_AngularYZDrive:
     serializedVersion: 4
-    positionSpring: 1000
+    positionSpring: 20
     positionDamper: 5
     maximumForce: 3.4028233e+38
     useAcceleration: 0
@@ -6805,13 +6805,13 @@ ConfigurableJoint:
   m_RotationDriveMode: 0
   m_AngularXDrive:
     serializedVersion: 4
-    positionSpring: 1000
+    positionSpring: 20
     positionDamper: 5
     maximumForce: 3.4028233e+38
     useAcceleration: 0
   m_AngularYZDrive:
     serializedVersion: 4
-    positionSpring: 1000
+    positionSpring: 20
     positionDamper: 5
     maximumForce: 3.4028233e+38
     useAcceleration: 0
@@ -7222,13 +7222,13 @@ ConfigurableJoint:
   m_RotationDriveMode: 0
   m_AngularXDrive:
     serializedVersion: 4
-    positionSpring: 1000
+    positionSpring: 20
     positionDamper: 5
     maximumForce: 3.4028233e+38
     useAcceleration: 0
   m_AngularYZDrive:
     serializedVersion: 4
-    positionSpring: 1000
+    positionSpring: 20
     positionDamper: 5
     maximumForce: 3.4028233e+38
     useAcceleration: 0
@@ -8465,7 +8465,7 @@ ConfigurableJoint:
   m_XMotion: 0
   m_YMotion: 0
   m_ZMotion: 0
-  m_AngularXMotion: 2
+  m_AngularXMotion: 1
   m_AngularYMotion: 2
   m_AngularZMotion: 2
   m_LinearLimitSpring:
@@ -8479,7 +8479,7 @@ ConfigurableJoint:
     spring: 0
     damper: 0
   m_LowAngularXLimit:
-    limit: 0
+    limit: -40
     bounciness: 0
     contactDistance: 0
   m_HighAngularXLimit:
@@ -8522,13 +8522,13 @@ ConfigurableJoint:
   m_RotationDriveMode: 0
   m_AngularXDrive:
     serializedVersion: 4
-    positionSpring: 1000
+    positionSpring: 20
     positionDamper: 5
     maximumForce: 3.4028233e+38
     useAcceleration: 0
   m_AngularYZDrive:
     serializedVersion: 4
-    positionSpring: 1000
+    positionSpring: 20
     positionDamper: 5
     maximumForce: 3.4028233e+38
     useAcceleration: 0
@@ -9111,7 +9111,7 @@ MonoBehaviour:
   moveForce: 30
   maxSpeed: 5
   swingMoveForce: 10
-  jumpForce: 60
+  jumpForce: 120
   turnSpeed: 10
   groundCheckDistance: 0.5
   leftHipJoint: {fileID: 8355264795394179417}
@@ -9132,7 +9132,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1596354461be2e4491b5507b84dfd4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rb: {fileID: 968799460}
+  rb: {fileID: 2006754616}
   cam: {fileID: 330585545}
   bodyTrans: {fileID: 1917698541071093312}
   firePoint: {fileID: 1978948015803965666}
