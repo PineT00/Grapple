@@ -5,7 +5,7 @@ public class GrappleController : MonoBehaviour
 {
     [Header("필수")]
     public Rigidbody handRb;
-    public Rigidbody hipRb;
+    public Rigidbody subRb;
     public Camera cam;
     public Transform bodyTrans;
     public Transform firePoint;
@@ -109,10 +109,12 @@ public class GrappleController : MonoBehaviour
         handRb.linearVelocity = Vector3.Lerp(handRb.linearVelocity, targetVelocity, Time.fixedDeltaTime * smoothing);
 
         handRb.linearVelocity = targetDir * reelSpeed * 0.5f;
-        hipRb.linearVelocity = targetDir * reelSpeed * 0.5f;
+        subRb.linearVelocity = targetDir * reelSpeed * 0.5f;
 
         if (distance <= arrivalThreshold)
         {
+            handRb.linearVelocity = Vector3.zero;
+            subRb.linearVelocity = Vector3.zero;
             StopReeling();
         }
     }
