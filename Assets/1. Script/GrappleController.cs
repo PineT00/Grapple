@@ -1,9 +1,11 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class GrappleController : MonoBehaviour
 {
     [Header("필수")]
-    public Rigidbody rb;
+    public Rigidbody handRb;
+    public Rigidbody hipRb;
     public Camera cam;
     public Transform bodyTrans;
     public Transform firePoint;
@@ -18,37 +20,42 @@ public class GrappleController : MonoBehaviour
     public float damper = 7f;
     public float massScale = 4.5f;
     public float pullForce = 4.5f;
-
-    private Vector3 grapplePoint;
-    private bool isGrappling = false;
-    private bool isReeling = false;
-    private float maxRope = 0f;
-    private SpringJoint joint;
     public float reelSpeed = 25f;
     public float arrivalThreshold = 1.5f;
 
+    private Vector3 grapplePoint;
+    private bool isGrappling = false;
+    private float maxRope = 0f;
+    private SpringJoint joint;
+
+
     void Start()
     {
-        if (rb == null)
+        if (handRb == null)
         {
-            rb = GetComponent<Rigidbody>();
+            handRb = GetComponent<Rigidbody>();
         }
         characterContoller = GetComponent<RagdollCharacterController>();
         lineRenderer = Instantiate(lineRendererPrefab);
         lineRenderer.positionCount = 0;
+
+        joint = handRb.gameObject.AddComponent<SpringJoint>();
+        joint.autoConfigureConnectedAnchor = false;
+        SetRope(false);
     }
 
     void FixedUpdate()
     {
-        if (isReeling)
+        switch (characterContoller.CurrState)
         {
-            ReelingToTarget();
-            DrawRope();
-        }
-        else if (isGrappling)
-        {
-            AdjustGrapplePoint();
-            DrawRope();
+            case PlayerState.Swinging:
+                AdjustGrapplePoint();
+                DrawRope();
+                break;
+            case PlayerState.Reeling:
+                ReelingToTarget();
+                DrawRope();
+                break;
         }
     }
     public void OnGrapple()
@@ -61,76 +68,35 @@ public class GrappleController : MonoBehaviour
             characterContoller.SetPlayerState(PlayerState.Swinging);
             grapplePoint = hit.point;
             maxRope = Vector3.Distance(bodyTrans.position, hit.point);
-            isGrappling = true;
-
-            joint = rb.gameObject.AddComponent<SpringJoint>();
-            joint.autoConfigureConnectedAnchor = false;
-            joint.connectedAnchor = grapplePoint;
-
-            joint.maxDistance = maxRope * 0.9f;
-            joint.minDistance = maxRope * 0.25f;
-
-            joint.spring = spring;
-            joint.damper = damper;
-            joint.massScale = massScale;
-
-            if (lineRenderer != null)
-            {
-                lineRenderer.positionCount = 2;
-                DrawRope();
-            }
+            SetRope(true);
         }
     }
 
     public void OnRelease()
     {
         characterContoller.SetPlayerState(PlayerState.OnAir);
-        if (joint != null)
-        {
-            Destroy(joint);
-        }
-        isGrappling = false;
         maxRope = 0f;
-        if (!isReeling)
-        {
-            lineRenderer.positionCount = 0;
-        }
+        SetRope(false);
     }
+
     public void StartReeling()
     {
-        isReeling = true;
-        rb.linearVelocity = Vector3.zero;
-
-        if (joint != null)
-        {
-            Destroy(joint);
-            joint = null;
-        }
+        handRb.linearVelocity = Vector3.zero;
+        characterContoller.SetPlayerState(PlayerState.Reeling);
+        joint.spring = 0;
     }
     public void StopReeling()
     {
-        isReeling = false;
         if (isGrappling)
         {
-            rb.linearVelocity = Vector3.zero;
-            joint = rb.gameObject.AddComponent<SpringJoint>();
-            joint.autoConfigureConnectedAnchor = false;
-            joint.connectedAnchor = grapplePoint;
-
-            joint.maxDistance = maxRope * 0.9f;
-            joint.minDistance = maxRope * 0.25f;
-
+            characterContoller.SetPlayerState(PlayerState.Swinging);
+            maxRope = Vector3.Distance(bodyTrans.position, grapplePoint);
             joint.spring = spring;
-            joint.damper = damper;
-            joint.massScale = massScale;
         }
         else
         {
-            if (joint != null)
-            {
-                Destroy(joint);
-                joint = null;
-            }
+            characterContoller.SetPlayerState(PlayerState.OnAir);
+            SetRope(isGrappling);
         }
     }
     private void ReelingToTarget()
@@ -138,7 +104,12 @@ public class GrappleController : MonoBehaviour
         Vector3 targetDir = (grapplePoint - firePoint.position).normalized;
         float distance = Vector3.Distance(firePoint.position, grapplePoint);
 
-        rb.linearVelocity = targetDir * reelSpeed;
+        Vector3 targetVelocity = targetDir * reelSpeed;
+        float smoothing = 5f;
+        handRb.linearVelocity = Vector3.Lerp(handRb.linearVelocity, targetVelocity, Time.fixedDeltaTime * smoothing);
+
+        handRb.linearVelocity = targetDir * reelSpeed * 0.5f;
+        hipRb.linearVelocity = targetDir * reelSpeed * 0.5f;
 
         if (distance <= arrivalThreshold)
         {
@@ -162,14 +133,39 @@ public class GrappleController : MonoBehaviour
         if (Physics.Raycast(from, dir, out RaycastHit hit, dist, grappleLayerMask))
         {
             grapplePoint = hit.point;
-
             joint.connectedAnchor = grapplePoint;
-            float newRope = Vector3.Distance(bodyTrans.position, grapplePoint);
-            joint.maxDistance = newRope * 0.9f;
-            joint.minDistance = newRope * 0.25f;
-
-            maxRope = newRope;
-            DrawRope();
+            maxRope = Vector3.Distance(bodyTrans.position, grapplePoint);
+            joint.maxDistance = maxRope * 0.9f;
+            joint.minDistance = maxRope * 0.25f;
         }
+    }
+
+    private void SetRope(bool active)
+    {
+        if (active)
+        {
+            isGrappling = true;
+            joint.connectedAnchor = grapplePoint;
+            joint.maxDistance = maxRope * 0.9f;
+            joint.minDistance = maxRope * 0.25f;
+            joint.spring = spring;
+            joint.damper = damper;
+            joint.massScale = massScale;
+
+            lineRenderer.positionCount = 2;
+        }
+        else
+        {
+            isGrappling = false;
+            joint.connectedAnchor = handRb.position;
+            joint.maxDistance = 0;
+            joint.minDistance = 0;
+            joint.spring = 0;
+            joint.damper = 0;
+            joint.massScale = 0;
+
+            lineRenderer.positionCount = 0;
+        }
+        
     }
 }

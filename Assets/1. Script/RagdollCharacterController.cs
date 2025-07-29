@@ -6,6 +6,7 @@ public enum PlayerState
     Walking,
     OnAir,
     Swinging,
+    Reeling,
     Gliding,
 }
 
@@ -28,9 +29,9 @@ public class RagdollCharacterController : MonoBehaviour
     public float groundCheckDistance = 0.2f;
 
     private Vector2 moveInput;
-    private PlayerState currState;
-    private GrappleController grappleController;
-
+    public PlayerState CurrState { get; private set; }
+    public GrappleController grappleController;
+    public RagdollAnimator ragdollAnimator;
 
     void Awake()
     {
@@ -41,6 +42,12 @@ public class RagdollCharacterController : MonoBehaviour
         SetPlayerState(PlayerState.Walking);
         Cursor.lockState = CursorLockMode.Confined;
         grappleController = GetComponent<GrappleController>();
+
+
+        if (ragdollAnimator == null)
+        {
+            ragdollAnimator = GetComponent<RagdollAnimator>();
+        }
     }
 
     void FixedUpdate()
@@ -48,6 +55,8 @@ public class RagdollCharacterController : MonoBehaviour
         CheckCurrState();
         HandleMovement();
         directionCheck();
+
+        Debug.Log(CurrState);
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -59,51 +68,88 @@ public class RagdollCharacterController : MonoBehaviour
     {
         if (context.started)
         {
-            if (currState == PlayerState.Walking)
+            if (CurrState == PlayerState.Walking)
             {
                 Vector3 vel = mainRb.linearVelocity;
                 vel.y = 0;
                 mainRb.linearVelocity = vel;
                 mainRb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             }
-            else if (currState == PlayerState.Swinging)
+            else if (CurrState == PlayerState.Swinging)
             {
                 grappleController.StartReeling();
             }
         }
         else if (context.canceled)
         {
-            if (currState == PlayerState.Swinging)
+            if (CurrState == PlayerState.Reeling)
             {
                 grappleController.StopReeling();
             }
         }
     }
+    public void OnGlide(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            if (CurrState != PlayerState.OnAir)
+                return;
+
+            SetPlayerState(PlayerState.Gliding);
+        }
+        else if (context.canceled)
+        {
+            SetPlayerState(PlayerState.OnAir);
+        }
+    }
+    
     public void SetPlayerState(PlayerState state)
     {
-        currState = state;
+        CurrState = state;
+        switch (state)
+        {
+            case PlayerState.Swinging:
+                ragdollAnimator.SetAnimation(RagdollAnimState.Sway);
+                break;
+            case PlayerState.OnAir:
+                ragdollAnimator.SetAnimation(RagdollAnimState.Stand);
+                break;
+            case PlayerState.Walking:
+                ragdollAnimator.SetAnimation(RagdollAnimState.Walk);
+                break;
+            case PlayerState.Gliding:
+                break;
+        }
     }
 
     void HandleMovement()
     {
-        if (moveInput.sqrMagnitude < 0.1f)
+        if (moveInput.sqrMagnitude < 0.01f && mainRb.linearVelocity.sqrMagnitude < 0.01f)
             return;
 
         Vector3 inputDirection = new Vector3(moveInput.x, 0f, moveInput.y);
         Vector3 worldDirection = camTarget.TransformDirection(inputDirection);
         worldDirection = Vector3.ProjectOnPlane(worldDirection, Vector3.up);
 
-        switch (currState)
+        switch (CurrState)
         {
             case PlayerState.Walking:
                 {
                     Vector3 targetVelocity = worldDirection.normalized * maxSpeed;
                     Vector3 horizontalVelocity = mainRb.linearVelocity;
                     horizontalVelocity.y = 0f;
-
-                    Vector3 velocityChange = targetVelocity - horizontalVelocity;
+                    Vector3 velocityChange;
+                    if (worldDirection.sqrMagnitude > 0.01f)
+                    {
+                        // 입력이 있을 때: 가속
+                        velocityChange = targetVelocity - horizontalVelocity;
+                    }
+                    else
+                    {
+                        // 입력이 없을 때: 감속
+                        velocityChange = -horizontalVelocity * 0.5f;
+                    }
                     velocityChange.y = 0f;
-
                     mainRb.AddForce(velocityChange * moveForce, ForceMode.Acceleration);
                     break;
                 }
@@ -114,6 +160,7 @@ public class RagdollCharacterController : MonoBehaviour
                 }
                 break;
             case PlayerState.Swinging:
+            case PlayerState.Gliding:
                 {
                     mainRb.AddForce(worldDirection.normalized * swingMoveForce, ForceMode.Acceleration);
                     break;
@@ -137,16 +184,19 @@ public class RagdollCharacterController : MonoBehaviour
 
     private void CheckCurrState()
     {
-        if (currState == PlayerState.Swinging)
+        if (CurrState == PlayerState.Swinging || CurrState == PlayerState.Reeling)
             return;
 
         if (IsGrounded())
         {
-            currState = PlayerState.Walking;
+            SetPlayerState(PlayerState.Walking);
         }
         else
         {
-            currState = PlayerState.OnAir;
+            if (CurrState == PlayerState.Gliding)
+                return;
+
+            SetPlayerState(PlayerState.OnAir);
         }
     }
 

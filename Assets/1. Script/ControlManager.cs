@@ -50,8 +50,9 @@ public class ControlManager : MonoBehaviour
         characterController.OnJump(context);
     }
 
-    public void OnSprint(InputAction.CallbackContext context)
+    public void OnGlide(InputAction.CallbackContext context)
     {
+        characterController.OnGlide(context);
     }
 
     public void OnInterect(InputAction.CallbackContext context)
