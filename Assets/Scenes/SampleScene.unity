@@ -1878,7 +1878,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 12.13, y: 1.364986, z: 9.7}
-  m_LocalScale: {x: 1, y: 2, z: 1}
+  m_LocalScale: {x: 1, y: 2.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -3231,7 +3231,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 13.986, y: 1.364986, z: 9.7}
-  m_LocalScale: {x: 1, y: 2, z: 1}
+  m_LocalScale: {x: 1, y: 1.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2063207633}
@@ -4059,6 +4059,114 @@ CapsuleCollider:
   m_Height: 0.23663269
   m_Direction: 1
   m_Center: {x: 0, y: 0.118316345, z: 0}
+--- !u!1 &1015179936
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1015179940}
+  - component: {fileID: 1015179939}
+  - component: {fileID: 1015179938}
+  - component: {fileID: 1015179937}
+  m_Layer: 0
+  m_Name: Cube (3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!65 &1015179937
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1015179936}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &1015179938
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1015179936}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1015179939
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1015179936}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1015179940
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1015179936}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.46159384, y: 0, z: 0, w: 0.88709146}
+  m_LocalPosition: {x: 10.06, y: 1.364986, z: 9.7}
+  m_LocalScale: {x: 1, y: 2, z: 0.8}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 54.98, y: 0, z: 0}
 --- !u!1 &1071849257
 GameObject:
   m_ObjectHideFlags: 0
@@ -4294,7 +4402,8 @@ MonoBehaviour:
   objectsToSpawn:
   - {fileID: 379281785}
   - {fileID: 694950370}
-  areaSize: {x: 300, y: 100, z: 300}
+  - {fileID: 1015179936}
+  areaSize: {x: 300, y: 80, z: 300}
   setUp_Y_Pos: 0
   spawnCount: 50
   minScale: 15
@@ -5600,6 +5709,8 @@ MonoBehaviour:
   pullForce: 10
   reelSpeed: 25
   arrivalThreshold: 1.5
+  maxRope: 0
+  minRope: 1.5
 --- !u!114 &1928468871
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7941,6 +8052,7 @@ GameObject:
   - component: {fileID: 8679757491139526149}
   - component: {fileID: 8679757491139526150}
   - component: {fileID: 8679757491139526151}
+  - component: {fileID: 8679757491139526153}
   - component: {fileID: 8679757491139526152}
   m_Layer: 0
   m_Name: RagdollPlayer
@@ -9460,12 +9572,14 @@ MonoBehaviour:
     m_Bits: 1
   lineRendererPrefab: {fileID: 3632720800341118414, guid: 52154fd2e9579914ea7b278d64854a03, type: 3}
   maxRayDistance: 70
-  spring: 100
-  damper: 10
+  spring: 80
+  damper: 20
   massScale: 3
   pullForce: 10
-  reelSpeed: 60
+  reelSpeed: 80
   arrivalThreshold: 0.5
+  maxRope: 0.8
+  minRope: 0.15
 --- !u!114 &8679757491139526152
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9487,6 +9601,59 @@ MonoBehaviour:
   stepDuration: 0.3
   standDrive: 2000
   fallDrive: 100
+--- !u!114 &8679757491139526153
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5436741564144718803}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d18ce0118b09df4f9507d9b72f4b3e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  grapplingController: {fileID: 8679757491139526151}
+  firePoint: {fileID: 1978948015803965666}
+  quality: 300
+  damper: 10
+  strength: 500
+  velocity: 15
+  waveCount: 3
+  waveHeight: 5
+  affectCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0.9697957
+      outSlope: 0.9697957
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.030200092
+      value: 0.02928792
+      inSlope: 0.49342147
+      outSlope: 0.49342147
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.96666664
+      outWeight: 0.030951597
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: -0.03019996
+      outSlope: -0.03019996
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!4 &8733670187911265998
 Transform:
   m_ObjectHideFlags: 0
@@ -9707,3 +9874,4 @@ SceneRoots:
   - {fileID: 1928468873}
   - {fileID: 379281789}
   - {fileID: 694950374}
+  - {fileID: 1015179940}
