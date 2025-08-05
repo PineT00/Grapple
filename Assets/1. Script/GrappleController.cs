@@ -127,8 +127,7 @@ public class GrappleController : MonoBehaviour
         float smoothing = 5f;
         handRb.linearVelocity = Vector3.Lerp(handRb.linearVelocity, targetVelocity, Time.fixedDeltaTime * smoothing);
 
-        handRb.linearVelocity = targetDir * reelSpeed * 0.5f;
-        subRb.linearVelocity = targetDir * reelSpeed * 0.5f;
+        handRb.linearVelocity = targetDir * reelSpeed;
 
         if (distance <= arrivalThreshold)
         {
