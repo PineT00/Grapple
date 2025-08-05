@@ -55,8 +55,6 @@ public class RagdollCharacterController : MonoBehaviour
         CheckCurrState();
         HandleMovement();
         directionCheck();
-
-        Debug.Log(CurrState);
     }
 
     public void OnMove(InputAction.CallbackContext context)
