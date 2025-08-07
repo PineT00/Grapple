@@ -4,16 +4,15 @@ using UnityEngine;
 public class GrappleController : MonoBehaviour
 {
     [Header("필수")]
-    public Rigidbody handRb;
-    public Rigidbody subRb;
+    public Rigidbody anchorRb;
     public Camera cam;
-    public Transform bodyTrans;
     public Transform firePoint;
     public LayerMask grappleLayerMask;
     public LineRenderer lineRendererPrefab;
     private LineRenderer lineRenderer;
     private RagdollCharacterController characterContoller;
     private GrapplingRope grapplingRope;
+    private RagdollAnimator ragdollAnimator;
 
     [Header("파라미터")]
     public float maxRayDistance = 30f;
@@ -38,17 +37,15 @@ public class GrappleController : MonoBehaviour
 
     void Start()
     {
-        if (handRb == null)
-        {
-            handRb = GetComponent<Rigidbody>();
-        }
         characterContoller = GetComponent<RagdollCharacterController>();
+        ragdollAnimator = GetComponent<RagdollAnimator>();
         lineRenderer = Instantiate(lineRendererPrefab);
-        lineRenderer.transform.SetParent(handRb.transform);
+        lineRenderer.transform.SetParent(anchorRb.transform);
         lineRenderer.positionCount = 0;
 
-        joint = handRb.gameObject.AddComponent<SpringJoint>();
+        joint = anchorRb.gameObject.AddComponent<SpringJoint>();
         joint.autoConfigureConnectedAnchor = false;
+        joint.anchor = joint.transform.InverseTransformPoint(firePoint.position);
 
         grapplingRope = GetComponent<GrapplingRope>();
         grapplingRope.SetLineRenderer(lineRenderer);
@@ -77,7 +74,7 @@ public class GrappleController : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, grappleLayerMask))
         {
             grapplePoint = hit.point;
-            ropeLength = Vector3.Distance(bodyTrans.position, hit.point);
+            ropeLength = Vector3.Distance(anchorRb.position, hit.point);
             characterContoller.SetPlayerState(PlayerState.Swinging);
             SetJoint(true);
             grapplingRope.SetRope(true);
@@ -94,7 +91,8 @@ public class GrappleController : MonoBehaviour
 
     public void StartReeling()
     {
-        handRb.linearVelocity = Vector3.zero;
+        anchorRb.linearVelocity = Vector3.zero;
+        anchorRb.angularVelocity = Vector3.zero;
         characterContoller.SetPlayerState(PlayerState.Reeling);
         joint.spring = 0;
     }
@@ -103,7 +101,7 @@ public class GrappleController : MonoBehaviour
         if (isGrappling)
         {
             characterContoller.SetPlayerState(PlayerState.Swinging);
-            ropeLength = Vector3.Distance(bodyTrans.position, grapplePoint);
+            ropeLength = Vector3.Distance(anchorRb.position, grapplePoint);
             joint.spring = spring;
         }
         else
@@ -120,19 +118,36 @@ public class GrappleController : MonoBehaviour
 
     private void ReelingToTarget()
     {
-        Vector3 targetDir = (grapplePoint - firePoint.position).normalized;
-        float distance = Vector3.Distance(firePoint.position, grapplePoint);
+        Vector3 toTarget = grapplePoint - firePoint.position;
+        float distance = toTarget.magnitude;
+        Vector3 dir = toTarget.normalized;
 
-        Vector3 targetVelocity = targetDir * reelSpeed;
-        float smoothing = 5f;
-        handRb.linearVelocity = Vector3.Lerp(handRb.linearVelocity, targetVelocity, Time.fixedDeltaTime * smoothing);
+        // 파라미터
+        float decelStartDist = 3f;
+        float minSpeed = 2f;
+        float maxSpeed = 100f;
 
-        handRb.linearVelocity = targetDir * reelSpeed;
+        // 속도 보간: 거리 멀면 빠르게, 가까우면 감속
+        float t = Mathf.InverseLerp(0f, decelStartDist, distance);
+        float targetSpeed = Mathf.Lerp(minSpeed, maxSpeed, t);
 
+        // 현재 속도에서 부드러운 가속 적용
+        Vector3 currentVel = anchorRb.linearVelocity;
+        Vector3 forwardVel = Vector3.Project(currentVel, dir);
+        float currentSpeed = forwardVel.magnitude;
+        float accelLerpRate = 10f;
+        float finalSpeed = Mathf.Lerp(currentSpeed, targetSpeed, Time.fixedDeltaTime * accelLerpRate);
+
+        anchorRb.linearVelocity = dir * finalSpeed;
+
+        // 회전 고정: 가속 방향으로 바라보게
+        Quaternion targetRot = Quaternion.LookRotation(dir, Vector3.up);
+        ragdollAnimator.ReelingToward(targetRot);
+
+        // 도착 처리
         if (distance <= arrivalThreshold)
         {
-            handRb.linearVelocity = Vector3.zero;
-            subRb.linearVelocity = Vector3.zero;
+            anchorRb.linearVelocity = Vector3.zero;
             StopReeling();
         }
     }
@@ -148,7 +163,7 @@ public class GrappleController : MonoBehaviour
         {
             grapplePoint = hit.point;
             joint.connectedAnchor = grapplePoint;
-            ropeLength = Vector3.Distance(bodyTrans.position, grapplePoint);
+            ropeLength = Vector3.Distance(anchorRb.position, grapplePoint);
             joint.maxDistance = ropeLength * maxRope;
             joint.minDistance = ropeLength * minRope;
             grapplingRope.BendRope();
@@ -170,7 +185,7 @@ public class GrappleController : MonoBehaviour
         else
         {
             isGrappling = false;
-            joint.connectedAnchor = handRb.position;
+            joint.connectedAnchor = anchorRb.position;
             joint.maxDistance = 0;
             joint.minDistance = 0;
             joint.spring = 0;

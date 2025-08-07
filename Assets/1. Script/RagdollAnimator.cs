@@ -6,6 +6,7 @@ public enum RagdollAnimState
     Walk,
     Sway,
     Glide,
+    Reel,
 }
 
 public class RagdollAnimator : MonoBehaviour
@@ -40,6 +41,11 @@ public class RagdollAnimator : MonoBehaviour
                 Walking();
                 break;
         }
+    }
+
+    public void ReelingToward(Quaternion targetRot)
+    {
+        mainHipJoint.targetRotation = targetRot;
     }
 
     public void Walking()
@@ -86,6 +92,10 @@ public class RagdollAnimator : MonoBehaviour
                 break;
             case RagdollAnimState.Sway:
                 drive.positionSpring = fallDrive;
+                mainHipJoint.slerpDrive = drive;
+                break;
+            case RagdollAnimState.Reel:
+                drive.positionSpring = standDrive;
                 mainHipJoint.slerpDrive = drive;
                 break;
                 

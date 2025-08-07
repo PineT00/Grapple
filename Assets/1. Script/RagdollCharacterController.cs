@@ -15,46 +15,44 @@ public class RagdollCharacterController : MonoBehaviour
     [Header("Essencial")]
     public LayerMask groundLayer;
     public Transform camTarget;
-    public Rigidbody mainRb;
-    public Transform bodyTrans;
-    public ConfigurableJoint mainJoint;
+    public GameObject charCenterPart;
 
     [Header("Settings")]
     public float moveForce = 30f;
     public float maxSpeed = 5f;
     public float swingMoveForce = 10f;
-
     public float jumpForce = 7f;
     public float turnSpeed = 5f;
     public float groundCheckDistance = 0.2f;
 
-    private Vector2 moveInput;
     public PlayerState CurrState { get; private set; }
-    public GrappleController grappleController;
-    public RagdollAnimator ragdollAnimator;
+    private Rigidbody mainRb;
+    private ConfigurableJoint mainJoint;
+    private Vector2 moveInput;
+    private GrappleController grappleController;
+    private RagdollAnimator ragdollAnimator;
 
     void Awake()
     {
-        if (mainRb == null)
-        {
-            mainRb = GetComponent<Rigidbody>();
-        }
-        SetPlayerState(PlayerState.Walking);
-        Cursor.lockState = CursorLockMode.Confined;
+        mainRb = charCenterPart.GetComponent<Rigidbody>();
+        mainJoint = charCenterPart.GetComponent<ConfigurableJoint>();
         grappleController = GetComponent<GrappleController>();
+        ragdollAnimator = GetComponent<RagdollAnimator>();
 
+        SetPlayerState(PlayerState.Walking);
 
-        if (ragdollAnimator == null)
-        {
-            ragdollAnimator = GetComponent<RagdollAnimator>();
-        }
+        Cursor.lockState = CursorLockMode.Confined; //Mouse Screen Lock
     }
 
     void FixedUpdate()
     {
         CheckCurrState();
         HandleMovement();
-        directionCheck();
+
+        if (CurrState != PlayerState.Reeling)
+        {
+            directionCheck();
+        }
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -163,12 +161,14 @@ public class RagdollCharacterController : MonoBehaviour
                     mainRb.AddForce(worldDirection.normalized * swingMoveForce, ForceMode.Acceleration);
                     break;
                 }
+            case PlayerState.Reeling:
+                break;
         }
     }
 
     private void directionCheck()
     {
-        float yCurrent = bodyTrans.rotation.eulerAngles.y;
+        float yCurrent = mainRb.rotation.eulerAngles.y;
         float yTarget = camTarget.rotation.eulerAngles.y;
 
         float diff = Mathf.DeltaAngle(yCurrent, yTarget);
@@ -200,7 +200,7 @@ public class RagdollCharacterController : MonoBehaviour
 
     private bool IsGrounded()
     {
-        Vector3 origin = bodyTrans.position + Vector3.up * 0.1f;
+        Vector3 origin = mainRb.position + Vector3.up * 0.1f;
         return Physics.Raycast(origin, Vector3.down, groundCheckDistance + 0.1f, groundLayer);
     }
 
