@@ -12,7 +12,6 @@ public class GrappleController : MonoBehaviour
     private LineRenderer lineRenderer;
     private RagdollCharacterController characterContoller;
     private GrapplingRope grapplingRope;
-    private RagdollAnimator ragdollAnimator;
 
     [Header("파라미터")]
     public float maxRayDistance = 30f;
@@ -38,7 +37,6 @@ public class GrappleController : MonoBehaviour
     void Start()
     {
         characterContoller = GetComponent<RagdollCharacterController>();
-        ragdollAnimator = GetComponent<RagdollAnimator>();
         lineRenderer = Instantiate(lineRendererPrefab);
         lineRenderer.transform.SetParent(anchorRb.transform);
         lineRenderer.positionCount = 0;
@@ -142,7 +140,6 @@ public class GrappleController : MonoBehaviour
 
         // 회전 고정: 가속 방향으로 바라보게
         Quaternion targetRot = Quaternion.LookRotation(dir, Vector3.up);
-        ragdollAnimator.ReelingToward(targetRot);
 
         // 도착 처리
         if (distance <= arrivalThreshold)

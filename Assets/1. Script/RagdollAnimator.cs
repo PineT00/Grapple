@@ -1,44 +1,47 @@
 using UnityEngine;
 
-public enum RagdollAnimState
-{
-    Stand,
-    Walk,
-    Sway,
-    Glide,
-    Reel,
-}
-
 public class RagdollAnimator : MonoBehaviour
 {
 
     [Header("좌/우 다리 조인트")]
     public ConfigurableJoint mainHipJoint;
-    public ConfigurableJoint leftHipJoint;
-    public ConfigurableJoint rightHipJoint;
+    public Transform leftLeg;
+    public Transform rightLeg;
+    public Transform rightShoulderBone;
+    public Transform rightArmBone;
     public Quaternion leftInitialRotation;
     public Quaternion rightInitialRotation;
 
     [Header("스텝 설정")]
     public float stepAngle = 30f; // 다리를 내미는 각도
-    public float stepDuration = 0.3f;
+    public float stepSpeed = 2f;
+    private float offsetBetweenLegs = Mathf.PI;
+
+    [Header("오뚝이 설정")]
     public float standDrive = 2000f;
     public float fallDrive = 100f;
 
-    private float stepTimer = 0f;
-    private bool isLeftStep = true;
-    private RagdollAnimState currAnimState;
+    [Header("스윙 액션 설정")]
+    public float armReachSpeed = 10f;
+    private PlayerState currState;
+    private Vector3 curHookTargetPos;
+    private float timeCounter = 0f;
 
     void Start()
     {
+        leftInitialRotation = leftLeg.localRotation;
+        rightInitialRotation = rightLeg.localRotation;
     }
 
     void FixedUpdate()
     {
-        switch (currAnimState)
+        switch (currState)
         {
-            case RagdollAnimState.Walk:
+            case PlayerState.Walking:
                 Walking();
+                break;
+            case PlayerState.Swinging:
+                SwayWithHand();
                 break;
         }
     }
@@ -48,53 +51,57 @@ public class RagdollAnimator : MonoBehaviour
         mainHipJoint.targetRotation = targetRot;
     }
 
-    public void Walking()
+    public void SetHookTarget(Vector3 targetPos)
     {
-        stepTimer += Time.fixedDeltaTime;
-        if (stepTimer >= stepDuration)
-        {
-            stepTimer = 0f;
-            DoStep();
-            isLeftStep = !isLeftStep;
-        }
+        curHookTargetPos = targetPos;
     }
 
-    private void DoStep()
+    public void SwayWithHand()
     {
-        // 앞쪽으로 뻗는 회전값 (local 기준)
-        Quaternion forwardRot = Quaternion.Euler(-stepAngle, 0f, 0f);
-        Quaternion neutralRot = Quaternion.identity;
+        Vector3 toTarget = curHookTargetPos - rightArmBone.position;
+        if (toTarget.sqrMagnitude < 0.001f)
+            return;
+        Quaternion lookRot = Quaternion.LookRotation(toTarget, Vector3.up);
 
-        if (isLeftStep)
-        {
-            leftHipJoint.targetRotation = Quaternion.Inverse(leftInitialRotation) * forwardRot;
-            rightHipJoint.targetRotation = Quaternion.Inverse(rightInitialRotation) * neutralRot;
-        }
-        else
-        {
-            leftHipJoint.targetRotation = Quaternion.Inverse(leftInitialRotation) * neutralRot;
-            rightHipJoint.targetRotation = Quaternion.Inverse(rightInitialRotation) * forwardRot;
-        }
+        // Z축 → Y축 보정 (Z가 전방인 LookRotation 결과를 Y축 전방인 구조에 맞춤)
+        Quaternion correction = Quaternion.Euler(90f, 0f, 0f);
+        Quaternion targetRot = lookRot * correction;
+
+        // rightArmBone.rotation = targetRot;
+        // rightShoulderBone.rotation = targetRot;
+
+        rightShoulderBone.rotation = Quaternion.Slerp(rightArmBone.rotation, targetRot, Time.deltaTime * armReachSpeed);
+        rightArmBone.rotation = Quaternion.Slerp(rightArmBone.rotation, targetRot, Time.deltaTime * armReachSpeed);
     }
 
-    public void SetAnimation(RagdollAnimState state)
+    private void Walking()
     {
-        currAnimState = state;
+        timeCounter += Time.deltaTime * stepSpeed * Mathf.PI * 2f;
+
+        // 사인파 기반 회전
+        float leftAngle = Mathf.Sin(timeCounter) * stepAngle;
+        float rightAngle = Mathf.Sin(timeCounter + offsetBetweenLegs) * stepAngle;
+
+        leftLeg.localRotation = leftInitialRotation * Quaternion.Euler(leftAngle, 0f, 0f);
+        rightLeg.localRotation = rightInitialRotation * Quaternion.Euler(rightAngle, 0f, 0f);
+    }
+
+    public void SetAnimation(PlayerState state)
+    {
+        currState = state;
         JointDrive drive = mainHipJoint.slerpDrive;
         switch (state)
         {
-            case RagdollAnimState.Stand:
-            case RagdollAnimState.Walk:
+            case PlayerState.Standing:
+            case PlayerState.Walking:
                 drive.positionSpring = standDrive;
                 mainHipJoint.slerpDrive = drive;
-                leftHipJoint.targetRotation = leftInitialRotation;
-                rightHipJoint.targetRotation = rightInitialRotation;
                 break;
-            case RagdollAnimState.Sway:
+            case PlayerState.Swinging:
                 drive.positionSpring = fallDrive;
                 mainHipJoint.slerpDrive = drive;
                 break;
-            case RagdollAnimState.Reel:
+            case PlayerState.Reeling:
                 drive.positionSpring = standDrive;
                 mainHipJoint.slerpDrive = drive;
                 break;

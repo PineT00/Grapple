@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 
 public enum PlayerState
 {
+    Standing,
     Walking,
     OnAir,
     Swinging,
@@ -19,7 +20,8 @@ public class RagdollCharacterController : MonoBehaviour
 
     [Header("Settings")]
     public float moveForce = 30f;
-    public float maxSpeed = 5f;
+    public float maxRunSpeed = 5f;
+    public float maxAirSpeed = 15f;
     public float swingMoveForce = 10f;
     public float jumpForce = 7f;
     public float turnSpeed = 5f;
@@ -104,14 +106,21 @@ public class RagdollCharacterController : MonoBehaviour
         CurrState = state;
         switch (state)
         {
+            case PlayerState.Standing:
+                ragdollAnimator.SetAnimation(PlayerState.Standing);
+                break;
             case PlayerState.Swinging:
-                ragdollAnimator.SetAnimation(RagdollAnimState.Sway);
+                ragdollAnimator.SetHookTarget(grappleController.GetGrapplePoint());
+                ragdollAnimator.SetAnimation(PlayerState.Swinging);
                 break;
             case PlayerState.OnAir:
-                ragdollAnimator.SetAnimation(RagdollAnimState.Stand);
+                ragdollAnimator.SetAnimation(PlayerState.Standing);
                 break;
             case PlayerState.Walking:
-                ragdollAnimator.SetAnimation(RagdollAnimState.Walk);
+                ragdollAnimator.SetAnimation(PlayerState.Walking);
+                break;
+            case PlayerState.Reeling:
+                ragdollAnimator.SetAnimation(PlayerState.Reeling);
                 break;
             case PlayerState.Gliding:
                 break;
@@ -126,15 +135,17 @@ public class RagdollCharacterController : MonoBehaviour
         Vector3 inputDirection = new Vector3(moveInput.x, 0f, moveInput.y);
         Vector3 worldDirection = camTarget.TransformDirection(inputDirection);
         worldDirection = Vector3.ProjectOnPlane(worldDirection, Vector3.up);
+        
+        Vector3 horizontalVelocity = mainRb.linearVelocity;
+        horizontalVelocity.y = 0f;
+        Vector3 velocityChange;
 
         switch (CurrState)
         {
+            case PlayerState.Standing:
             case PlayerState.Walking:
                 {
-                    Vector3 targetVelocity = worldDirection.normalized * maxSpeed;
-                    Vector3 horizontalVelocity = mainRb.linearVelocity;
-                    horizontalVelocity.y = 0f;
-                    Vector3 velocityChange;
+                    Vector3 targetVelocity = worldDirection.normalized * maxRunSpeed;
                     if (worldDirection.sqrMagnitude > 0.01f)
                     {
                         // 입력이 있을 때: 가속
@@ -143,21 +154,26 @@ public class RagdollCharacterController : MonoBehaviour
                     else
                     {
                         // 입력이 없을 때: 감속
-                        velocityChange = -horizontalVelocity * 0.5f;
+                        velocityChange = -horizontalVelocity * 0.2f;
                     }
                     velocityChange.y = 0f;
                     mainRb.AddForce(velocityChange * moveForce, ForceMode.Acceleration);
                     break;
                 }
             case PlayerState.OnAir:
-                if (mainRb.linearVelocity.magnitude < maxSpeed)
                 {
-                    mainRb.AddForce(worldDirection.normalized * moveForce, ForceMode.Acceleration);
+                    if (horizontalVelocity.magnitude > maxAirSpeed)
+                        return;
+                        
+                    mainRb.AddForce(worldDirection.normalized * swingMoveForce, ForceMode.Acceleration);
+                    break;
                 }
-                break;
             case PlayerState.Swinging:
             case PlayerState.Gliding:
                 {
+                    if (horizontalVelocity.magnitude > maxAirSpeed)
+                        return;
+
                     mainRb.AddForce(worldDirection.normalized * swingMoveForce, ForceMode.Acceleration);
                     break;
                 }
@@ -187,7 +203,14 @@ public class RagdollCharacterController : MonoBehaviour
 
         if (IsGrounded())
         {
-            SetPlayerState(PlayerState.Walking);
+            if (mainRb.linearVelocity.sqrMagnitude < 0.08f)
+            {
+                SetPlayerState(PlayerState.Standing);
+            }
+            else
+            {
+                SetPlayerState(PlayerState.Walking);
+            }
         }
         else
         {
