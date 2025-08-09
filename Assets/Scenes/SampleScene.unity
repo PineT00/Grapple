@@ -2233,7 +2233,7 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 1707973146}
 --- !u!33 &609203051
@@ -6805,7 +6805,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1548952940
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8433,7 +8433,7 @@ ConfigurableJoint:
   m_Axis: {x: 1, y: 0, z: 0}
   m_AutoConfigureConnectedAnchor: 1
   m_ConnectedAnchor: {x: 0, y: 0, z: 0}
-  m_SecondaryAxis: {x: 0, y: 1, z: 0}
+  m_SecondaryAxis: {x: 0, y: -1, z: 0}
   m_XMotion: 2
   m_YMotion: 2
   m_ZMotion: 2
@@ -8669,7 +8669,7 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 1286414714}
 --- !u!33 &1991740414
@@ -9150,7 +9150,7 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 240755852}
 --- !u!33 &2039674462
@@ -9781,14 +9781,14 @@ MonoBehaviour:
     m_Bits: 1
   lineRendererPrefab: {fileID: 3632720800341118414, guid: 52154fd2e9579914ea7b278d64854a03, type: 3}
   maxRayDistance: 70
-  spring: 80
+  spring: 70
   damper: 20
   massScale: 3
   pullForce: 10
   reelSpeed: 50
   arrivalThreshold: 0.5
-  maxRope: 0.8
-  minRope: 0.15
+  maxRope: 0.75
+  minRope: 0.1
 --- !u!114 &919132149617612268
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9810,9 +9810,9 @@ MonoBehaviour:
   maxRunSpeed: 5
   maxAirSpeed: 20
   swingMoveForce: 30
-  jumpForce: 90
-  turnSpeed: 10
-  groundCheckDistance: 0.6
+  jumpForce: 50
+  turnSpeed: 250
+  groundCheckDistance: 0.7
 --- !u!4 &1236524299012655480
 Transform:
   m_ObjectHideFlags: 0
@@ -10729,7 +10729,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8026441597484276545}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.01766559, y: 0.0006061367, z: 0.0006061368, w: 0.9998436}
+  m_LocalRotation: {x: 0.00000035213102, y: 0.0005934062, z: 0.0005934062, w: 0.99999964}
   m_LocalPosition: {x: -0, y: 0.5962784, z: -0.000000026064157}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -10739,7 +10739,7 @@ Transform:
   - {fileID: 2525594346810033278}
   - {fileID: 694195795}
   m_Father: {fileID: 8879528566908444620}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0.068, z: 0.068}
 --- !u!4 &6966900226730851636
 Transform:
   m_ObjectHideFlags: 0

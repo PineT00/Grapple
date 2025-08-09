@@ -50,11 +50,6 @@ public class RagdollCharacterController : MonoBehaviour
     {
         CheckCurrState();
         HandleMovement();
-
-        if (CurrState != PlayerState.Reeling)
-        {
-            directionCheck();
-        }
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -66,7 +61,7 @@ public class RagdollCharacterController : MonoBehaviour
     {
         if (context.started)
         {
-            if (CurrState == PlayerState.Walking)
+            if (CurrState == PlayerState.Walking || CurrState == PlayerState.Standing)
             {
                 Vector3 vel = mainRb.linearVelocity;
                 vel.y = 0;
@@ -135,7 +130,7 @@ public class RagdollCharacterController : MonoBehaviour
         Vector3 inputDirection = new Vector3(moveInput.x, 0f, moveInput.y);
         Vector3 worldDirection = camTarget.TransformDirection(inputDirection);
         worldDirection = Vector3.ProjectOnPlane(worldDirection, Vector3.up);
-        
+
         Vector3 horizontalVelocity = mainRb.linearVelocity;
         horizontalVelocity.y = 0f;
         Vector3 velocityChange;
@@ -145,11 +140,13 @@ public class RagdollCharacterController : MonoBehaviour
             case PlayerState.Standing:
             case PlayerState.Walking:
                 {
-                    Vector3 targetVelocity = worldDirection.normalized * maxRunSpeed;
+                    //Vector3 targetVelocity = worldDirection.normalized * maxRunSpeed;
+                    Vector3 targetVelocity = mainJoint.transform.forward * maxRunSpeed;
                     if (worldDirection.sqrMagnitude > 0.01f)
                     {
                         // 입력이 있을 때: 가속
                         velocityChange = targetVelocity - horizontalVelocity;
+                        RotateDirection(worldDirection);
                     }
                     else
                     {
@@ -182,17 +179,17 @@ public class RagdollCharacterController : MonoBehaviour
         }
     }
 
-    private void directionCheck()
+    private void RotateDirection(Vector3 worldDirection)
     {
-        float yCurrent = mainRb.rotation.eulerAngles.y;
-        float yTarget = camTarget.rotation.eulerAngles.y;
-
-        float diff = Mathf.DeltaAngle(yCurrent, yTarget);
-
-        if (Mathf.Abs(diff) > 0.1f)
+        worldDirection.y = 0f;
+        if (worldDirection.sqrMagnitude > 0.01f)
         {
-            Quaternion targetRotation = Quaternion.Euler(0f, -yTarget, 0f);
-            mainJoint.targetRotation = targetRotation;
+            Quaternion targetRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up);
+            mainJoint.targetRotation = Quaternion.RotateTowards(
+                mainJoint.targetRotation,
+                targetRotation,
+                turnSpeed * Time.fixedDeltaTime
+            );
         }
     }
 
