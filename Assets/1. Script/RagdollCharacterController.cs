@@ -21,10 +21,13 @@ public class RagdollCharacterController : MonoBehaviour
     [Header("Settings")]
     public float moveForce = 30f;
     public float maxRunSpeed = 5f;
-    public float maxAirSpeed = 15f;
+    public float maxAirSpeed = 30f;
+    public float airControlForce = 15f;
+    public float airBrakeForce = 2f;
     public float swingMoveForce = 10f;
     public float jumpForce = 7f;
     public float turnSpeed = 5f;
+    public float airTurnSpeed = 3f;
     public float groundCheckDistance = 0.2f;
 
     public PlayerState CurrState { get; private set; }
@@ -140,17 +143,14 @@ public class RagdollCharacterController : MonoBehaviour
             case PlayerState.Standing:
             case PlayerState.Walking:
                 {
-                    //Vector3 targetVelocity = worldDirection.normalized * maxRunSpeed;
-                    Vector3 targetVelocity = mainJoint.transform.forward * maxRunSpeed;
                     if (worldDirection.sqrMagnitude > 0.01f)
                     {
-                        // 입력이 있을 때: 가속
+                        Vector3 targetVelocity = mainJoint.transform.forward * maxRunSpeed;
                         velocityChange = targetVelocity - horizontalVelocity;
-                        RotateDirection(worldDirection);
+                        RotateDirection(worldDirection, turnSpeed);
                     }
                     else
                     {
-                        // 입력이 없을 때: 감속
                         velocityChange = -horizontalVelocity * 0.2f;
                     }
                     velocityChange.y = 0f;
@@ -159,10 +159,18 @@ public class RagdollCharacterController : MonoBehaviour
                 }
             case PlayerState.OnAir:
                 {
-                    if (horizontalVelocity.magnitude > maxAirSpeed)
-                        return;
-                        
-                    mainRb.AddForce(worldDirection.normalized * swingMoveForce, ForceMode.Acceleration);
+                    if (worldDirection.sqrMagnitude > 0.01f)
+                    {
+                        Vector3 targetVelocity = mainJoint.transform.forward * maxAirSpeed;
+                        velocityChange = targetVelocity - horizontalVelocity;
+                        RotateDirection(worldDirection, airTurnSpeed);
+                        mainRb.AddForce(velocityChange * airControlForce, ForceMode.Acceleration);
+                    }
+                    else
+                    {
+                        velocityChange = -horizontalVelocity * airBrakeForce;
+                        mainRb.AddForce(velocityChange, ForceMode.Acceleration);
+                    }
                     break;
                 }
             case PlayerState.Swinging:
@@ -179,7 +187,7 @@ public class RagdollCharacterController : MonoBehaviour
         }
     }
 
-    private void RotateDirection(Vector3 worldDirection)
+    private void RotateDirection(Vector3 worldDirection, float turnSpeed)
     {
         worldDirection.y = 0f;
         if (worldDirection.sqrMagnitude > 0.01f)

@@ -9808,10 +9808,13 @@ MonoBehaviour:
   charCenterPart: {fileID: 8026441597484276545}
   moveForce: 60
   maxRunSpeed: 5
-  maxAirSpeed: 20
+  maxAirSpeed: 10
+  airControlForce: 5
+  airBrakeForce: 2
   swingMoveForce: 30
   jumpForce: 50
-  turnSpeed: 250
+  turnSpeed: 300
+  airTurnSpeed: 200
   groundCheckDistance: 0.7
 --- !u!4 &1236524299012655480
 Transform:
