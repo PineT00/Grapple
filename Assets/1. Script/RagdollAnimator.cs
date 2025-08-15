@@ -4,6 +4,7 @@ public class RagdollAnimator : MonoBehaviour
 {
 
     [Header("좌/우 다리 조인트")]
+    public Transform moveFrame;
     public ConfigurableJoint mainHipJoint;
     public Transform leftLeg;
     public Transform rightLeg;
@@ -27,10 +28,13 @@ public class RagdollAnimator : MonoBehaviour
     private Vector3 curHookTargetPos;
     private float timeCounter = 0f;
 
+    private Quaternion hipInitialRotation;
+
     void Start()
     {
         leftInitialRotation = leftLeg.localRotation;
         rightInitialRotation = rightLeg.localRotation;
+        hipInitialRotation = mainHipJoint.transform.localRotation;
     }
 
     void FixedUpdate()
@@ -43,17 +47,43 @@ public class RagdollAnimator : MonoBehaviour
             case PlayerState.Swinging:
                 SwayWithHand();
                 break;
+            case PlayerState.Gliding:
+                break;
         }
     }
 
     public void ReelingToward(Quaternion targetRot)
     {
-        mainHipJoint.targetRotation = targetRot;
+        //mainHipJoint.targetRotation = targetRot;
     }
 
     public void SetHookTarget(Vector3 targetPos)
     {
         curHookTargetPos = targetPos;
+    }
+
+    public void RotateDirection(Vector3 worldDirection, float turnSpeed)
+    {
+        worldDirection.y = 0f;
+        if (worldDirection.sqrMagnitude > 0.01f)
+        {
+            Vector3 currentEuler = moveFrame.eulerAngles;
+            float targetYaw = Quaternion.LookRotation(worldDirection.normalized, Vector3.up).eulerAngles.y;
+            float newYaw = Mathf.MoveTowardsAngle(currentEuler.y, targetYaw, turnSpeed * Time.fixedDeltaTime);
+
+            //yaw만 갱신
+            mainHipJoint.targetRotation = Quaternion.Euler(0, newYaw, 0);
+        }
+    }
+
+    public void RotateForGliding(Vector3 worldDirection, float turnSpeed)
+    {
+        float currentYaw = mainHipJoint.targetRotation.eulerAngles.y;
+        float targetYaw = Quaternion.LookRotation(worldDirection).eulerAngles.y;
+        float newYaw = Mathf.MoveTowardsAngle(currentYaw, targetYaw, turnSpeed * Time.fixedDeltaTime);
+        Quaternion quaternion = Quaternion.Euler(70, targetYaw, 0);
+
+        ConfigurableJointExtensions.SetTargetRotationLocal(mainHipJoint, quaternion, hipInitialRotation);
     }
 
     public void SwayWithHand()
@@ -63,12 +93,9 @@ public class RagdollAnimator : MonoBehaviour
             return;
         Quaternion lookRot = Quaternion.LookRotation(toTarget, Vector3.up);
 
-        // Z축 → Y축 보정 (Z가 전방인 LookRotation 결과를 Y축 전방인 구조에 맞춤)
+        // 조인트 축 보정
         Quaternion correction = Quaternion.Euler(90f, 0f, 0f);
         Quaternion targetRot = lookRot * correction;
-
-        // rightArmBone.rotation = targetRot;
-        // rightShoulderBone.rotation = targetRot;
 
         rightShoulderBone.rotation = Quaternion.Slerp(rightArmBone.rotation, targetRot, Time.deltaTime * armReachSpeed);
         rightArmBone.rotation = Quaternion.Slerp(rightArmBone.rotation, targetRot, Time.deltaTime * armReachSpeed);
@@ -90,12 +117,14 @@ public class RagdollAnimator : MonoBehaviour
     {
         currState = state;
         JointDrive drive = mainHipJoint.slerpDrive;
+        Vector3 currentEuler = mainHipJoint.targetRotation.eulerAngles;
         switch (state)
         {
             case PlayerState.Standing:
             case PlayerState.Walking:
                 drive.positionSpring = standDrive;
                 mainHipJoint.slerpDrive = drive;
+                mainHipJoint.targetRotation = Quaternion.Euler(0, currentEuler.y, currentEuler.z);
                 break;
             case PlayerState.Swinging:
                 drive.positionSpring = fallDrive;
@@ -105,7 +134,11 @@ public class RagdollAnimator : MonoBehaviour
                 drive.positionSpring = standDrive;
                 mainHipJoint.slerpDrive = drive;
                 break;
-                
+            case PlayerState.Gliding:
+                drive.positionSpring = standDrive;
+                mainHipJoint.slerpDrive = drive;
+                break;
+
         }
     }
 

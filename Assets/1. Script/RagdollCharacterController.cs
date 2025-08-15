@@ -17,6 +17,7 @@ public class RagdollCharacterController : MonoBehaviour
     public LayerMask groundLayer;
     public Transform camTarget;
     public GameObject charCenterPart;
+    public Transform moveFrame; //연출과 별개로 회전이 고정된 이동 오브젝트
 
     [Header("Settings")]
     public float moveForce = 30f;
@@ -105,22 +106,32 @@ public class RagdollCharacterController : MonoBehaviour
         switch (state)
         {
             case PlayerState.Standing:
+                mainRb.linearDamping = normalDrag;
                 ragdollAnimator.SetAnimation(PlayerState.Standing);
                 break;
             case PlayerState.Swinging:
+                mainRb.linearDamping = normalDrag;
                 ragdollAnimator.SetHookTarget(grappleController.GetGrapplePoint());
                 ragdollAnimator.SetAnimation(PlayerState.Swinging);
                 break;
             case PlayerState.OnAir:
+                mainRb.linearDamping = normalDrag;
                 ragdollAnimator.SetAnimation(PlayerState.Standing);
                 break;
             case PlayerState.Walking:
+                mainRb.linearDamping = normalDrag;
                 ragdollAnimator.SetAnimation(PlayerState.Walking);
                 break;
             case PlayerState.Reeling:
+                mainRb.linearDamping = normalDrag;
                 ragdollAnimator.SetAnimation(PlayerState.Reeling);
                 break;
             case PlayerState.Gliding:
+                mainRb.linearDamping = glidDrag;
+                Vector3 currVel = mainRb.linearVelocity;
+                currVel.y = 0;
+                mainRb.linearVelocity = currVel;
+                ragdollAnimator.SetAnimation(PlayerState.Gliding);
                 break;
         }
     }
@@ -137,6 +148,7 @@ public class RagdollCharacterController : MonoBehaviour
         Vector3 horizontalVelocity = mainRb.linearVelocity;
         horizontalVelocity.y = 0f;
         Vector3 velocityChange;
+        Vector3 targetVelocity = moveFrame.forward;
 
         switch (CurrState)
         {
@@ -145,9 +157,9 @@ public class RagdollCharacterController : MonoBehaviour
                 {
                     if (worldDirection.sqrMagnitude > 0.01f)
                     {
-                        Vector3 targetVelocity = mainJoint.transform.forward * maxRunSpeed;
+                        targetVelocity *= maxRunSpeed;
                         velocityChange = targetVelocity - horizontalVelocity;
-                        RotateDirection(worldDirection, turnSpeed);
+                        ragdollAnimator.RotateDirection(worldDirection, turnSpeed);
                     }
                     else
                     {
@@ -161,9 +173,9 @@ public class RagdollCharacterController : MonoBehaviour
                 {
                     if (worldDirection.sqrMagnitude > 0.01f)
                     {
-                        Vector3 targetVelocity = mainJoint.transform.forward * maxAirSpeed;
+                        targetVelocity *= maxAirSpeed;
                         velocityChange = targetVelocity - horizontalVelocity;
-                        RotateDirection(worldDirection, airTurnSpeed);
+                        ragdollAnimator.RotateDirection(worldDirection, airTurnSpeed);
                         mainRb.AddForce(velocityChange * airControlForce, ForceMode.Acceleration);
                     }
                     else
@@ -174,7 +186,6 @@ public class RagdollCharacterController : MonoBehaviour
                     break;
                 }
             case PlayerState.Swinging:
-            case PlayerState.Gliding:
                 {
                     if (horizontalVelocity.magnitude > maxAirSpeed)
                         return;
@@ -182,24 +193,25 @@ public class RagdollCharacterController : MonoBehaviour
                     mainRb.AddForce(worldDirection.normalized * swingMoveForce, ForceMode.Acceleration);
                     break;
                 }
+            case PlayerState.Gliding:
+                {
+                    if (worldDirection.sqrMagnitude > 0.01f)
+                    {
+                        ragdollAnimator.RotateForGliding(worldDirection, airTurnSpeed);
+
+                        targetVelocity *= maxAirSpeed;
+                        velocityChange = targetVelocity - horizontalVelocity;
+                        mainRb.AddForce(Physics.gravity * -glideGravity, ForceMode.Acceleration);
+                        mainRb.AddForce(velocityChange * forwardSpeed, ForceMode.Acceleration);
+                    }
+                    break;
+                }
             case PlayerState.Reeling:
                 break;
         }
     }
 
-    private void RotateDirection(Vector3 worldDirection, float turnSpeed)
-    {
-        worldDirection.y = 0f;
-        if (worldDirection.sqrMagnitude > 0.01f)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up);
-            mainJoint.targetRotation = Quaternion.RotateTowards(
-                mainJoint.targetRotation,
-                targetRotation,
-                turnSpeed * Time.fixedDeltaTime
-            );
-        }
-    }
+
 
     private void CheckCurrState()
     {
@@ -232,4 +244,11 @@ public class RagdollCharacterController : MonoBehaviour
         return Physics.Raycast(origin, Vector3.down, groundCheckDistance + 0.1f, groundLayer);
     }
 
+
+    public float forwardSpeed = 15f;    // 전방 속도
+    public float glideGravity = 0.3f;     // 활공시 중력 배율
+    public float pitchSpeed = 2f;       // 상하 기울기 반응 속도
+    public float liftMultiplier = 3f;   // 전방 힘 배율
+    public float glidDrag = 3f;   // 전방 힘 배율
+    public float normalDrag = 0f;   // 전방 힘 배율
 }

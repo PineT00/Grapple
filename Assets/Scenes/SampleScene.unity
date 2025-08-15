@@ -3025,6 +3025,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be68077063dc7694983cd724b93e6c68, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  followRotX: 0
+  followRotY: 0
+  followRotZ: 0
   target: {fileID: 6887620785992885606}
 --- !u!4 &640423029
 Transform:
@@ -3215,6 +3218,54 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &868993572
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 868993573}
+  - component: {fileID: 868993574}
+  m_Layer: 6
+  m_Name: moveFrame
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &868993573
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 868993572}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.000000021855694, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -4, y: 0.87, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &868993574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 868993572}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be68077063dc7694983cd724b93e6c68, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  followRotX: 0
+  followRotY: 1
+  followRotZ: 0
+  target: {fileID: 6887620785992885606}
 --- !u!1 &939819600
 GameObject:
   m_ObjectHideFlags: 0
@@ -6338,7 +6389,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3913082547380985311}
   serializedVersion: 4
-  m_Mass: 2
+  m_Mass: 1
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -6805,7 +6856,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1548952940
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6827,9 +6878,9 @@ MonoBehaviour:
   - {fileID: 609203049}
   areaSize: {x: 800, y: 80, z: 800}
   setUp_Y_Pos: 0
-  spawnCount: 40
-  minScale: 10
-  maxScale: 20
+  spawnCount: 30
+  minScale: 5
+  maxScale: 15
   randRotation: 1
 --- !u!4 &1548952941
 Transform:
@@ -9696,6 +9747,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c700cf674d1703247ab3972b12094fd1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  moveFrame: {fileID: 868993573}
   mainHipJoint: {fileID: 1878314555}
   leftLeg: {fileID: 1236524299012655480}
   rightLeg: {fileID: 8912186977405160590}
@@ -9806,9 +9858,10 @@ MonoBehaviour:
     m_Bits: 1
   camTarget: {fileID: 640423029}
   charCenterPart: {fileID: 8026441597484276545}
+  moveFrame: {fileID: 868993573}
   moveForce: 60
   maxRunSpeed: 5
-  maxAirSpeed: 10
+  maxAirSpeed: 15
   airControlForce: 5
   airBrakeForce: 2
   swingMoveForce: 30
@@ -9816,6 +9869,12 @@ MonoBehaviour:
   turnSpeed: 300
   airTurnSpeed: 200
   groundCheckDistance: 0.7
+  forwardSpeed: 8
+  glideGravity: 1.5
+  pitchSpeed: 2
+  liftMultiplier: 3
+  glidDrag: 2
+  normalDrag: 0
 --- !u!4 &1236524299012655480
 Transform:
   m_ObjectHideFlags: 0
@@ -11383,5 +11442,6 @@ SceneRoots:
   - {fileID: 1148265205}
   - {fileID: 609203055}
   - {fileID: 543450653270806354}
+  - {fileID: 868993573}
   - {fileID: 1866880114}
   - {fileID: 1822345681}
