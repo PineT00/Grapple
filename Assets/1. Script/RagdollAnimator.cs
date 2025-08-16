@@ -3,15 +3,28 @@ using UnityEngine;
 public class RagdollAnimator : MonoBehaviour
 {
 
-    [Header("좌/우 다리 조인트")]
+    [Header("Body Parts")]
     public Transform moveFrame;
-    public ConfigurableJoint mainHipJoint;
+    public Transform hip;
     public Transform leftLeg;
     public Transform rightLeg;
-    public Transform rightShoulderBone;
-    public Transform rightArmBone;
-    public Quaternion leftInitialRotation;
-    public Quaternion rightInitialRotation;
+    public Transform leftArm;
+    public Transform leftForeArm;
+    public Transform rightArm;
+    public Transform rightForeArm;
+
+    private ConfigurableJoint mainHipJoint;
+    private ConfigurableJoint leftLegJoint;
+    private ConfigurableJoint rightLegJoint;
+    private ConfigurableJoint leftArmJoint;
+    private ConfigurableJoint rightArmJoint;
+    private ConfigurableJoint leftForeArmJoint;
+    private ConfigurableJoint rightForeArmJoint;
+
+    private Quaternion leftInitialRotation;
+    private Quaternion rightInitialRotation;
+    private Quaternion hipInitialRotation;
+
 
     [Header("스텝 설정")]
     public float stepAngle = 30f; // 다리를 내미는 각도
@@ -28,10 +41,20 @@ public class RagdollAnimator : MonoBehaviour
     private Vector3 curHookTargetPos;
     private float timeCounter = 0f;
 
-    private Quaternion hipInitialRotation;
+    private float poseTimer = 0f;
+    private float poseChangeTime = 1f;
 
-    void Start()
+
+    void Awake()
     {
+        mainHipJoint = hip.GetComponent<ConfigurableJoint>();
+        leftLegJoint = leftLeg.GetComponent<ConfigurableJoint>();
+        rightLegJoint = rightLeg.GetComponent<ConfigurableJoint>();
+        leftArmJoint = leftArm.GetComponent<ConfigurableJoint>();
+        rightArmJoint = rightArm.GetComponent<ConfigurableJoint>();
+        leftForeArmJoint = leftForeArm.GetComponent<ConfigurableJoint>();
+        rightForeArmJoint = rightForeArm.GetComponent<ConfigurableJoint>();
+
         leftInitialRotation = leftLeg.localRotation;
         rightInitialRotation = rightLeg.localRotation;
         hipInitialRotation = mainHipJoint.transform.localRotation;
@@ -78,17 +101,25 @@ public class RagdollAnimator : MonoBehaviour
 
     public void RotateForGliding(Vector3 worldDirection, float turnSpeed)
     {
-        float currentYaw = mainHipJoint.targetRotation.eulerAngles.y;
-        float targetYaw = Quaternion.LookRotation(worldDirection).eulerAngles.y;
-        float newYaw = Mathf.MoveTowardsAngle(currentYaw, targetYaw, turnSpeed * Time.fixedDeltaTime);
-        Quaternion quaternion = Quaternion.Euler(70, targetYaw, 0);
+        float step = turnSpeed * Time.fixedDeltaTime;
+        if (poseTimer > 0f)
+        {
+            step *= 3f; //first quick change
+            poseTimer -= Time.deltaTime;
+        }
+        Vector3 flatDirection = worldDirection;
+        flatDirection.y = 0;
 
-        ConfigurableJointExtensions.SetTargetRotationLocal(mainHipJoint, quaternion, hipInitialRotation);
+        Quaternion targetWorldRotation = Quaternion.LookRotation(flatDirection) * Quaternion.Euler(70, 0, 0);
+        Quaternion currentLocalRotation = mainHipJoint.transform.rotation;
+
+        Quaternion newLocalRotation = Quaternion.RotateTowards(currentLocalRotation, targetWorldRotation, step);
+        ConfigurableJointExtensions.SetTargetRotationLocal(mainHipJoint, newLocalRotation, hipInitialRotation);
     }
 
     public void SwayWithHand()
     {
-        Vector3 toTarget = curHookTargetPos - rightArmBone.position;
+        Vector3 toTarget = curHookTargetPos - rightForeArm.position;
         if (toTarget.sqrMagnitude < 0.001f)
             return;
         Quaternion lookRot = Quaternion.LookRotation(toTarget, Vector3.up);
@@ -97,8 +128,8 @@ public class RagdollAnimator : MonoBehaviour
         Quaternion correction = Quaternion.Euler(90f, 0f, 0f);
         Quaternion targetRot = lookRot * correction;
 
-        rightShoulderBone.rotation = Quaternion.Slerp(rightArmBone.rotation, targetRot, Time.deltaTime * armReachSpeed);
-        rightArmBone.rotation = Quaternion.Slerp(rightArmBone.rotation, targetRot, Time.deltaTime * armReachSpeed);
+        rightArm.rotation = Quaternion.Slerp(rightForeArm.rotation, targetRot, Time.deltaTime * armReachSpeed);
+        rightForeArm.rotation = Quaternion.Slerp(rightForeArm.rotation, targetRot, Time.deltaTime * armReachSpeed);
     }
 
     private void Walking()
@@ -137,6 +168,7 @@ public class RagdollAnimator : MonoBehaviour
             case PlayerState.Gliding:
                 drive.positionSpring = standDrive;
                 mainHipJoint.slerpDrive = drive;
+                poseTimer = poseChangeTime;
                 break;
 
         }

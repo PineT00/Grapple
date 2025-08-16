@@ -129,7 +129,7 @@ Rigidbody:
   serializedVersion: 4
   m_Mass: 0.5
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -1621,7 +1621,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 1.4, z: -8}
+  m_LocalPosition: {x: -3.1185935, y: 2.7482905, z: -7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2176,7 +2176,7 @@ Rigidbody:
   serializedVersion: 4
   m_Mass: 0.3
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -2876,7 +2876,7 @@ Rigidbody:
   serializedVersion: 4
   m_Mass: 0.5
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -3038,7 +3038,7 @@ Transform:
   m_GameObject: {fileID: 640423027}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -3.99, y: 1.94, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3276,7 +3276,8 @@ GameObject:
   m_Component:
   - component: {fileID: 939819604}
   - component: {fileID: 939819603}
-  - component: {fileID: 939819602}
+  - component: {fileID: 939819606}
+  - component: {fileID: 939819605}
   m_Layer: 0
   m_Name: CinemachineCamera
   m_TagString: Untagged
@@ -3284,32 +3285,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &939819602
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 939819600}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 625c14eee3ad46c99df7c7c891ef668a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Damping: {x: 0.1, y: 0.1, z: 0.1}
-  ShoulderOffset: {x: 0.5, y: 1, z: 0}
-  VerticalArmLength: 0.4
-  CameraSide: 1
-  CameraDistance: 8
-  AvoidObstacles:
-    Enabled: 0
-    CollisionFilter:
-      serializedVersion: 2
-      m_Bits: 1
-    IgnoreTag: 
-    CameraRadius: 0.2
-    DampingIntoCollision: 0
-    DampingFromCollision: 0.5
 --- !u!114 &939819603
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3362,12 +3337,56 @@ Transform:
   m_GameObject: {fileID: 939819600}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 1.4, z: -8}
+  m_LocalPosition: {x: -3.1185935, y: 2.7482905, z: -7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &939819605
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 939819600}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4afa82ae3200b82408d605c3dbdd1e38, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Damping: 0.1
+--- !u!114 &939819606
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 939819600}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 886251e9a18ece04ea8e61686c173e1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CameraDistance: 7
+  DeadZoneDepth: 0
+  Composition:
+    ScreenPosition: {x: -0.05, y: 0.1}
+    DeadZone:
+      Enabled: 0
+      Size: {x: 0.2, y: 0.2}
+    HardLimits:
+      Enabled: 0
+      Size: {x: 0.8, y: 0.8}
+      Offset: {x: 0, y: 0}
+  CenterOnActivate: 1
+  TargetOffset: {x: 0, y: 0, z: 0}
+  Damping: {x: 0.3, y: 0.1, z: 0.3}
+  Lookahead:
+    Enabled: 0
+    Time: 0
+    Smoothing: 0
+    IgnoreY: 0
 --- !u!153 &1049534249
 ConfigurableJoint:
   m_ObjectHideFlags: 0
@@ -3480,7 +3499,7 @@ Rigidbody:
   serializedVersion: 4
   m_Mass: 0.3
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -5233,7 +5252,7 @@ Rigidbody:
   serializedVersion: 4
   m_Mass: 0.5
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -6199,7 +6218,7 @@ Rigidbody:
   serializedVersion: 4
   m_Mass: 1
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -6391,7 +6410,7 @@ Rigidbody:
   serializedVersion: 4
   m_Mass: 1
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -6876,9 +6895,9 @@ MonoBehaviour:
   - {fileID: 34763718}
   - {fileID: 1148265199}
   - {fileID: 609203049}
-  areaSize: {x: 800, y: 80, z: 800}
+  areaSize: {x: 600, y: 80, z: 600}
   setUp_Y_Pos: 0
-  spawnCount: 30
+  spawnCount: 40
   minScale: 5
   maxScale: 15
   randRotation: 1
@@ -6891,7 +6910,7 @@ Transform:
   m_GameObject: {fileID: 1548952939}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -5, z: 400}
+  m_LocalPosition: {x: 0, y: -5, z: 300}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8453,7 +8472,7 @@ Rigidbody:
   serializedVersion: 4
   m_Mass: 3
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -9144,7 +9163,7 @@ Rigidbody:
   serializedVersion: 4
   m_Mass: 0.5
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -9748,13 +9767,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveFrame: {fileID: 868993573}
-  mainHipJoint: {fileID: 1878314555}
+  hip: {fileID: 6887620785992885606}
   leftLeg: {fileID: 1236524299012655480}
   rightLeg: {fileID: 8912186977405160590}
-  rightShoulderBone: {fileID: 202945567157495248}
-  rightArmBone: {fileID: 7332870104671531536}
-  leftInitialRotation: {x: 0.0008734257, y: 0.0008719024, z: 0.00087190233, w: 0.9999989}
-  rightInitialRotation: {x: 0.00087342545, y: 0.00087190233, z: 0.00087190233, w: 0.9999989}
+  leftArm: {fileID: 7059064162571618679}
+  leftForeArm: {fileID: 2298438722659207617}
+  rightArm: {fileID: 202945567157495248}
+  rightForeArm: {fileID: 7332870104671531536}
   stepAngle: 35
   stepSpeed: 1.8
   standDrive: 3000
@@ -9839,7 +9858,7 @@ MonoBehaviour:
   pullForce: 10
   reelSpeed: 50
   arrivalThreshold: 0.5
-  maxRope: 0.75
+  maxRope: 0.8
   minRope: 0.1
 --- !u!114 &919132149617612268
 MonoBehaviour:
@@ -9859,20 +9878,19 @@ MonoBehaviour:
   camTarget: {fileID: 640423029}
   charCenterPart: {fileID: 8026441597484276545}
   moveFrame: {fileID: 868993573}
-  moveForce: 60
+  moveForce: 80
   maxRunSpeed: 5
+  turnSpeed: 500
+  groundCheckDistance: 0.7
   maxAirSpeed: 15
   airControlForce: 5
-  airBrakeForce: 2
+  airBrakeForce: 1.5
   swingMoveForce: 30
-  jumpForce: 50
-  turnSpeed: 300
+  jumpForce: 60
   airTurnSpeed: 200
-  groundCheckDistance: 0.7
-  forwardSpeed: 8
-  glideGravity: 1.5
-  pitchSpeed: 2
-  liftMultiplier: 3
+  glideSpeed: 30
+  glideTurnSpeed: 300
+  reducedGravity: 0.3
   glidDrag: 2
   normalDrag: 0
 --- !u!4 &1236524299012655480
@@ -10299,7 +10317,7 @@ Rigidbody:
   serializedVersion: 4
   m_Mass: 0.3
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -11033,7 +11051,7 @@ Rigidbody:
   serializedVersion: 4
   m_Mass: 0.3
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -11185,6 +11203,7 @@ GameObject:
   - component: {fileID: 1878314554}
   - component: {fileID: 1878314555}
   - component: {fileID: 8026441597484276546}
+  - component: {fileID: 8026441597484276547}
   m_Layer: 6
   m_Name: Hip
   m_TagString: Untagged
@@ -11199,7 +11218,7 @@ CapsuleCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8026441597484276545}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 0e6bc110cb8066a4b950a272c430dba5, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -11212,9 +11231,30 @@ CapsuleCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.3
-  m_Height: 1
+  m_Height: 1.2
   m_Direction: 1
-  m_Center: {x: 0, y: -0.1, z: 0}
+  m_Center: {x: 0, y: 0.1, z: 0}
+--- !u!135 &8026441597484276547
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8026441597484276545}
+  m_Material: {fileID: 13400000, guid: 3c2cb0e98f977fe49852b6d45c3b85a0, type: 2}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.1
+  m_Center: {x: 0, y: -0.5, z: 0}
 --- !u!4 &8134815294628447287
 Transform:
   m_ObjectHideFlags: 0

@@ -19,17 +19,26 @@ public class RagdollCharacterController : MonoBehaviour
     public GameObject charCenterPart;
     public Transform moveFrame; //연출과 별개로 회전이 고정된 이동 오브젝트
 
-    [Header("Settings")]
+    [Header("Ground Settings")]
     public float moveForce = 30f;
     public float maxRunSpeed = 5f;
+    public float turnSpeed = 5f;
+    public float groundCheckDistance = 0.2f;
+
+    [Header("Air Settings")]
     public float maxAirSpeed = 30f;
     public float airControlForce = 15f;
     public float airBrakeForce = 2f;
     public float swingMoveForce = 10f;
     public float jumpForce = 7f;
-    public float turnSpeed = 5f;
     public float airTurnSpeed = 3f;
-    public float groundCheckDistance = 0.2f;
+
+    [Header("Glide Settings")]
+    public float glideSpeed = 15f;
+    public float glideTurnSpeed = 300f;
+    public float reducedGravity = 0.3f;
+    public float glidDrag = 3f;
+    public float normalDrag = 0f;
 
     public PlayerState CurrState { get; private set; }
     private Rigidbody mainRb;
@@ -197,12 +206,12 @@ public class RagdollCharacterController : MonoBehaviour
                 {
                     if (worldDirection.sqrMagnitude > 0.01f)
                     {
-                        ragdollAnimator.RotateForGliding(worldDirection, airTurnSpeed);
+                        ragdollAnimator.RotateForGliding(worldDirection, glideTurnSpeed);
 
                         targetVelocity *= maxAirSpeed;
                         velocityChange = targetVelocity - horizontalVelocity;
-                        mainRb.AddForce(Physics.gravity * -glideGravity, ForceMode.Acceleration);
-                        mainRb.AddForce(velocityChange * forwardSpeed, ForceMode.Acceleration);
+                        mainRb.AddForce(Physics.gravity * -reducedGravity, ForceMode.Acceleration);
+                        mainRb.AddForce(velocityChange * glideSpeed, ForceMode.Acceleration);
                     }
                     break;
                 }
@@ -244,11 +253,4 @@ public class RagdollCharacterController : MonoBehaviour
         return Physics.Raycast(origin, Vector3.down, groundCheckDistance + 0.1f, groundLayer);
     }
 
-
-    public float forwardSpeed = 15f;    // 전방 속도
-    public float glideGravity = 0.3f;     // 활공시 중력 배율
-    public float pitchSpeed = 2f;       // 상하 기울기 반응 속도
-    public float liftMultiplier = 3f;   // 전방 힘 배율
-    public float glidDrag = 3f;   // 전방 힘 배율
-    public float normalDrag = 0f;   // 전방 힘 배율
 }
