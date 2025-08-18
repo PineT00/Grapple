@@ -5,6 +5,7 @@ public class RagdollAnimator : MonoBehaviour
 
     [Header("Body Parts")]
     public Transform moveFrame;
+    public Transform head;
     public Transform hip;
     public Transform leftLeg;
     public Transform rightLeg;
@@ -13,6 +14,7 @@ public class RagdollAnimator : MonoBehaviour
     public Transform rightArm;
     public Transform rightForeArm;
 
+    private ConfigurableJoint headJoint;
     private ConfigurableJoint mainHipJoint;
     private ConfigurableJoint leftLegJoint;
     private ConfigurableJoint rightLegJoint;
@@ -23,6 +25,7 @@ public class RagdollAnimator : MonoBehaviour
 
     private Quaternion leftInitialRotation;
     private Quaternion rightInitialRotation;
+    private Quaternion headInitialRotation;
     private Quaternion hipInitialRotation;
 
 
@@ -47,6 +50,7 @@ public class RagdollAnimator : MonoBehaviour
 
     void Awake()
     {
+        headJoint = head.GetComponent<ConfigurableJoint>();
         mainHipJoint = hip.GetComponent<ConfigurableJoint>();
         leftLegJoint = leftLeg.GetComponent<ConfigurableJoint>();
         rightLegJoint = rightLeg.GetComponent<ConfigurableJoint>();
@@ -58,6 +62,7 @@ public class RagdollAnimator : MonoBehaviour
         leftInitialRotation = leftLeg.localRotation;
         rightInitialRotation = rightLeg.localRotation;
         hipInitialRotation = mainHipJoint.transform.localRotation;
+        headInitialRotation = headJoint.transform.localRotation;
     }
 
     void FixedUpdate()
@@ -99,7 +104,7 @@ public class RagdollAnimator : MonoBehaviour
         }
     }
 
-    public void RotateForGliding(Vector3 worldDirection, float turnSpeed)
+    public void GlidingStart(Vector3 worldDirection, float turnSpeed)
     {
         float step = turnSpeed * Time.fixedDeltaTime;
         if (poseTimer > 0f)
@@ -107,6 +112,19 @@ public class RagdollAnimator : MonoBehaviour
             step *= 3f; //first quick change
             poseTimer -= Time.deltaTime;
         }
+        Vector3 flatDirection = worldDirection;
+        flatDirection.y = 0;
+
+        Quaternion targetWorldRotation = Quaternion.LookRotation(flatDirection) * Quaternion.Euler(70, 0, 0);
+        Quaternion currentLocalRotation = mainHipJoint.transform.rotation;
+
+        Quaternion newLocalRotation = Quaternion.RotateTowards(currentLocalRotation, targetWorldRotation, step);
+        ConfigurableJointExtensions.SetTargetRotationLocal(mainHipJoint, newLocalRotation, hipInitialRotation);
+    }
+
+    public void RotateForGliding(Vector3 worldDirection, float turnSpeed)
+    {
+        float step = turnSpeed * Time.fixedDeltaTime;
         Vector3 flatDirection = worldDirection;
         flatDirection.y = 0;
 

@@ -39,6 +39,10 @@ public class RagdollCharacterController : MonoBehaviour
     public float reducedGravity = 0.3f;
     public float glidDrag = 3f;
     public float normalDrag = 0f;
+    public float glideDashTime = 1f;
+    public float dashSpeedMultiplier = 2f;
+    private float dashTimer = 0f;
+    private Vector3 dashDir = Vector3.zero;
 
     public PlayerState CurrState { get; private set; }
     private Rigidbody mainRb;
@@ -101,6 +105,8 @@ public class RagdollCharacterController : MonoBehaviour
             if (CurrState != PlayerState.OnAir)
                 return;
 
+            dashTimer = glideDashTime;
+            dashDir = Vector3.zero;
             SetPlayerState(PlayerState.Gliding);
         }
         else if (context.canceled)
@@ -108,7 +114,7 @@ public class RagdollCharacterController : MonoBehaviour
             SetPlayerState(PlayerState.OnAir);
         }
     }
-    
+
     public void SetPlayerState(PlayerState state)
     {
         CurrState = state;
@@ -206,12 +212,28 @@ public class RagdollCharacterController : MonoBehaviour
                 {
                     if (worldDirection.sqrMagnitude > 0.01f)
                     {
-                        ragdollAnimator.RotateForGliding(worldDirection, glideTurnSpeed);
-
-                        targetVelocity *= maxAirSpeed;
-                        velocityChange = targetVelocity - horizontalVelocity;
+                        if (dashTimer > 0f)
+                        {
+                            if (dashDir == Vector3.zero)
+                            {
+                                dashDir = worldDirection;
+                            }
+                            ragdollAnimator.RotateForGliding(dashDir, glideTurnSpeed * dashSpeedMultiplier);
+                            float tempSpeedLimit = maxAirSpeed * dashSpeedMultiplier;
+                            targetVelocity *= tempSpeedLimit;
+                            velocityChange = targetVelocity - horizontalVelocity;
+                            mainRb.AddForce(velocityChange * glideSpeed * dashSpeedMultiplier, ForceMode.Acceleration);
+                            dashTimer -= Time.deltaTime;
+                        }
+                        else
+                        {
+                            ragdollAnimator.RotateForGliding(worldDirection, glideTurnSpeed);
+                            targetVelocity *= maxAirSpeed;
+                            velocityChange = targetVelocity - horizontalVelocity;
+                            mainRb.AddForce(velocityChange * glideSpeed, ForceMode.Acceleration);
+                        }
                         mainRb.AddForce(Physics.gravity * -reducedGravity, ForceMode.Acceleration);
-                        mainRb.AddForce(velocityChange * glideSpeed, ForceMode.Acceleration);
+
                     }
                     break;
                 }
