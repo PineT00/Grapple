@@ -594,7 +594,7 @@ Transform:
   m_GameObject: {fileID: 34763718}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 22.659008, y: -21.8, z: 13.893531}
+  m_LocalPosition: {x: 22.659008, y: -18.31, z: 13.893531}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3189,6 +3189,54 @@ MonoBehaviour:
   followRotY: 1
   followRotZ: 0
   target: {fileID: 6887620785992885606}
+--- !u!1 &911642620
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 911642622}
+  - component: {fileID: 911642621}
+  m_Layer: 0
+  m_Name: ParticleManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &911642621
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 911642620}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc6ba84c0b0c25d43bc73c9391e33887, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  particlePoolItems:
+  - particleName: SmokeEffect
+    prefab: {fileID: 3590210635516193472, guid: e9f7e244939f6334d98835ee905b8b73, type: 3}
+    initialPoolSize: 5
+--- !u!4 &911642622
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 911642620}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5.8162284, y: 1.9229313, z: -1.0339581}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &939819600
 GameObject:
   m_ObjectHideFlags: 0
@@ -9690,6 +9738,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveFrame: {fileID: 868993573}
+  head: {fileID: 4586774190065451244}
   hip: {fileID: 6887620785992885606}
   leftLeg: {fileID: 1236524299012655480}
   rightLeg: {fileID: 8912186977405160590}
@@ -9812,10 +9861,12 @@ MonoBehaviour:
   jumpForce: 60
   airTurnSpeed: 200
   glideSpeed: 30
-  glideTurnSpeed: 300
+  glideTurnSpeed: 400
   reducedGravity: 0.3
   glidDrag: 2
   normalDrag: 0
+  glideDashTime: 1
+  dashSpeedMultiplier: 2
 --- !u!4 &1236524299012655480
 Transform:
   m_ObjectHideFlags: 0
@@ -11669,3 +11720,4 @@ SceneRoots:
   - {fileID: 868993573}
   - {fileID: 1866880114}
   - {fileID: 1822345681}
+  - {fileID: 911642622}

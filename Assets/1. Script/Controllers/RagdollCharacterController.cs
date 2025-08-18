@@ -84,6 +84,9 @@ public class RagdollCharacterController : MonoBehaviour
                 vel.y = 0;
                 mainRb.linearVelocity = vel;
                 mainRb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+                Vector3 effectPos = moveFrame.position;
+                effectPos.y -= 1f;
+                ParticleManager.Instance.Play("SmokeEffect", effectPos, moveFrame.rotation);
             }
             else if (CurrState == PlayerState.Swinging)
             {
