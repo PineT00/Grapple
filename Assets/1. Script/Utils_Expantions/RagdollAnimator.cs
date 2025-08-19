@@ -180,7 +180,7 @@ public class RagdollAnimator : MonoBehaviour
                 mainHipJoint.slerpDrive = drive;
                 break;
             case PlayerState.Reeling:
-                drive.positionSpring = standDrive;
+                drive.positionSpring = fallDrive;
                 mainHipJoint.slerpDrive = drive;
                 break;
             case PlayerState.Gliding:
