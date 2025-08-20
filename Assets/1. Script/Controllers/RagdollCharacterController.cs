@@ -17,7 +17,7 @@ public class RagdollCharacterController : MonoBehaviour
     public LayerMask groundLayer;
     public Transform camTarget;
     public GameObject charCenterPart;
-    public Transform moveFrame; //연출과 별개로 회전이 고정된 이동 오브젝트
+    public Transform moveFrame; //No x,z turn
 
     [Header("Ground Settings")]
     public float moveForce = 30f;
@@ -50,6 +50,7 @@ public class RagdollCharacterController : MonoBehaviour
     private Vector2 moveInput;
     private GrappleController grappleController;
     private RagdollAnimator ragdollAnimator;
+    private Rigidbody[] allRigidbodies;
 
     void Awake()
     {
@@ -61,6 +62,8 @@ public class RagdollCharacterController : MonoBehaviour
         SetPlayerState(PlayerState.Walking);
 
         Cursor.lockState = CursorLockMode.Confined; //Mouse Screen Lock
+
+        allRigidbodies = GetComponentsInChildren<Rigidbody>();
     }
 
     void FixedUpdate()
@@ -193,7 +196,8 @@ public class RagdollCharacterController : MonoBehaviour
                     {
                         targetVelocity *= maxAirSpeed;
                         velocityChange = targetVelocity - horizontalVelocity;
-                        ragdollAnimator.RotateDirection(worldDirection, airTurnSpeed);
+                        //ragdollAnimator.RotateDirection(worldDirection, airTurnSpeed);
+                        ragdollAnimator.SmoothRotate(worldDirection, 5f);
                         mainRb.AddForce(velocityChange * airControlForce, ForceMode.Acceleration);
                     }
                     else
@@ -215,17 +219,21 @@ public class RagdollCharacterController : MonoBehaviour
                 {
                     if (worldDirection.sqrMagnitude > 0.01f)
                     {
+                        Vector3 finalForce = Vector3.zero;
+                        Vector3 antiGravity = Vector3.zero;
                         if (dashTimer > 0f)
                         {
                             if (dashDir == Vector3.zero)
                             {
                                 dashDir = worldDirection;
+                                StopAllMotion();
                             }
-                            ragdollAnimator.RotateForGliding(dashDir, glideTurnSpeed * dashSpeedMultiplier);
+                            ragdollAnimator.RotateForGliding(dashDir, glideTurnSpeed * dashSpeedMultiplier * 10f);
                             float tempSpeedLimit = maxAirSpeed * dashSpeedMultiplier;
                             targetVelocity *= tempSpeedLimit;
                             velocityChange = targetVelocity - horizontalVelocity;
-                            mainRb.AddForce(velocityChange * glideSpeed * dashSpeedMultiplier, ForceMode.Acceleration);
+                            finalForce = velocityChange * glideSpeed * dashSpeedMultiplier;
+                            antiGravity = Physics.gravity * -reducedGravity * 1.5f;
                             dashTimer -= Time.deltaTime;
                         }
                         else
@@ -233,9 +241,11 @@ public class RagdollCharacterController : MonoBehaviour
                             ragdollAnimator.RotateForGliding(worldDirection, glideTurnSpeed);
                             targetVelocity *= maxAirSpeed;
                             velocityChange = targetVelocity - horizontalVelocity;
-                            mainRb.AddForce(velocityChange * glideSpeed, ForceMode.Acceleration);
+                            finalForce = velocityChange * glideSpeed;
+                            antiGravity = Physics.gravity * -reducedGravity;
                         }
-                        mainRb.AddForce(Physics.gravity * -reducedGravity, ForceMode.Acceleration);
+                        mainRb.AddForce(finalForce, ForceMode.Acceleration);
+                        mainRb.AddForce(antiGravity, ForceMode.Acceleration);
 
                     }
                     break;
@@ -269,6 +279,16 @@ public class RagdollCharacterController : MonoBehaviour
                 return;
 
             SetPlayerState(PlayerState.OnAir);
+        }
+    }
+    public void StopAllMotion()
+    {
+        if (allRigidbodies == null) return;
+
+        foreach (var rb in allRigidbodies)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
         }
     }
 
