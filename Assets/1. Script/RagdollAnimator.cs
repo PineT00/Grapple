@@ -6,7 +6,6 @@ public class RagdollAnimator : MonoBehaviour
     [Header("Body Parts")]
     public Transform moveFrame;
     public Transform head;
-    public Transform spine;
     public Transform hip;
     public Transform leftLeg;
     public Transform rightLeg;
@@ -16,7 +15,6 @@ public class RagdollAnimator : MonoBehaviour
     public Transform rightForeArm;
 
     private ConfigurableJoint headJoint;
-    private ConfigurableJoint spineJoint;
     private ConfigurableJoint mainHipJoint;
     private ConfigurableJoint leftLegJoint;
     private ConfigurableJoint rightLegJoint;
@@ -36,10 +34,9 @@ public class RagdollAnimator : MonoBehaviour
     public float stepSpeed = 2f;
     private float offsetBetweenLegs = Mathf.PI;
 
-    [Header("일반 상태 설정")]
-    public float standBodyDrive = 2000f;
+    [Header("오뚝이 설정")]
+    public float standDrive = 2000f;
     public float fallDrive = 100f;
-    public float normalArmDrive = 30f;
 
     [Header("스윙 액션 설정")]
     public float armReachSpeed = 10f;
@@ -47,15 +44,10 @@ public class RagdollAnimator : MonoBehaviour
     private Vector3 curHookTargetPos;
     private float timeCounter = 0f;
 
-    [Header("글라이드 액션 설정")]
-    public float glideDrive = 3000f;
-    private float poseTimer = 0f;
-
 
     void Awake()
     {
         headJoint = head.GetComponent<ConfigurableJoint>();
-        spineJoint = spine.GetComponent<ConfigurableJoint>();
         mainHipJoint = hip.GetComponent<ConfigurableJoint>();
         leftLegJoint = leftLeg.GetComponent<ConfigurableJoint>();
         rightLegJoint = rightLeg.GetComponent<ConfigurableJoint>();
@@ -103,37 +95,10 @@ public class RagdollAnimator : MonoBehaviour
             Vector3 currentEuler = moveFrame.eulerAngles;
             float targetYaw = Quaternion.LookRotation(worldDirection.normalized, Vector3.up).eulerAngles.y;
             float newYaw = Mathf.MoveTowardsAngle(currentEuler.y, targetYaw, turnSpeed * Time.fixedDeltaTime);
+
+            //yaw만 갱신
             mainHipJoint.targetRotation = Quaternion.Euler(0, newYaw, 0);
         }
-    }
-    public void SmoothRotate(Vector3 worldDirection, float turnSmoothing)
-    {
-        worldDirection.y = 0f;
-        if (worldDirection.sqrMagnitude > 0.01f)
-        {
-            float targetYaw = Quaternion.LookRotation(worldDirection.normalized, Vector3.up).eulerAngles.y;
-            float currentYaw = moveFrame.eulerAngles.y;
-            float newYaw = Mathf.LerpAngle(currentYaw, targetYaw, turnSmoothing * Time.fixedDeltaTime);
-            mainHipJoint.targetRotation = Quaternion.Euler(0, newYaw, 0);
-        }
-    }
-
-    public void GlidingStart(Vector3 worldDirection, float turnSpeed)
-    {
-        float step = turnSpeed * Time.fixedDeltaTime;
-        if (poseTimer > 0f)
-        {
-            step *= 3f; //first quick change
-            poseTimer -= Time.deltaTime;
-        }
-        Vector3 flatDirection = worldDirection;
-        flatDirection.y = 0;
-
-        Quaternion targetWorldRotation = Quaternion.LookRotation(flatDirection) * Quaternion.Euler(70, 0, 0);
-        Quaternion currentLocalRotation = mainHipJoint.transform.rotation;
-
-        Quaternion newLocalRotation = Quaternion.RotateTowards(currentLocalRotation, targetWorldRotation, step);
-        ConfigurableJointExtensions.SetTargetRotationLocal(mainHipJoint, newLocalRotation, hipInitialRotation);
     }
 
     public void RotateForGliding(Vector3 worldDirection, float turnSpeed)
@@ -185,7 +150,7 @@ public class RagdollAnimator : MonoBehaviour
         {
             case PlayerState.Standing:
             case PlayerState.Walking:
-                drive.positionSpring = standBodyDrive;
+                drive.positionSpring = standDrive;
                 mainHipJoint.slerpDrive = drive;
                 mainHipJoint.targetRotation = Quaternion.Euler(0, currentEuler.y, currentEuler.z);
                 break;
@@ -194,12 +159,11 @@ public class RagdollAnimator : MonoBehaviour
                 mainHipJoint.slerpDrive = drive;
                 break;
             case PlayerState.Reeling:
-                drive.positionSpring = fallDrive;
+                drive.positionSpring = standDrive;
                 mainHipJoint.slerpDrive = drive;
                 break;
             case PlayerState.Gliding:
-                drive.positionSpring = glideDrive;
-                spineJoint.slerpDrive = drive;
+                drive.positionSpring = standDrive;
                 mainHipJoint.slerpDrive = drive;
                 break;
 

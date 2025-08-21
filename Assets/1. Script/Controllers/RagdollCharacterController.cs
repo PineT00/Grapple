@@ -196,7 +196,6 @@ public class RagdollCharacterController : MonoBehaviour
                     {
                         targetVelocity *= maxAirSpeed;
                         velocityChange = targetVelocity - horizontalVelocity;
-                        //ragdollAnimator.RotateDirection(worldDirection, airTurnSpeed);
                         ragdollAnimator.SmoothRotate(worldDirection, 5f);
                         mainRb.AddForce(velocityChange * airControlForce, ForceMode.Acceleration);
                     }
