@@ -14,6 +14,8 @@ public class RagdollAnimator : MonoBehaviour
     public Transform leftForeArm;
     public Transform rightArm;
     public Transform rightForeArm;
+    [Header("Animation")]
+    public RagdollWalking ragdollWalking;
 
     private ConfigurableJoint headJoint;
     private ConfigurableJoint spineJoint;

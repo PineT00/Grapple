@@ -4,27 +4,27 @@ using UnityEngine;
 
 public class ActiveRagdoll : MonoBehaviour
 {
-    [Header("두 뼈대의 루트")]
+    [Header("참조: 두 뼈대의 루트")]
     public Transform animationRoot;
     public Transform ragdollRoot;
 
-    [Tooltip("중심 뼈")]
+    [Header("동기화 기준 뼈")]
     public Transform animationHips;
     public Transform ragdollHips;
 
-    // 조인트와 초기 회전 값을 함께 저장할 내부 클래스
+    // 조인트와 초기 '로컬' 회전 값을 저장할 내부 클래스
     private class JointData
     {
         public ConfigurableJoint joint;
-        public Quaternion startWorldRotation; // 게임 시작 시의 초기 회전 값을 저장할 변수
+        public Transform animationBone;
+        public Quaternion startLocalRotation; // 초기 로컬 회전 값을 저장
     }
 
-    private Dictionary<Transform, JointData> jointMap;
+    private List<JointData> jointDataList;
 
     void Awake()
     {
-        jointMap = new Dictionary<Transform, JointData>();
-
+        jointDataList = new List<JointData>();
         ConfigurableJoint[] allJoints = ragdollRoot.GetComponentsInChildren<ConfigurableJoint>();
         Transform[] allAnimationBones = animationRoot.GetComponentsInChildren<Transform>();
 
@@ -36,25 +36,25 @@ public class ActiveRagdoll : MonoBehaviour
                 var data = new JointData
                 {
                     joint = joint,
-                    startWorldRotation = joint.transform.rotation
+                    animationBone = matchingBone,
+                    // 게임 시작 시의 '로컬' 회전 값을 기준점으로 저장
+                    startLocalRotation = joint.transform.localRotation
                 };
-                jointMap.Add(matchingBone, data);
+                jointDataList.Add(data);
             }
         }
     }
 
     void FixedUpdate()
     {
+        // 1. 위치 및 회전 동기화
         Vector3 bodyPositionOffset = ragdollHips.position - animationHips.position;
         animationRoot.position += bodyPositionOffset;
 
-        foreach (var item in jointMap)
+        // 2. 각 관절의 목표 로컬 회전 설정
+        foreach (var data in jointDataList)
         {
-            Transform animationBone = item.Key;
-            JointData data = item.Value;
-
-            // 목표 회전 값(애니메이션 뼈대)과 저장해둔 초기 회전 값 전달
-            data.joint.SetTargetRotation(animationBone.rotation, data.startWorldRotation);
+            ConfigurableJointExtensions.SetTargetRotation(data.joint, data.animationBone.localRotation, data.startLocalRotation);
         }
     }
 }

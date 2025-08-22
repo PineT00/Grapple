@@ -1,14 +1,5 @@
 fileFormatVersion: 2
 guid: efda6721f0081284c9800ba75977ba30
-MonoImporter:
-  externalObjects: {}
-  serializedVersion: 2
-  defaultReferences: []
-  executionOrder: 0
-  icon: {instanceID: 0}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
 AssetOrigin:
   serializedVersion: 1
   productId: 183370
@@ -16,3 +7,12 @@ AssetOrigin:
   packageVersion: 5.7
   assetPath: Assets/Feel/MMTools/Accessories/MMPhysics/MMRigidbodyCenterOfMass.cs
   uploadId: 779587
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
