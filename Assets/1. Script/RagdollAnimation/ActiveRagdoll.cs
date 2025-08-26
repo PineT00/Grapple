@@ -50,8 +50,13 @@ public class ActiveRagdoll : MonoBehaviour
         // 1. 위치 및 회전 동기화
         Vector3 bodyPositionOffset = ragdollHips.position - animationHips.position;
         animationRoot.position += bodyPositionOffset;
+        //animationRoot.rotation = ragdollHips.rotation;
 
-        // 2. 각 관절의 목표 로컬 회전 설정
+        AnimationSynchro();
+    }
+
+    private void AnimationSynchro()
+    {
         foreach (var data in jointDataList)
         {
             ConfigurableJointExtensions.SetTargetRotationLocal(data.joint, data.animationBone.localRotation, data.startLocalRotation);

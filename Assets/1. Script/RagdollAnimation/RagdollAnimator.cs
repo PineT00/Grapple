@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class RagdollAnimator : MonoBehaviour
 {
+    //애니메이터 본의 타겟과 비중을 조절하고
+    //애니메이터 본의 회전방향을 조정함
+    //'이동'을 제외한 모든 애니메이팅 총괄
 
     [Header("Body Parts")]
     public Transform moveFrame;
@@ -15,17 +18,11 @@ public class RagdollAnimator : MonoBehaviour
     public Transform rightArm;
     public Transform rightForeArm;
     [Header("Animation")]
-    public RagdollWalking ragdollWalking;
+    public Transform animHipTrans;
 
     private ConfigurableJoint headJoint;
     private ConfigurableJoint spineJoint;
     private ConfigurableJoint mainHipJoint;
-    private ConfigurableJoint leftLegJoint;
-    private ConfigurableJoint rightLegJoint;
-    private ConfigurableJoint leftArmJoint;
-    private ConfigurableJoint rightArmJoint;
-    private ConfigurableJoint leftForeArmJoint;
-    private ConfigurableJoint rightForeArmJoint;
 
     private Quaternion leftInitialRotation;
     private Quaternion rightInitialRotation;
@@ -59,12 +56,6 @@ public class RagdollAnimator : MonoBehaviour
         headJoint = head.GetComponent<ConfigurableJoint>();
         spineJoint = spine.GetComponent<ConfigurableJoint>();
         mainHipJoint = hip.GetComponent<ConfigurableJoint>();
-        leftLegJoint = leftLeg.GetComponent<ConfigurableJoint>();
-        rightLegJoint = rightLeg.GetComponent<ConfigurableJoint>();
-        leftArmJoint = leftArm.GetComponent<ConfigurableJoint>();
-        rightArmJoint = rightArm.GetComponent<ConfigurableJoint>();
-        leftForeArmJoint = leftForeArm.GetComponent<ConfigurableJoint>();
-        rightForeArmJoint = rightForeArm.GetComponent<ConfigurableJoint>();
 
         leftInitialRotation = leftLeg.localRotation;
         rightInitialRotation = rightLeg.localRotation;
@@ -105,7 +96,8 @@ public class RagdollAnimator : MonoBehaviour
             Vector3 currentEuler = moveFrame.eulerAngles;
             float targetYaw = Quaternion.LookRotation(worldDirection.normalized, Vector3.up).eulerAngles.y;
             float newYaw = Mathf.MoveTowardsAngle(currentEuler.y, targetYaw, turnSpeed * Time.fixedDeltaTime);
-            mainHipJoint.targetRotation = Quaternion.Euler(0, newYaw, 0);
+            //mainHipJoint.targetRotation = Quaternion.Euler(0, newYaw, 0);
+            animHipTrans.localRotation = Quaternion.Euler(0, newYaw, 0);
         }
     }
     public void SmoothRotate(Vector3 worldDirection, float turnSmoothing)
@@ -116,7 +108,8 @@ public class RagdollAnimator : MonoBehaviour
             float targetYaw = Quaternion.LookRotation(worldDirection.normalized, Vector3.up).eulerAngles.y;
             float currentYaw = moveFrame.eulerAngles.y;
             float newYaw = Mathf.LerpAngle(currentYaw, targetYaw, turnSmoothing * Time.fixedDeltaTime);
-            mainHipJoint.targetRotation = Quaternion.Euler(0, newYaw, 0);
+            //mainHipJoint.targetRotation = Quaternion.Euler(0, newYaw, 0);
+            animHipTrans.localRotation = Quaternion.Euler(0, newYaw, 0);
         }
     }
 
@@ -182,14 +175,12 @@ public class RagdollAnimator : MonoBehaviour
     {
         currState = state;
         JointDrive drive = mainHipJoint.slerpDrive;
-        Vector3 currentEuler = mainHipJoint.targetRotation.eulerAngles;
         switch (state)
         {
             case PlayerState.Standing:
             case PlayerState.Walking:
                 drive.positionSpring = standBodyDrive;
                 mainHipJoint.slerpDrive = drive;
-                mainHipJoint.targetRotation = Quaternion.Euler(0, currentEuler.y, currentEuler.z);
                 break;
             case PlayerState.Swinging:
                 drive.positionSpring = fallDrive;
