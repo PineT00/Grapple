@@ -54,7 +54,7 @@ public class ActiveRagdoll : MonoBehaviour
         // 2. 각 관절의 목표 로컬 회전 설정
         foreach (var data in jointDataList)
         {
-            ConfigurableJointExtensions.SetTargetRotation(data.joint, data.animationBone.localRotation, data.startLocalRotation);
+            ConfigurableJointExtensions.SetTargetRotationLocal(data.joint, data.animationBone.localRotation, data.startLocalRotation);
         }
     }
 }
