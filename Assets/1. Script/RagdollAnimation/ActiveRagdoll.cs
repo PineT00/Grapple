@@ -50,7 +50,6 @@ public class ActiveRagdoll : MonoBehaviour
         // 1. 위치 및 회전 동기화
         Vector3 bodyPositionOffset = ragdollHips.position - animationHips.position;
         animationRoot.position += bodyPositionOffset;
-        //animationRoot.rotation = ragdollHips.rotation;
 
         AnimationSynchro();
     }
