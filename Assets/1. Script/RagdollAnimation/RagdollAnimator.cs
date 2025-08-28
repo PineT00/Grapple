@@ -50,9 +50,9 @@ public class RagdollAnimator : MonoBehaviour
     public float glideArmDrive = 999f;
 
     [Header("스윙 액션 설정")]
+    public Transform swingTarget;
     public float armReachSpeed = 10f;
     private PlayerState currState;
-    private Vector3 curHookTargetPos;
     private float timeCounter = 0f;
 
     void Awake()
@@ -69,7 +69,7 @@ public class RagdollAnimator : MonoBehaviour
                 Walking();
                 break;
             case PlayerState.Swinging:
-                SwayWithHand();
+                Swinging();
                 break;
             case PlayerState.Gliding:
                 break;
@@ -83,7 +83,7 @@ public class RagdollAnimator : MonoBehaviour
 
     public void SetHookTarget(Vector3 targetPos)
     {
-        curHookTargetPos = targetPos;
+        swingTarget.position = targetPos;
     }
 
     public void RotateDirection(Vector3 worldDirection, float turnSpeed)
@@ -124,21 +124,6 @@ public class RagdollAnimator : MonoBehaviour
         animHipTrans.localRotation = newLocalRotation;
     }
 
-    public void SwayWithHand()
-    {
-        // Vector3 toTarget = curHookTargetPos - rightForeArm.position;
-        // if (toTarget.sqrMagnitude < 0.001f)
-        //     return;
-        // Quaternion lookRot = Quaternion.LookRotation(toTarget, Vector3.up);
-
-        // // 조인트 축 보정
-        // Quaternion correction = Quaternion.Euler(90f, 0f, 0f);
-        // Quaternion targetRot = lookRot * correction;
-
-        //rightArm.rotation = Quaternion.Slerp(rightForeArm.rotation, targetRot, Time.deltaTime * armReachSpeed);
-        //rightForeArm.rotation = Quaternion.Slerp(rightForeArm.rotation, targetRot, Time.deltaTime * armReachSpeed);
-    }
-
     private void Walking()
     {
         timeCounter += Time.deltaTime * stepSpeed * Mathf.PI * 2f;
@@ -149,6 +134,27 @@ public class RagdollAnimator : MonoBehaviour
 
         leftLegJoint.transform.localRotation = leftInitialRotation * Quaternion.Euler(leftAngle, 0f, 0f);
         rightLegJoint.transform.localRotation = rightInitialRotation * Quaternion.Euler(rightAngle, 0f, 0f);
+    }
+
+    private void Swinging()
+    {
+        animHipTrans.localRotation = mainHipJoint.transform.localRotation;
+        SwayWithHand();
+    }
+
+    public void SwayWithHand()
+    {
+        Vector3 toTarget = swingTarget.position - rightForeArmJoint.transform.position;
+        if (toTarget.sqrMagnitude < 0.001f)
+            return;
+        Quaternion lookRot = Quaternion.LookRotation(toTarget, Vector3.up);
+
+        // 조인트 축 보정
+        Quaternion correction = Quaternion.Euler(90f, 0f, 0f);
+        Quaternion targetRot = lookRot * correction;
+
+        rightArmJoint.transform.rotation = Quaternion.Slerp(rightArmJoint.transform.rotation, targetRot, Time.deltaTime * armReachSpeed);
+        rightForeArmJoint.transform.rotation = Quaternion.Slerp(rightForeArmJoint.transform.rotation, targetRot, Time.deltaTime * armReachSpeed);
     }
 
     public void SetAnimation(PlayerState state)
@@ -172,11 +178,22 @@ public class RagdollAnimator : MonoBehaviour
                 rightForeArmJoint.slerpDrive = armDrive;
 
                 normalRig.weight = 1.0f;
+                swingRig.weight = 0f;
                 glideRig.weight = 0f;
                 break;
             case PlayerState.Swinging:
                 hipDrive.positionSpring = fallDrive;
                 mainHipJoint.slerpDrive = hipDrive;
+
+                armDrive.positionSpring = normalArmDrive;
+                leftArmJoint.slerpDrive = armDrive;
+                leftForeArmJoint.slerpDrive = armDrive;
+                rightArmJoint.slerpDrive = armDrive;
+                rightForeArmJoint.slerpDrive = armDrive;
+
+                normalRig.weight = 0f;
+                swingRig.weight = 1.0f;
+                glideRig.weight = 0f;
                 break;
             case PlayerState.Reeling:
                 hipDrive.positionSpring = fallDrive;
@@ -194,6 +211,7 @@ public class RagdollAnimator : MonoBehaviour
                 rightForeArmJoint.slerpDrive = armDrive;
 
                 normalRig.weight = 0f;
+                swingRig.weight = 0f;
                 glideRig.weight = 1.0f;
                 break;
 

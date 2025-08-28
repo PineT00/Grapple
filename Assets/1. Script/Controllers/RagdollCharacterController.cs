@@ -208,10 +208,12 @@ public class RagdollCharacterController : MonoBehaviour
                 }
             case PlayerState.Swinging:
                 {
-                    if (horizontalVelocity.magnitude > maxAirSpeed)
-                        return;
-
                     mainRb.AddForce(worldDirection.normalized * swingMoveForce, ForceMode.Acceleration);
+                    if (mainRb.linearVelocity.magnitude > maxAirSpeed)
+                    {
+                        Vector3 limitedVelocity = mainRb.linearVelocity.normalized * maxAirSpeed;
+                        mainRb.linearVelocity = limitedVelocity;
+                    }
                     break;
                 }
             case PlayerState.Gliding:
