@@ -18,6 +18,7 @@ public class RagdollCharacterController : MonoBehaviour
     public Transform camTarget;
     public GameObject charCenterPart;
     public Transform moveFrame; //No x,z turn
+    public PlayerState CurrState { get; private set; }
 
     [Header("Ground Settings")]
     public float moveForce = 30f;
@@ -41,12 +42,30 @@ public class RagdollCharacterController : MonoBehaviour
     public float normalDrag = 0f;
     public float glideDashTime = 1f;
     public float dashSpeedMultiplier = 2f;
+
+    [Header("New Gliding Mechanics")]
+    [Tooltip("급강하 시 중력배수")]
+    public float diveGravityMultiplier = 2.5f;
+
+    [Tooltip("급강하의 수직 속도를 활강의 수평 속도로 전환하는 정도")]
+    public float diveToGlideSpeedConversion = 0.8f;
+
+    [Tooltip("급강하 전환으로 얻을 수 있는 최대 추가 속도")]
+    public float maxDiveSpeedBonus = 25f;
+
+    [Tooltip("급강하에서 활강으로 방향이 전환되는 데 걸리는 시간. 길수록 부드럽고 큰 곡선.")]
+    public float glideTransitionDuration = 0.6f;
+
+    [Tooltip("급강하로 얻은 추가 속도가 점차 줄어드는 속도.")]
+    public float glideBoostDecayRate = 2f;
+
     private float dashTimer = 0f;
     private Vector3 dashDir = Vector3.zero;
-
-    public PlayerState CurrState { get; private set; }
+    private float currentGlideBoost = 0f;
+    private float transitionProgress = 0f;
+    private Vector3 diveDirection;
+    private Vector3 targetGlideDirection;
     private Rigidbody mainRb;
-    private ConfigurableJoint mainJoint;
     private Vector2 moveInput;
     private GrappleController grappleController;
     private RagdollAnimator ragdollAnimator;
@@ -55,11 +74,10 @@ public class RagdollCharacterController : MonoBehaviour
     void Awake()
     {
         mainRb = charCenterPart.GetComponent<Rigidbody>();
-        mainJoint = charCenterPart.GetComponent<ConfigurableJoint>();
         grappleController = GetComponent<GrappleController>();
         ragdollAnimator = GetComponent<RagdollAnimator>();
 
-        SetPlayerState(PlayerState.Walking);
+        SetPlayerState(PlayerState.Standing);
 
         Cursor.lockState = CursorLockMode.Confined; //Mouse Screen Lock
 
@@ -68,6 +86,13 @@ public class RagdollCharacterController : MonoBehaviour
 
     void FixedUpdate()
     {
+        // 부스트 지속시간 관리
+        if (currentGlideBoost > 0)
+        {
+            currentGlideBoost -= glideBoostDecayRate * Time.fixedDeltaTime;
+            if (currentGlideBoost < 0) currentGlideBoost = 0;
+        }
+
         CheckCurrState();
         HandleMovement();
     }
@@ -89,6 +114,7 @@ public class RagdollCharacterController : MonoBehaviour
                 mainRb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
                 Vector3 effectPos = moveFrame.position;
                 effectPos.y -= 1f;
+
                 ParticleManager.Instance.Play("SmokeEffect", effectPos, moveFrame.rotation);
             }
             else if (CurrState == PlayerState.Swinging)
@@ -117,6 +143,9 @@ public class RagdollCharacterController : MonoBehaviour
         }
         else if (context.canceled)
         {
+            if (CurrState != PlayerState.Gliding)
+                return;
+
             SetPlayerState(PlayerState.OnAir);
         }
     }
@@ -127,31 +156,31 @@ public class RagdollCharacterController : MonoBehaviour
         switch (state)
         {
             case PlayerState.Standing:
-                mainRb.linearDamping = normalDrag;
                 ragdollAnimator.SetAnimation(PlayerState.Standing);
                 break;
             case PlayerState.Swinging:
-                mainRb.linearDamping = normalDrag;
                 ragdollAnimator.SetHookTarget(grappleController.GetGrapplePoint());
                 ragdollAnimator.SetAnimation(PlayerState.Swinging);
                 break;
             case PlayerState.OnAir:
-                mainRb.linearDamping = normalDrag;
                 ragdollAnimator.SetAnimation(PlayerState.Standing);
                 break;
             case PlayerState.Walking:
-                mainRb.linearDamping = normalDrag;
                 ragdollAnimator.SetAnimation(PlayerState.Walking);
                 break;
             case PlayerState.Reeling:
-                mainRb.linearDamping = normalDrag;
                 ragdollAnimator.SetAnimation(PlayerState.Reeling);
                 break;
             case PlayerState.Gliding:
-                mainRb.linearDamping = glidDrag;
-                Vector3 currVel = mainRb.linearVelocity;
-                currVel.y = 0;
-                mainRb.linearVelocity = currVel;
+                if (moveInput.sqrMagnitude < 0.01f)
+                {
+                    currentGlideState = GlideState.Gliding;
+                    StopAllMotion();
+                }
+                else
+                {
+                    currentGlideState = GlideState.Diving;
+                }
                 ragdollAnimator.SetAnimation(PlayerState.Gliding);
                 break;
         }
@@ -218,37 +247,7 @@ public class RagdollCharacterController : MonoBehaviour
                 }
             case PlayerState.Gliding:
                 {
-                    if (worldDirection.sqrMagnitude > 0.01f)
-                    {
-                        Vector3 finalForce = Vector3.zero;
-                        Vector3 antiGravity = Vector3.zero;
-                        if (dashTimer > 0f)
-                        {
-                            if (dashDir == Vector3.zero)
-                            {
-                                dashDir = worldDirection;
-                                StopAllMotion();
-                            }
-                            ragdollAnimator.RotateForGliding(dashDir, glideTurnSpeed * dashSpeedMultiplier * 10f);
-                            float tempSpeedLimit = maxAirSpeed * dashSpeedMultiplier;
-                            targetVelocity *= tempSpeedLimit;
-                            velocityChange = targetVelocity - horizontalVelocity;
-                            finalForce = velocityChange * glideSpeed * dashSpeedMultiplier;
-                            antiGravity = Physics.gravity * -reducedGravity * 1.5f;
-                            dashTimer -= Time.deltaTime;
-                        }
-                        else
-                        {
-                            ragdollAnimator.RotateForGliding(worldDirection, glideTurnSpeed);
-                            targetVelocity *= maxAirSpeed;
-                            velocityChange = targetVelocity - horizontalVelocity;
-                            finalForce = velocityChange * glideSpeed;
-                            antiGravity = Physics.gravity * -reducedGravity;
-                        }
-                        mainRb.AddForce(finalForce, ForceMode.Acceleration);
-                        mainRb.AddForce(antiGravity, ForceMode.Acceleration);
-
-                    }
+                    GlidingWithDiving(worldDirection);
                     break;
                 }
             case PlayerState.Reeling:
@@ -293,10 +292,116 @@ public class RagdollCharacterController : MonoBehaviour
         }
     }
 
+    public void ReduceMomentum(float amount)
+    {
+        if (allRigidbodies == null) return;
+
+        Vector3 reducedVelocity = Vector3.zero;
+
+        foreach (var rb in allRigidbodies)
+        {
+            reducedVelocity = rb.linearVelocity;
+            reducedVelocity.y *= amount;
+            rb.linearVelocity = reducedVelocity;
+        }
+    }
+
     private bool IsGrounded()
     {
         Vector3 origin = mainRb.position + Vector3.up * 0.1f;
         return Physics.Raycast(origin, Vector3.down, groundCheckDistance + 0.1f, groundLayer);
     }
 
+    public enum GlideState
+    {
+        Dashing,
+        Gliding,
+        Diving,
+        Transitioning
+    }
+    private GlideState currentGlideState;
+
+    private void GlidingWithDiving(Vector3 worldDirection)
+    {
+        bool hasInput = worldDirection.sqrMagnitude > 0.01f;
+
+        // 입력이 없으면 무조건 Diving
+        if (!hasInput)
+        {
+            currentGlideState = GlideState.Diving;
+        }
+        // 입력이 있는데, 이전 상태가 Diving 이었다면 Transitioning 시작
+        else if (currentGlideState == GlideState.Diving)
+        {
+            currentGlideState = GlideState.Transitioning;
+
+            // Transitioning 상태에 진입하는 순간, 필요한 값들을 딱 한 번 설정합니다.
+            transitionProgress = 0f;
+            diveDirection = mainRb.linearVelocity.normalized;
+            targetGlideDirection = worldDirection.normalized;
+
+            float diveBonus = -mainRb.linearVelocity.y * diveToGlideSpeedConversion;
+            currentGlideBoost += Mathf.Clamp(diveBonus, 0, maxDiveSpeedBonus);
+            ReduceMomentum(0.25f);
+        }
+        else if (currentGlideState != GlideState.Transitioning)
+        {
+            currentGlideState = GlideState.Gliding;
+        }
+
+        // --- 상태별 실제 행동 로직 ---
+        switch (currentGlideState)
+        {
+            case GlideState.Gliding:
+                Vector3 glideDirection = worldDirection.normalized;
+                ApplyGlidingForce(glideDirection);
+                break;
+
+            case GlideState.Diving:
+                // 급강하 로직
+                currentGlideBoost = 0;
+                dashTimer = 0; // 다이빙 시작 시 대시도 취소
+                dashDir = Vector3.zero;
+
+                mainRb.AddForce(Physics.gravity * (diveGravityMultiplier - 1f), ForceMode.Acceleration);
+
+                if (mainRb.linearVelocity.sqrMagnitude > 0.1f)
+                {
+                    ragdollAnimator.RotateForGliding(mainRb.linearVelocity.normalized, glideTurnSpeed * 1.5f);
+                }
+                break;
+
+            case GlideState.Transitioning:
+                // 전환 로직
+                transitionProgress += Time.fixedDeltaTime / glideTransitionDuration;
+                Vector3 transitionDirection = Vector3.Slerp(diveDirection, targetGlideDirection, transitionProgress).normalized;
+
+                ApplyGlidingForce(transitionDirection);
+
+                ReduceMomentum(0.8f);
+
+                if (transitionProgress >= 1.0f)
+                {
+                    // 전환이 끝나면 일반 활강 상태로 변경
+                    currentGlideState = GlideState.Gliding;
+                }
+                break;
+        }
+    }
+
+    private void ApplyGlidingForce(Vector3 direction)
+    {
+        ragdollAnimator.RotateForGliding(direction, glideTurnSpeed);
+
+        float currentMaxSpeed = maxAirSpeed + currentGlideBoost;
+        Vector3 targetVelocity = direction * currentMaxSpeed;
+        Vector3 currentHorizontalVelocity = new Vector3(mainRb.linearVelocity.x, 0, mainRb.linearVelocity.z);
+        Vector3 velocityChange = targetVelocity - currentHorizontalVelocity;
+
+        Vector3 finalForce = velocityChange * glideSpeed;
+        Vector3 antiGravity = Physics.gravity * -reducedGravity;
+
+        mainRb.AddForce(finalForce, ForceMode.Acceleration);
+        mainRb.AddForce(antiGravity, ForceMode.Acceleration);
+    }
 }

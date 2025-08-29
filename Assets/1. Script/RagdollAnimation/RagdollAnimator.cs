@@ -114,10 +114,10 @@ public class RagdollAnimator : MonoBehaviour
     public void RotateForGliding(Vector3 worldDirection, float turnSpeed)
     {
         float step = turnSpeed * Time.fixedDeltaTime;
-        Vector3 flatDirection = worldDirection;
-        flatDirection.y = 0;
+        //Vector3 flatDirection = worldDirection;
+        //flatDirection.y = 0;
 
-        Quaternion targetWorldRotation = Quaternion.LookRotation(flatDirection) * Quaternion.Euler(70, 0, 0);
+        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection) * Quaternion.Euler(70, 0, 0);
         Quaternion currentLocalRotation = animHipTrans.rotation;
 
         Quaternion newLocalRotation = Quaternion.RotateTowards(currentLocalRotation, targetWorldRotation, step);
