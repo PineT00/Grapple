@@ -1,5 +1,5 @@
-using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GrappleController : MonoBehaviour
 {
@@ -13,6 +13,11 @@ public class GrappleController : MonoBehaviour
     private RagdollCharacterController characterContoller;
     private GrapplingRope grapplingRope;
 
+    [Header("UI")]
+    public Image grappleIndicatorUI; // 화면 중앙의 점 역할을 할 UI 이미지
+    public Color grappleableColor = Color.green; // 그래플 가능할 때의 색상
+    public Color nonGrappleableColor = Color.white; // 그래플 불가능할 때의 색상
+
     [Header("파라미터")]
     public float maxRayDistance = 30f;
     public float spring = 70f;
@@ -24,11 +29,13 @@ public class GrappleController : MonoBehaviour
 
     [SerializeField]
     private float maxRope = 8.5f;
-    
+
     [SerializeField]
     private float minRope = 1.5f;
 
+    private Vector3 potentialGrapplePoint;
     private Vector3 grapplePoint;
+    private bool isGrappleable = false;
     private bool isGrappling = false;
     private float ropeLength = 0f;
     private SpringJoint joint;
@@ -52,6 +59,9 @@ public class GrappleController : MonoBehaviour
 
     void FixedUpdate()
     {
+        CheckForGrapplePoint();
+        UpdateGrappleIndicator();
+
         switch (characterContoller.CurrState)
         {
             case PlayerState.Swinging:
@@ -62,21 +72,36 @@ public class GrappleController : MonoBehaviour
                 ReelingToTarget();
                 grapplingRope.DrawRope();
                 break;
+            default:
+                break;
         }
     }
-    public void OnGrapple()
+
+    private void CheckForGrapplePoint()
     {
         Vector2 screenCenter = new Vector2(Screen.width / 2f, Screen.height / 2f);
         Ray ray = cam.ScreenPointToRay(screenCenter);
 
         if (Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, grappleLayerMask))
         {
-            grapplePoint = hit.point;
-            ropeLength = Vector3.Distance(anchorRb.position, hit.point);
-            characterContoller.SetPlayerState(PlayerState.Swinging);
-            SetJoint(true);
-            grapplingRope.SetRope(true);
+            isGrappleable = true;
+            potentialGrapplePoint = hit.point;
         }
+        else
+        {
+            isGrappleable = false;
+        }
+    }
+
+    public void OnGrapple()
+    {
+        if (!isGrappleable) return;
+
+        grapplePoint = potentialGrapplePoint;
+        ropeLength = Vector3.Distance(anchorRb.position, potentialGrapplePoint);
+        characterContoller.SetPlayerState(PlayerState.Swinging);
+        SetJoint(true);
+        grapplingRope.SetRope(true);
     }
 
     public void OnRelease()
@@ -114,22 +139,21 @@ public class GrappleController : MonoBehaviour
         return grapplePoint;
     }
 
+
+
     private void ReelingToTarget()
     {
         Vector3 toTarget = grapplePoint - firePoint.position;
         float distance = toTarget.magnitude;
         Vector3 dir = toTarget.normalized;
 
-        // 파라미터
         float decelStartDist = 3f;
         float minSpeed = 2f;
         float maxSpeed = 100f;
 
-        // 속도 보간: 거리 멀면 빠르게, 가까우면 감속
         float t = Mathf.InverseLerp(0f, decelStartDist, distance);
         float targetSpeed = Mathf.Lerp(minSpeed, maxSpeed, t);
 
-        // 현재 속도에서 부드러운 가속 적용
         Vector3 currentVel = anchorRb.linearVelocity;
         Vector3 forwardVel = Vector3.Project(currentVel, dir);
         float currentSpeed = forwardVel.magnitude;
@@ -138,10 +162,8 @@ public class GrappleController : MonoBehaviour
 
         anchorRb.linearVelocity = dir * finalSpeed;
 
-        // 회전 고정: 가속 방향으로 바라보게
         Quaternion targetRot = Quaternion.LookRotation(dir, Vector3.up);
 
-        // 도착 처리
         if (distance <= arrivalThreshold)
         {
             anchorRb.linearVelocity = Vector3.zero;
@@ -189,6 +211,19 @@ public class GrappleController : MonoBehaviour
             joint.damper = 0;
             joint.massScale = 0;
         }
-        
+
+    }
+    private void UpdateGrappleIndicator()
+    {
+        if (grappleIndicatorUI == null) return; // UI가 할당되지 않았으면 실행하지 않음
+
+        if (isGrappleable)
+        {
+            grappleIndicatorUI.color = grappleableColor;
+        }
+        else
+        {
+            grappleIndicatorUI.color = nonGrappleableColor;
+        }
     }
 }

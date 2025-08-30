@@ -166,7 +166,6 @@ public class RagdollCharacterController : MonoBehaviour
             case PlayerState.Gliding:
                 currentGlideBoost = dashSpeed;
                 currentGlideState = GlideState.Dashing;
-                //StopAllMotion();
                 ragdollAnimator.SetAnimation(PlayerState.Gliding);
                 break;
         }
@@ -272,16 +271,6 @@ public class RagdollCharacterController : MonoBehaviour
                 return;
 
             SetPlayerState(PlayerState.OnAir);
-        }
-    }
-    public void StopAllMotion()
-    {
-        if (allRigidbodies == null) return;
-
-        foreach (var rb in allRigidbodies)
-        {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
         }
     }
 

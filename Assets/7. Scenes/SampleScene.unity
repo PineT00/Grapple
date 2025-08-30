@@ -7801,7 +7801,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.7546198, y: 3.8637607, z: -18.41}
+  m_LocalPosition: {x: 1.7547016, y: 3.9637606, z: -18.41}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9564,7 +9564,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 7.36}
   m_SizeDelta: {x: 15, y: 15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &445317144
@@ -19020,7 +19020,8 @@ GameObject:
   m_Component:
   - component: {fileID: 868993573}
   - component: {fileID: 868993574}
-  m_Layer: 6
+  - component: {fileID: 868993575}
+  m_Layer: 8
   m_Name: MoveFrame
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -19058,6 +19059,27 @@ MonoBehaviour:
   followRotY: 1
   followRotZ: 0
   target: {fileID: 6887620785992885606}
+--- !u!65 &868993575
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 868993572}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 10, y: 1, z: 10}
+  m_Center: {x: 0, y: -3, z: 0}
 --- !u!1 &871587769
 GameObject:
   m_ObjectHideFlags: 0
@@ -20122,7 +20144,7 @@ Transform:
   m_GameObject: {fileID: 939819600}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.7546198, y: 3.8637607, z: -18.41}
+  m_LocalPosition: {x: 1.7547016, y: 3.9637606, z: -18.41}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -20165,7 +20187,7 @@ MonoBehaviour:
       Size: {x: 0.8, y: 0.8}
       Offset: {x: 0, y: 0}
   CenterOnActivate: 1
-  TargetOffset: {x: 0, y: 1, z: 0}
+  TargetOffset: {x: 0, y: 1.1, z: 0}
   Damping: {x: 0.3, y: 0.1, z: 0.3}
   Lookahead:
     Enabled: 0
@@ -20179,19 +20201,19 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 939819600}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dbe43d662878a7c43bcd44d43c9e2094, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   CollideAgainst:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 256
   IgnoreTag: 
   TransparentLayers:
     serializedVersion: 2
     m_Bits: 0
-  MinimumDistanceFromTarget: 0.1
+  MinimumDistanceFromTarget: 1
   AvoidObstacles:
     Enabled: 1
     DistanceLimit: 0
@@ -35565,6 +35587,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   lineRendererPrefab: {fileID: 3632720800341118414, guid: 52154fd2e9579914ea7b278d64854a03, type: 3}
+  grappleIndicatorUI: {fileID: 445317144}
+  grappleableColor: {r: 0, g: 1, b: 0, a: 1}
+  nonGrappleableColor: {r: 0.4811321, g: 0.4788626, b: 0.4788626, a: 1}
   maxRayDistance: 50
   spring: 70
   damper: 20
@@ -35599,14 +35624,15 @@ MonoBehaviour:
   maxAirSpeed: 25
   airControlForce: 3
   airBrakeForce: 1.3
-  swingMoveForce: 25
+  swingMoveForce: 30
   jumpForce: 50
   airTurnSpeed: 400
   glideSpeed: 20
   glideTurnSpeed: 300
-  reducedGravity: 2
-  glideDashTime: 0.3
+  glideDashTime: 0.1
   dashSpeed: 1
+  targetGlideGravity: -1.5
+  verticalCorrectionForce: 20
   diveGravityMultiplier: 3.5
   diveToGlideSpeedConversion: 0.8
   maxDiveSpeedBonus: 35
