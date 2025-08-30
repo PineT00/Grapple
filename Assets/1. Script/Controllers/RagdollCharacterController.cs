@@ -100,14 +100,7 @@ public class RagdollCharacterController : MonoBehaviour
         {
             if (CurrState == PlayerState.Walking || CurrState == PlayerState.Standing)
             {
-                Vector3 vel = mainRb.linearVelocity;
-                vel.y = 0;
-                mainRb.linearVelocity = vel;
-                mainRb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-                Vector3 effectPos = moveFrame.position;
-                effectPos.y -= 1f;
-
-                ParticleManager.Instance.Play("SmokeEffect", effectPos, moveFrame.rotation);
+                JumpControl(jumpForce);
             }
             else if (CurrState == PlayerState.Swinging)
             {
@@ -217,7 +210,7 @@ public class RagdollCharacterController : MonoBehaviour
                     {
                         targetVelocity *= maxAirSpeed;
                         velocityChange = targetVelocity - horizontalVelocity;
-                        ragdollAnimator.SmoothRotate(worldDirection, 5f);
+                        ragdollAnimator.SmoothRotate(worldDirection, airTurnSpeed);
                         mainRb.AddForce(velocityChange * airControlForce, ForceMode.Acceleration);
                     }
                     else
@@ -246,8 +239,6 @@ public class RagdollCharacterController : MonoBehaviour
                 break;
         }
     }
-
-
 
     private void CheckCurrState()
     {
@@ -286,6 +277,19 @@ public class RagdollCharacterController : MonoBehaviour
             reducedVelocity.y *= amount;
             rb.linearVelocity = reducedVelocity;
         }
+    }
+
+    private void JumpControl(float force)
+    {
+        ReduceMomentum(0.1f);
+        Vector3 vel = mainRb.linearVelocity;
+        vel.y = 0;
+        mainRb.linearVelocity = vel;
+        mainRb.AddForce(Vector3.up * force, ForceMode.Impulse);
+
+        Vector3 effectPos = moveFrame.position;
+        effectPos.y -= 1f;
+        ParticleManager.Instance.Play("SmokeEffect", effectPos, moveFrame.rotation);
     }
 
     private bool IsGrounded()
