@@ -33722,7 +33722,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2040965035
 Transform:
   m_ObjectHideFlags: 0
@@ -35631,7 +35631,7 @@ MonoBehaviour:
   glideTurnSpeed: 300
   glideDashTime: 0.1
   dashSpeed: 1
-  targetGlideGravity: -1.5
+  targetGlideGravity: -2.5
   verticalCorrectionForce: 20
   diveGravityMultiplier: 3.5
   diveToGlideSpeedConversion: 0.8
