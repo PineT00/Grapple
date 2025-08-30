@@ -7772,7 +7772,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 1
   far clip plane: 1000
   field of view: 60.000004
   orthographic: 0
@@ -7801,7 +7801,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.984544, y: 2.7482905, z: -7}
+  m_LocalPosition: {x: 1.7546198, y: 3.8637607, z: -18.41}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9542,7 +9542,7 @@ GameObject:
   - component: {fileID: 445317145}
   - component: {fileID: 445317144}
   m_Layer: 5
-  m_Name: Image
+  m_Name: Dot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9565,7 +9565,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 25, y: 25}
+  m_SizeDelta: {x: 15, y: 15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &445317144
 MonoBehaviour:
@@ -15694,7 +15694,7 @@ Transform:
   m_GameObject: {fileID: 640423027}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.99, y: 1.94, z: 0}
+  m_LocalPosition: {x: 0.77, y: 1.94, z: -10.41}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -20096,7 +20096,7 @@ MonoBehaviour:
   Lens:
     FieldOfView: 60.000004
     OrthographicSize: 5
-    NearClipPlane: 0.3
+    NearClipPlane: 1
     FarClipPlane: 1000
     Dutch: 0
     ModeOverride: 0
@@ -20122,7 +20122,7 @@ Transform:
   m_GameObject: {fileID: 939819600}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.984544, y: 2.7482905, z: -7}
+  m_LocalPosition: {x: 1.7546198, y: 3.8637607, z: -18.41}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -20153,10 +20153,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 886251e9a18ece04ea8e61686c173e1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CameraDistance: 7
+  CameraDistance: 8
   DeadZoneDepth: 0
   Composition:
-    ScreenPosition: {x: -0.07, y: 0.1}
+    ScreenPosition: {x: -0.06, y: 0.1}
     DeadZone:
       Enabled: 0
       Size: {x: 0.2, y: 0.2}
@@ -20165,7 +20165,7 @@ MonoBehaviour:
       Size: {x: 0.8, y: 0.8}
       Offset: {x: 0, y: 0}
   CenterOnActivate: 1
-  TargetOffset: {x: 0, y: 0, z: 0}
+  TargetOffset: {x: 0, y: 1, z: 0}
   Damping: {x: 0.3, y: 0.1, z: 0.3}
   Lookahead:
     Enabled: 0
@@ -28282,8 +28282,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectsToSpawn:
   - {fileID: 154782202}
-  areaSize: {x: 500, y: 50, z: 500}
-  setUp_Y_Pos: -50
+  areaSize: {x: 500, y: 100, z: 500}
+  setUp_Y_Pos: -80
   spawnCount: 40
   minScale: 3
   maxScale: 8
@@ -35605,15 +35605,13 @@ MonoBehaviour:
   glideSpeed: 20
   glideTurnSpeed: 300
   reducedGravity: 2
-  glidDrag: 0
-  normalDrag: 0
   glideDashTime: 0.3
-  dashSpeedMultiplier: 1.5
+  dashSpeed: 1
   diveGravityMultiplier: 3.5
   diveToGlideSpeedConversion: 0.8
   maxDiveSpeedBonus: 35
   glideTransitionDuration: 0.7
-  glideBoostDecayRate: 2
+  glideBoostDecayRate: 12
 --- !u!4 &1236524299012655480
 Transform:
   m_ObjectHideFlags: 0

@@ -37,11 +37,10 @@ public class RagdollCharacterController : MonoBehaviour
     [Header("Glide Settings")]
     public float glideSpeed = 15f;
     public float glideTurnSpeed = 300f;
-    public float reducedGravity = 0.3f;
-    public float glidDrag = 3f;
-    public float normalDrag = 0f;
     public float glideDashTime = 1f;
-    public float dashSpeedMultiplier = 2f;
+    public float dashSpeed = 15f;
+    public float targetGlideGravity = -1.5f;
+    public float verticalCorrectionForce = 20f;
 
     [Header("New Gliding Mechanics")]
     [Tooltip("급강하 시 중력배수")]
@@ -59,7 +58,7 @@ public class RagdollCharacterController : MonoBehaviour
     [Tooltip("급강하로 얻은 추가 속도가 점차 줄어드는 속도.")]
     public float glideBoostDecayRate = 2f;
 
-    private float dashTimer = 0f;
+    private float glideDashTimer = 0f;
     private Vector3 dashDir = Vector3.zero;
     private float currentGlideBoost = 0f;
     private float transitionProgress = 0f;
@@ -86,13 +85,6 @@ public class RagdollCharacterController : MonoBehaviour
 
     void FixedUpdate()
     {
-        // 부스트 지속시간 관리
-        if (currentGlideBoost > 0)
-        {
-            currentGlideBoost -= glideBoostDecayRate * Time.fixedDeltaTime;
-            if (currentGlideBoost < 0) currentGlideBoost = 0;
-        }
-
         CheckCurrState();
         HandleMovement();
     }
@@ -137,7 +129,7 @@ public class RagdollCharacterController : MonoBehaviour
             if (CurrState != PlayerState.OnAir)
                 return;
 
-            dashTimer = glideDashTime;
+            glideDashTimer = glideDashTime;
             dashDir = Vector3.zero;
             SetPlayerState(PlayerState.Gliding);
         }
@@ -172,15 +164,9 @@ public class RagdollCharacterController : MonoBehaviour
                 ragdollAnimator.SetAnimation(PlayerState.Reeling);
                 break;
             case PlayerState.Gliding:
-                if (moveInput.sqrMagnitude < 0.01f)
-                {
-                    currentGlideState = GlideState.Gliding;
-                    StopAllMotion();
-                }
-                else
-                {
-                    currentGlideState = GlideState.Diving;
-                }
+                currentGlideBoost = dashSpeed;
+                currentGlideState = GlideState.Dashing;
+                //StopAllMotion();
                 ragdollAnimator.SetAnimation(PlayerState.Gliding);
                 break;
         }
@@ -188,6 +174,13 @@ public class RagdollCharacterController : MonoBehaviour
 
     void HandleMovement()
     {
+        // 글라이딩 부스트 지속시간 관리
+        if (currentGlideBoost > 0)
+        {
+            currentGlideBoost -= glideBoostDecayRate * Time.fixedDeltaTime;
+            if (currentGlideBoost < 0)
+                currentGlideBoost = 0;
+        }
         if (moveInput.sqrMagnitude < 0.01f && mainRb.linearVelocity.sqrMagnitude < 0.01f)
             return;
 
@@ -325,44 +318,59 @@ public class RagdollCharacterController : MonoBehaviour
     {
         bool hasInput = worldDirection.sqrMagnitude > 0.01f;
 
-        // 입력이 없으면 무조건 Diving
-        if (!hasInput)
-        {
-            currentGlideState = GlideState.Diving;
-        }
-        // 입력이 있는데, 이전 상태가 Diving 이었다면 Transitioning 시작
-        else if (currentGlideState == GlideState.Diving)
-        {
-            currentGlideState = GlideState.Transitioning;
+        Vector3 glideDirection = camTarget.forward;
+        glideDirection.y = 0f;
+        glideDirection.Normalize();
 
-            // Transitioning 상태에 진입하는 순간, 필요한 값들을 딱 한 번 설정합니다.
-            transitionProgress = 0f;
-            diveDirection = mainRb.linearVelocity.normalized;
-            targetGlideDirection = worldDirection.normalized;
-
-            float diveBonus = -mainRb.linearVelocity.y * diveToGlideSpeedConversion;
-            currentGlideBoost += Mathf.Clamp(diveBonus, 0, maxDiveSpeedBonus);
-            ReduceMomentum(0.25f);
-        }
-        else if (currentGlideState != GlideState.Transitioning)
+        if (currentGlideState == GlideState.Dashing)
         {
-            currentGlideState = GlideState.Gliding;
+            glideDashTimer -= Time.fixedDeltaTime;
+            if (glideDashTimer < 0f)
+            {
+                glideDashTimer = 0f;
+                currentGlideState = GlideState.Gliding;
+            }
+        }
+
+        if (hasInput)
+        {
+            if (currentGlideState == GlideState.Diving)
+            {
+                currentGlideState = GlideState.Transitioning;
+
+                // Transitioning 상태에 진입하는 순간, 필요한 값들을 딱 한 번 설정합니다.
+                transitionProgress = 0f;
+                diveDirection = mainRb.linearVelocity.normalized;
+                targetGlideDirection = glideDirection.normalized;
+
+                float diveBonus = -mainRb.linearVelocity.y * diveToGlideSpeedConversion;
+                currentGlideBoost += Mathf.Clamp(diveBonus, 0, maxDiveSpeedBonus);
+                ReduceMomentum(0.25f);
+            }
+        }
+        else //방향입력 없음
+        {
+            if (currentGlideState != GlideState.Dashing)
+            {
+                currentGlideBoost = 0;
+                glideDashTimer = 0;
+                dashDir = Vector3.zero;
+                currentGlideState = GlideState.Diving;
+            }
         }
 
         // --- 상태별 실제 행동 로직 ---
         switch (currentGlideState)
         {
+            case GlideState.Dashing:
+                ApplyGlidingForce(glideDirection);
+                break;
             case GlideState.Gliding:
-                Vector3 glideDirection = worldDirection.normalized;
                 ApplyGlidingForce(glideDirection);
                 break;
 
             case GlideState.Diving:
                 // 급강하 로직
-                currentGlideBoost = 0;
-                dashTimer = 0; // 다이빙 시작 시 대시도 취소
-                dashDir = Vector3.zero;
-
                 mainRb.AddForce(Physics.gravity * (diveGravityMultiplier - 1f), ForceMode.Acceleration);
 
                 if (mainRb.linearVelocity.sqrMagnitude > 0.1f)
@@ -376,9 +384,9 @@ public class RagdollCharacterController : MonoBehaviour
                 transitionProgress += Time.fixedDeltaTime / glideTransitionDuration;
                 Vector3 transitionDirection = Vector3.Slerp(diveDirection, targetGlideDirection, transitionProgress).normalized;
 
-                ApplyGlidingForce(transitionDirection);
-
                 ReduceMomentum(0.8f);
+
+                ApplyGlidingForce(transitionDirection);
 
                 if (transitionProgress >= 1.0f)
                 {
@@ -399,9 +407,12 @@ public class RagdollCharacterController : MonoBehaviour
         Vector3 velocityChange = targetVelocity - currentHorizontalVelocity;
 
         Vector3 finalForce = velocityChange * glideSpeed;
-        Vector3 antiGravity = Physics.gravity * -reducedGravity;
-
         mainRb.AddForce(finalForce, ForceMode.Acceleration);
-        mainRb.AddForce(antiGravity, ForceMode.Acceleration);
+
+        // 반중력 값 보정
+        float currentVerticalSpeed = mainRb.linearVelocity.y;
+        float speedDifference = targetGlideGravity - currentVerticalSpeed;
+        Vector3 correctionForce = Vector3.up * speedDifference * verticalCorrectionForce;
+        mainRb.AddForce(correctionForce, ForceMode.Acceleration);
     }
 }
