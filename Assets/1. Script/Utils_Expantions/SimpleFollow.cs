@@ -8,22 +8,26 @@ public class SimpleFollow : MonoBehaviour
 
     public Transform target;
 
-    private Quaternion rot = Quaternion.identity;
-
     void FixedUpdate()
     {
         if (!target) return;
 
         transform.position = target.position;
 
-        // 현재 회전의 오일러, 타깃 오일러
-        Vector3 cur = transform.eulerAngles;
         Vector3 tgt = target.eulerAngles;
 
-        if (followRotX) cur.x = tgt.x;
-        if (followRotY) cur.y = tgt.y;
-        if (followRotZ) cur.z = tgt.z;
+        float finalX = followRotX ? tgt.x : 0;
+        float finalY = followRotY ? tgt.y : 0;
+        float finalZ = followRotZ ? tgt.z : 0;
 
-        transform.rotation = Quaternion.Euler(cur);
+        if (target.up.y < 0)
+        {
+            if (followRotY) // Y축을 따라갈 때만 보정
+            {
+                finalY += 180f;
+            }
+        }
+
+        transform.rotation = Quaternion.Euler(finalX, finalY, finalZ);
     }
 }

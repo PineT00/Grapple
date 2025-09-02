@@ -7801,7 +7801,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.7547016, y: 3.9637606, z: -18.41}
+  m_LocalPosition: {x: 1.7922368, y: 3.9637606, z: -18.41}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -19020,7 +19020,6 @@ GameObject:
   m_Component:
   - component: {fileID: 868993573}
   - component: {fileID: 868993574}
-  - component: {fileID: 868993575}
   m_Layer: 8
   m_Name: MoveFrame
   m_TagString: Untagged
@@ -19059,27 +19058,6 @@ MonoBehaviour:
   followRotY: 1
   followRotZ: 0
   target: {fileID: 6887620785992885606}
---- !u!65 &868993575
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 868993572}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 10, y: 1, z: 10}
-  m_Center: {x: 0, y: -3, z: 0}
 --- !u!1 &871587769
 GameObject:
   m_ObjectHideFlags: 0
@@ -20144,7 +20122,7 @@ Transform:
   m_GameObject: {fileID: 939819600}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.7547016, y: 3.9637606, z: -18.41}
+  m_LocalPosition: {x: 1.7922368, y: 3.9637606, z: -18.41}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -20188,7 +20166,7 @@ MonoBehaviour:
       Offset: {x: 0, y: 0}
   CenterOnActivate: 1
   TargetOffset: {x: 0, y: 1.1, z: 0}
-  Damping: {x: 0.3, y: 0.1, z: 0.3}
+  Damping: {x: 0.1, y: 0.1, z: 0.1}
   Lookahead:
     Enabled: 0
     Time: 0
@@ -33971,7 +33949,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2040965035
 Transform:
   m_ObjectHideFlags: 0
@@ -35867,7 +35845,7 @@ MonoBehaviour:
   charCenterPart: {fileID: 8026441597484276545}
   moveFrame: {fileID: 868993573}
   moveForce: 40
-  maxRunSpeed: 7
+  maxRunSpeed: 8
   turnSpeed: 800
   groundCheckDistance: 0.7
   maxAirSpeed: 25
@@ -35876,17 +35854,18 @@ MonoBehaviour:
   swingMoveForce: 30
   jumpForce: 50
   airTurnSpeed: 8
-  glideSpeed: 20
-  glideTurnSpeed: 300
-  glideDashTime: 0.1
+  maxGlideSpeed: 25
+  glideSpeed: 15
+  glideTurnSpeed: 150
+  glideDashTime: 0.2
   dashSpeed: 0.2
-  targetGlideGravity: -2.4
+  targetGlideGravity: -1.8
   verticalCorrectionForce: 20
-  diveGravityMultiplier: 3.5
+  diveGravityMultiplier: 10
   diveToGlideSpeedConversion: 0.8
-  maxDiveSpeedBonus: 35
-  glideTransitionDuration: 0.7
-  glideBoostDecayRate: 12
+  maxDiveSpeedBonus: 30
+  glideTransitionDuration: 0.5
+  glideBoostDecayRate: 10
 --- !u!4 &1236524299012655480
 Transform:
   m_ObjectHideFlags: 0

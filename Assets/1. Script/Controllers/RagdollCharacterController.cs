@@ -35,6 +35,7 @@ public class RagdollCharacterController : MonoBehaviour
     public float airTurnSpeed = 3f;
 
     [Header("Glide Settings")]
+    public float maxGlideSpeed = 50f;
     public float glideSpeed = 15f;
     public float glideTurnSpeed = 300f;
     public float glideDashTime = 1f;
@@ -123,7 +124,10 @@ public class RagdollCharacterController : MonoBehaviour
                 return;
 
             glideDashTimer = glideDashTime;
-            dashDir = Vector3.zero;
+            currentGlideBoost = dashSpeed;
+            dashDir = camTarget.forward;
+            dashDir.y = 0f;
+            dashDir.Normalize();
             SetPlayerState(PlayerState.Gliding);
         }
         else if (context.canceled)
@@ -157,7 +161,6 @@ public class RagdollCharacterController : MonoBehaviour
                 ragdollAnimator.SetAnimation(PlayerState.Reeling);
                 break;
             case PlayerState.Gliding:
-                currentGlideBoost = dashSpeed;
                 currentGlideState = GlideState.Dashing;
                 ragdollAnimator.SetAnimation(PlayerState.Gliding);
                 break;
@@ -265,7 +268,7 @@ public class RagdollCharacterController : MonoBehaviour
         }
     }
 
-    public void ReduceMomentum(float amount)
+    public void ReduceMomentum(float amount) //예측불가능하게 움직일 수 있으니 꼭 필요한 상황외엔 사용X 목표힘만큼 역방향 가속을 사용할것.
     {
         if (allRigidbodies == null) return;
 
@@ -311,7 +314,7 @@ public class RagdollCharacterController : MonoBehaviour
     {
         bool hasInput = worldDirection.sqrMagnitude > 0.01f;
 
-        Vector3 glideDirection = camTarget.forward;
+        Vector3 glideDirection = worldDirection;
         glideDirection.y = 0f;
         glideDirection.Normalize();
 
@@ -338,7 +341,6 @@ public class RagdollCharacterController : MonoBehaviour
 
                 float diveBonus = -mainRb.linearVelocity.y * diveToGlideSpeedConversion;
                 currentGlideBoost += Mathf.Clamp(diveBonus, 0, maxDiveSpeedBonus);
-                ReduceMomentum(0.25f);
             }
         }
         else //방향입력 없음
@@ -356,7 +358,7 @@ public class RagdollCharacterController : MonoBehaviour
         switch (currentGlideState)
         {
             case GlideState.Dashing:
-                ApplyGlidingForce(glideDirection);
+                ApplyGlidingForce(dashDir, 3f);
                 break;
             case GlideState.Gliding:
                 ApplyGlidingForce(glideDirection);
@@ -364,11 +366,11 @@ public class RagdollCharacterController : MonoBehaviour
 
             case GlideState.Diving:
                 // 급강하 로직
-                mainRb.AddForce(Physics.gravity * (diveGravityMultiplier - 1f), ForceMode.Acceleration);
+                mainRb.AddForce(Vector3.down * diveGravityMultiplier, ForceMode.Acceleration);
 
                 if (mainRb.linearVelocity.sqrMagnitude > 0.1f)
                 {
-                    ragdollAnimator.RotateForGliding(mainRb.linearVelocity.normalized, glideTurnSpeed * 1.5f);
+                    ragdollAnimator.RotateForGliding(mainRb.linearVelocity.normalized, glideTurnSpeed * 150f);
                 }
                 break;
 
@@ -376,9 +378,6 @@ public class RagdollCharacterController : MonoBehaviour
                 // 전환 로직
                 transitionProgress += Time.fixedDeltaTime / glideTransitionDuration;
                 Vector3 transitionDirection = Vector3.Slerp(diveDirection, targetGlideDirection, transitionProgress).normalized;
-
-                ReduceMomentum(0.8f);
-
                 ApplyGlidingForce(transitionDirection);
 
                 if (transitionProgress >= 1.0f)
@@ -390,19 +389,20 @@ public class RagdollCharacterController : MonoBehaviour
         }
     }
 
-    private void ApplyGlidingForce(Vector3 direction)
+    private void ApplyGlidingForce(Vector3 direction, float turnSpeedMultiply = 1)
     {
-        ragdollAnimator.RotateForGliding(direction, glideTurnSpeed);
+        ragdollAnimator.RotateForGliding(direction, glideTurnSpeed * turnSpeedMultiply);
 
-        float currentMaxSpeed = maxAirSpeed + currentGlideBoost;
-        Vector3 targetVelocity = direction * currentMaxSpeed;
+        float currentMaxSpeed = maxGlideSpeed + currentGlideBoost;
+
+        Vector3 targetVelocity = moveFrame.forward.normalized * currentMaxSpeed;
         Vector3 currentHorizontalVelocity = new Vector3(mainRb.linearVelocity.x, 0, mainRb.linearVelocity.z);
         Vector3 velocityChange = targetVelocity - currentHorizontalVelocity;
 
         Vector3 finalForce = velocityChange * glideSpeed;
         mainRb.AddForce(finalForce, ForceMode.Acceleration);
 
-        // 반중력 값 보정
+        // 반중력 값 보정(안정적)
         float currentVerticalSpeed = mainRb.linearVelocity.y;
         float speedDifference = targetGlideGravity - currentVerticalSpeed;
         Vector3 correctionForce = Vector3.up * speedDifference * verticalCorrectionForce;
