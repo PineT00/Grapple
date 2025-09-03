@@ -24,7 +24,7 @@ public class RagdollCharacterController : MonoBehaviour
     public float moveForce = 30f;
     public float maxRunSpeed = 5f;
     public float turnSpeed = 5f;
-    public float groundCheckDistance = 0.2f;
+    public float groundCheckDistance = 0.7f;
 
     [Header("Air Settings")]
     public float maxAirSpeed = 30f;
@@ -43,9 +43,14 @@ public class RagdollCharacterController : MonoBehaviour
     public float targetGlideGravity = -1.5f;
     public float verticalCorrectionForce = 20f;
 
-    [Header("New Gliding Mechanics")]
-    [Tooltip("급강하 시 중력배수")]
-    public float diveGravityMultiplier = 2.5f;
+    [Header("Dive Settings")]
+    public float maxDiveSpeed = 70f;
+
+    [Tooltip("급강하 시 목표 속도에 도달하기 위한 힘")]
+    public float diveControlForce = 10f;
+
+    [Tooltip("급강하 시 아래를 향하도록 방향을 전환하는 속도")]
+    public float diveSteeringFactor = 1.5f;
 
     [Tooltip("급강하의 수직 속도를 활강의 수평 속도로 전환하는 정도")]
     public float diveToGlideSpeedConversion = 0.8f;
@@ -58,6 +63,8 @@ public class RagdollCharacterController : MonoBehaviour
 
     [Tooltip("급강하로 얻은 추가 속도가 점차 줄어드는 속도.")]
     public float glideBoostDecayRate = 2f;
+
+    public float reelingAntiGravity = 5f;
 
     private float glideDashTimer = 0f;
     private Vector3 dashDir = Vector3.zero;
@@ -239,6 +246,7 @@ public class RagdollCharacterController : MonoBehaviour
                     break;
                 }
             case PlayerState.Reeling:
+                //AntiGravity(reelingAntiGravity);
                 break;
         }
     }
@@ -310,13 +318,16 @@ public class RagdollCharacterController : MonoBehaviour
     }
     private GlideState currentGlideState;
 
-    private void GlidingWithDiving(Vector3 worldDirection)
+    private void GlidingWithDiving(Vector3 direction)
     {
-        bool hasInput = worldDirection.sqrMagnitude > 0.01f;
+        bool hasInput = direction.sqrMagnitude > 0.01f;
 
-        Vector3 glideDirection = worldDirection;
-        glideDirection.y = 0f;
-        glideDirection.Normalize();
+        Vector3 currDir = moveFrame.forward;
+        Vector3 targetDir = direction;
+        targetDir.y = 0f;
+        targetDir.Normalize();
+
+        Vector3 glideDirection = Vector3.Lerp(currDir, targetDir, glideTurnSpeed * Time.fixedDeltaTime);
 
         if (currentGlideState == GlideState.Dashing)
         {
@@ -333,8 +344,6 @@ public class RagdollCharacterController : MonoBehaviour
             if (currentGlideState == GlideState.Diving)
             {
                 currentGlideState = GlideState.Transitioning;
-
-                // Transitioning 상태에 진입하는 순간, 필요한 값들을 딱 한 번 설정합니다.
                 transitionProgress = 0f;
                 diveDirection = mainRb.linearVelocity.normalized;
                 targetGlideDirection = glideDirection.normalized;
@@ -358,53 +367,57 @@ public class RagdollCharacterController : MonoBehaviour
         switch (currentGlideState)
         {
             case GlideState.Dashing:
-                ApplyGlidingForce(dashDir, 3f);
+                ApplyGlidingForce(dashDir);
+                AntiGravity(targetGlideGravity);
                 break;
             case GlideState.Gliding:
                 ApplyGlidingForce(glideDirection);
+                AntiGravity(targetGlideGravity);
                 break;
-
             case GlideState.Diving:
-                // 급강하 로직
-                mainRb.AddForce(Vector3.down * diveGravityMultiplier, ForceMode.Acceleration);
-
+                Vector3 currentDirection = mainRb.linearVelocity.sqrMagnitude > 0.1f ? mainRb.linearVelocity.normalized : Vector3.down;
+                Vector3 targetDirection = Vector3.Slerp(currentDirection, Vector3.down, diveSteeringFactor * Time.fixedDeltaTime);
+                Vector3 targetVel = targetDirection * maxDiveSpeed;
+                Vector3 velocityDiff = targetVel - mainRb.linearVelocity;
+                mainRb.AddForce(velocityDiff * diveControlForce, ForceMode.Acceleration);
                 if (mainRb.linearVelocity.sqrMagnitude > 0.1f)
                 {
-                    ragdollAnimator.RotateForGliding(mainRb.linearVelocity.normalized, glideTurnSpeed * 150f);
+                    ragdollAnimator.RotateForGliding(mainRb.linearVelocity.normalized);
                 }
                 break;
-
             case GlideState.Transitioning:
-                // 전환 로직
                 transitionProgress += Time.fixedDeltaTime / glideTransitionDuration;
                 Vector3 transitionDirection = Vector3.Slerp(diveDirection, targetGlideDirection, transitionProgress).normalized;
                 ApplyGlidingForce(transitionDirection);
+                AntiGravity(targetGlideGravity);
 
                 if (transitionProgress >= 1.0f)
                 {
-                    // 전환이 끝나면 일반 활강 상태로 변경
                     currentGlideState = GlideState.Gliding;
                 }
                 break;
         }
     }
 
-    private void ApplyGlidingForce(Vector3 direction, float turnSpeedMultiply = 1)
+    private void ApplyGlidingForce(Vector3 direction)
     {
-        ragdollAnimator.RotateForGliding(direction, glideTurnSpeed * turnSpeedMultiply);
+        ragdollAnimator.RotateForGliding(direction);
 
         float currentMaxSpeed = maxGlideSpeed + currentGlideBoost;
+        Vector3 targetVelocity = direction * currentMaxSpeed;
 
-        Vector3 targetVelocity = moveFrame.forward.normalized * currentMaxSpeed;
         Vector3 currentHorizontalVelocity = new Vector3(mainRb.linearVelocity.x, 0, mainRb.linearVelocity.z);
         Vector3 velocityChange = targetVelocity - currentHorizontalVelocity;
 
         Vector3 finalForce = velocityChange * glideSpeed;
         mainRb.AddForce(finalForce, ForceMode.Acceleration);
+    }
 
+    private void AntiGravity(float targetAntiGravity)
+    {
         // 반중력 값 보정(안정적)
         float currentVerticalSpeed = mainRb.linearVelocity.y;
-        float speedDifference = targetGlideGravity - currentVerticalSpeed;
+        float speedDifference = targetAntiGravity - currentVerticalSpeed;
         Vector3 correctionForce = Vector3.up * speedDifference * verticalCorrectionForce;
         mainRb.AddForce(correctionForce, ForceMode.Acceleration);
     }

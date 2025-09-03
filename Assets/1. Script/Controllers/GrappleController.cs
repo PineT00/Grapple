@@ -25,7 +25,6 @@ public class GrappleController : MonoBehaviour
     public float massScale = 4.5f;
     public float pullForce = 4.5f;
     public float reelSpeed = 25f;
-    public float arrivalThreshold = 1.5f;
 
     [SerializeField]
     private float maxRope = 8.5f;
@@ -69,7 +68,7 @@ public class GrappleController : MonoBehaviour
                 grapplingRope.DrawRope();
                 break;
             case PlayerState.Reeling:
-                ReelingToTarget();
+                ShortenRope();
                 grapplingRope.DrawRope();
                 break;
             default:
@@ -114,10 +113,9 @@ public class GrappleController : MonoBehaviour
 
     public void StartReeling()
     {
-        anchorRb.linearVelocity = Vector3.zero;
-        anchorRb.angularVelocity = Vector3.zero;
         characterContoller.SetPlayerState(PlayerState.Reeling);
-        joint.spring = 0;
+        joint.spring = 200f;
+        joint.damper = 50f;
     }
     public void StopReeling()
     {
@@ -125,7 +123,7 @@ public class GrappleController : MonoBehaviour
         {
             characterContoller.SetPlayerState(PlayerState.Swinging);
             ropeLength = Vector3.Distance(anchorRb.position, grapplePoint);
-            joint.spring = spring;
+            SetJoint(isGrappling);
         }
         else
         {
@@ -134,41 +132,22 @@ public class GrappleController : MonoBehaviour
             grapplingRope.SetRope(false);
         }
     }
+
+    private void ShortenRope()
+    {
+        ropeLength -= reelSpeed * Time.fixedDeltaTime;
+        if (ropeLength <= 0f)
+        {
+            ropeLength = 0f;
+        }
+        joint.maxDistance = ropeLength * maxRope;
+        joint.minDistance = ropeLength * minRope;
+        Debug.Log(ropeLength);
+    }
+
     public Vector3 GetGrapplePoint()
     {
         return grapplePoint;
-    }
-
-
-
-    private void ReelingToTarget()
-    {
-        Vector3 toTarget = grapplePoint - firePoint.position;
-        float distance = toTarget.magnitude;
-        Vector3 dir = toTarget.normalized;
-
-        float decelStartDist = 3f;
-        float minSpeed = 2f;
-        float maxSpeed = 100f;
-
-        float t = Mathf.InverseLerp(0f, decelStartDist, distance);
-        float targetSpeed = Mathf.Lerp(minSpeed, maxSpeed, t);
-
-        Vector3 currentVel = anchorRb.linearVelocity;
-        Vector3 forwardVel = Vector3.Project(currentVel, dir);
-        float currentSpeed = forwardVel.magnitude;
-        float accelLerpRate = 10f;
-        float finalSpeed = Mathf.Lerp(currentSpeed, targetSpeed, Time.fixedDeltaTime * accelLerpRate);
-
-        anchorRb.linearVelocity = dir * finalSpeed;
-
-        Quaternion targetRot = Quaternion.LookRotation(dir, Vector3.up);
-
-        if (distance <= arrivalThreshold)
-        {
-            anchorRb.linearVelocity = Vector3.zero;
-            StopReeling();
-        }
     }
 
     private void AdjustGrapplePoint()

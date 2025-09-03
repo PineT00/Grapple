@@ -7801,7 +7801,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.7922368, y: 3.9637606, z: -18.41}
+  m_LocalPosition: {x: 1.7786938, y: 3.9637606, z: -18.41}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -19020,6 +19020,7 @@ GameObject:
   m_Component:
   - component: {fileID: 868993573}
   - component: {fileID: 868993574}
+  - component: {fileID: 868993575}
   m_Layer: 8
   m_Name: MoveFrame
   m_TagString: Untagged
@@ -19058,6 +19059,27 @@ MonoBehaviour:
   followRotY: 1
   followRotZ: 0
   target: {fileID: 6887620785992885606}
+--- !u!65 &868993575
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 868993572}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 6, y: 1, z: 6}
+  m_Center: {x: 0, y: -3, z: 0}
 --- !u!1 &871587769
 GameObject:
   m_ObjectHideFlags: 0
@@ -20122,7 +20144,7 @@ Transform:
   m_GameObject: {fileID: 939819600}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.7922368, y: 3.9637606, z: -18.41}
+  m_LocalPosition: {x: 1.7786938, y: 3.9637606, z: -18.41}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -33949,7 +33971,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2040965035
 Transform:
   m_ObjectHideFlags: 0
@@ -35823,8 +35845,7 @@ MonoBehaviour:
   massScale: 3
   pullForce: 10
   reelSpeed: 20
-  arrivalThreshold: 0.3
-  maxRope: 0.7
+  maxRope: 0.8
   minRope: 0.5
 --- !u!114 &919132149617612268
 MonoBehaviour:
@@ -35856,16 +35877,19 @@ MonoBehaviour:
   airTurnSpeed: 8
   maxGlideSpeed: 25
   glideSpeed: 15
-  glideTurnSpeed: 150
+  glideTurnSpeed: 7
   glideDashTime: 0.2
   dashSpeed: 0.2
   targetGlideGravity: -1.8
   verticalCorrectionForce: 20
-  diveGravityMultiplier: 10
+  maxDiveSpeed: 40
+  diveControlForce: 10
+  diveSteeringFactor: 2.5
   diveToGlideSpeedConversion: 0.8
   maxDiveSpeedBonus: 30
-  glideTransitionDuration: 0.5
+  glideTransitionDuration: 0.3
   glideBoostDecayRate: 10
+  reelingAntiGravity: 5
 --- !u!4 &1236524299012655480
 Transform:
   m_ObjectHideFlags: 0

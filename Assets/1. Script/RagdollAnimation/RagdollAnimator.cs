@@ -71,6 +71,9 @@ public class RagdollAnimator : MonoBehaviour
             case PlayerState.Swinging:
                 Swinging();
                 break;
+            case PlayerState.Reeling:
+                Swinging();
+                break;
             case PlayerState.Gliding:
                 break;
         }
@@ -106,22 +109,14 @@ public class RagdollAnimator : MonoBehaviour
             float targetYaw = Quaternion.LookRotation(worldDirection.normalized, Vector3.up).eulerAngles.y;
             float currentYaw = moveFrame.eulerAngles.y;
             float newYaw = Mathf.LerpAngle(currentYaw, targetYaw, turnSmoothing * Time.fixedDeltaTime);
-            //mainHipJoint.targetRotation = Quaternion.Euler(0, newYaw, 0);
             animHipTrans.localRotation = Quaternion.Euler(0, newYaw, 0);
         }
     }
 
-    public void RotateForGliding(Vector3 worldDirection, float turnSpeed)
+    public void RotateForGliding(Vector3 worldDirection)
     {
-        float step = turnSpeed * Time.fixedDeltaTime;
-        //Vector3 flatDirection = worldDirection;
-        //flatDirection.y = 0;
-
         Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection) * Quaternion.Euler(70, 0, 0);
-        Quaternion currentLocalRotation = animHipTrans.rotation;
-
-        Quaternion newLocalRotation = Quaternion.RotateTowards(currentLocalRotation, targetWorldRotation, step);
-        animHipTrans.localRotation = newLocalRotation;
+        animHipTrans.localRotation = targetWorldRotation;
     }
 
     private void Walking()
@@ -176,6 +171,8 @@ public class RagdollAnimator : MonoBehaviour
                 leftForeArmJoint.slerpDrive = armDrive;
                 rightArmJoint.slerpDrive = armDrive;
                 rightForeArmJoint.slerpDrive = armDrive;
+                leftLegJoint.slerpDrive = armDrive;
+                rightLegJoint.slerpDrive = armDrive;
 
                 normalRig.weight = 1.0f;
                 swingRig.weight = 0f;
@@ -209,6 +206,9 @@ public class RagdollAnimator : MonoBehaviour
                 leftForeArmJoint.slerpDrive = armDrive;
                 rightArmJoint.slerpDrive = armDrive;
                 rightForeArmJoint.slerpDrive = armDrive;
+
+                leftLegJoint.slerpDrive = armDrive;
+                rightLegJoint.slerpDrive = armDrive;
 
                 normalRig.weight = 0f;
                 swingRig.weight = 0f;
