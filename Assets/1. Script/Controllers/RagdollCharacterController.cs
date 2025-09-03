@@ -51,6 +51,7 @@ public class RagdollCharacterController : MonoBehaviour
 
     [Tooltip("급강하 시 아래를 향하도록 방향을 전환하는 속도")]
     public float diveSteeringFactor = 1.5f;
+    public float diveDamper = 10f;
 
     [Tooltip("급강하의 수직 속도를 활강의 수평 속도로 전환하는 정도")]
     public float diveToGlideSpeedConversion = 0.8f;
@@ -63,8 +64,6 @@ public class RagdollCharacterController : MonoBehaviour
 
     [Tooltip("급강하로 얻은 추가 속도가 점차 줄어드는 속도.")]
     public float glideBoostDecayRate = 2f;
-
-    public float reelingAntiGravity = 5f;
 
     private float glideDashTimer = 0f;
     private Vector3 dashDir = Vector3.zero;
@@ -183,6 +182,9 @@ public class RagdollCharacterController : MonoBehaviour
             if (currentGlideBoost < 0)
                 currentGlideBoost = 0;
         }
+
+        Debug.Log(currentGlideBoost);
+
         if (moveInput.sqrMagnitude < 0.01f && mainRb.linearVelocity.sqrMagnitude < 0.01f)
             return;
 
@@ -376,10 +378,16 @@ public class RagdollCharacterController : MonoBehaviour
                 break;
             case GlideState.Diving:
                 Vector3 currentDirection = mainRb.linearVelocity.sqrMagnitude > 0.1f ? mainRb.linearVelocity.normalized : Vector3.down;
+                float dot = Vector3.Dot(currentDirection, Vector3.down);
+                // 낙하방향 음수화 방지
+                float dampingFactor = Mathf.Clamp01(1.0f - dot) * diveDamper;
+
                 Vector3 targetDirection = Vector3.Slerp(currentDirection, Vector3.down, diveSteeringFactor * Time.fixedDeltaTime);
                 Vector3 targetVel = targetDirection * maxDiveSpeed;
                 Vector3 velocityDiff = targetVel - mainRb.linearVelocity;
-                mainRb.AddForce(velocityDiff * diveControlForce, ForceMode.Acceleration);
+
+                mainRb.AddForce(velocityDiff * diveControlForce * dampingFactor, ForceMode.Acceleration);
+
                 if (mainRb.linearVelocity.sqrMagnitude > 0.1f)
                 {
                     ragdollAnimator.RotateForGliding(mainRb.linearVelocity.normalized);

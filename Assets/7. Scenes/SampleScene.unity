@@ -7801,7 +7801,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.7786938, y: 3.9637606, z: -18.41}
+  m_LocalPosition: {x: 1.7554746, y: 3.9637606, z: -18.41}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -20144,7 +20144,7 @@ Transform:
   m_GameObject: {fileID: 939819600}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.7786938, y: 3.9637606, z: -18.41}
+  m_LocalPosition: {x: 1.7554746, y: 3.9637606, z: -18.41}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -35884,12 +35884,12 @@ MonoBehaviour:
   verticalCorrectionForce: 20
   maxDiveSpeed: 40
   diveControlForce: 10
-  diveSteeringFactor: 2.5
-  diveToGlideSpeedConversion: 0.8
-  maxDiveSpeedBonus: 30
+  diveSteeringFactor: 2
+  diveDamper: 10
+  diveToGlideSpeedConversion: 1
+  maxDiveSpeedBonus: 40
   glideTransitionDuration: 0.3
   glideBoostDecayRate: 10
-  reelingAntiGravity: 5
 --- !u!4 &1236524299012655480
 Transform:
   m_ObjectHideFlags: 0
