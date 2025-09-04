@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,9 +11,11 @@ public class GrappleController : MonoBehaviour
     public Transform firePoint;
     public LayerMask grappleLayerMask;
     public LineRenderer lineRendererPrefab;
+    public GameObject ropePrefab;
     private LineRenderer lineRenderer;
     private RagdollCharacterController characterContoller;
-    private GrapplingRope grapplingRope;
+    //private GrapplingRope grapplingRope;
+    private RopeMeshGenerator activeRopeRender;
 
     [Header("UI")]
     public Image grappleIndicatorUI; // 화면 중앙의 점 역할을 할 UI 이미지
@@ -23,23 +27,20 @@ public class GrappleController : MonoBehaviour
     public float spring = 70f;
     public float damper = 7f;
     public float massScale = 4.5f;
-    public float pullForce = 4.5f;
     public float reelSpeed = 25f;
 
     [SerializeField]
-    private float maxRope = 8.5f;
+    private float maxRope = 0.7f;
 
     [SerializeField]
-    private float minRope = 1.5f;
+    private float minRope = 0.4f;
 
     private Vector3 potentialGrapplePoint;
-    private Vector3 grapplePoint;
     private bool isGrappleable = false;
     private bool isGrappling = false;
-    private float ropeLength = 0f;
     private SpringJoint joint;
-
-
+    private List<Vector3> bendPoints = new List<Vector3>();
+    private float currentRopeLength;
     void Start()
     {
         characterContoller = GetComponent<RagdollCharacterController>();
@@ -50,9 +51,14 @@ public class GrappleController : MonoBehaviour
         joint = anchorRb.gameObject.AddComponent<SpringJoint>();
         joint.autoConfigureConnectedAnchor = false;
         joint.anchor = joint.transform.InverseTransformPoint(firePoint.position);
+        joint.minDistance = minRope;
 
-        grapplingRope = GetComponent<GrapplingRope>();
-        grapplingRope.SetLineRenderer(lineRenderer);
+        // grapplingRope 스크립트가 있다면 초기화
+        //grapplingRope = GetComponent<GrapplingRope>();
+        //grapplingRope.SetLineRenderer(lineRenderer);
+
+        activeRopeRender = Instantiate(ropePrefab).GetComponent<RopeMeshGenerator>();
+
         SetJoint(false);
     }
 
@@ -61,26 +67,22 @@ public class GrappleController : MonoBehaviour
         CheckForGrapplePoint();
         UpdateGrappleIndicator();
 
-        switch (characterContoller.CurrState)
+        if (isGrappling)
         {
-            case PlayerState.Swinging:
-                AdjustGrapplePoint();
-                grapplingRope.DrawRope();
-                break;
-            case PlayerState.Reeling:
-                ShortenRope();
-                grapplingRope.DrawRope();
-                break;
-            default:
-                break;
+            HandleRopePhysics();
+            //grapplingRope.UpdateRopeVisuals(firePoint.position, bendPoints);
+            activeRopeRender.UpdateRopeVisuals(firePoint.position, bendPoints, cam.transform);
+        }
+
+        if (characterContoller.CurrState == PlayerState.Reeling)
+        {
+            ShortenRope();
         }
     }
 
     private void CheckForGrapplePoint()
     {
-        Vector2 screenCenter = new Vector2(Screen.width / 2f, Screen.height / 2f);
-        Ray ray = cam.ScreenPointToRay(screenCenter);
-
+        Ray ray = cam.ScreenPointToRay(new Vector2(Screen.width / 2f, Screen.height / 2f));
         if (Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, grappleLayerMask))
         {
             isGrappleable = true;
@@ -95,114 +97,132 @@ public class GrappleController : MonoBehaviour
     public void OnGrapple()
     {
         if (!isGrappleable) return;
+        isGrappling = true;
 
-        grapplePoint = potentialGrapplePoint;
-        ropeLength = Vector3.Distance(anchorRb.position, potentialGrapplePoint);
+        bendPoints.Clear();
+        bendPoints.Add(potentialGrapplePoint);
+
+        currentRopeLength = Vector3.Distance(firePoint.position, potentialGrapplePoint);
+
         characterContoller.SetPlayerState(PlayerState.Swinging);
         SetJoint(true);
-        grapplingRope.SetRope(true);
+        //grapplingRope.ActivateRope(true);
+        activeRopeRender.ActivateRope(isGrappling);
     }
 
     public void OnRelease()
     {
+        if (!isGrappling) return;
+        isGrappling = false;
+
         characterContoller.SetPlayerState(PlayerState.OnAir);
-        ropeLength = 0f;
         SetJoint(false);
-        grapplingRope.SetRope(false);
+        //grapplingRope.ActivateRope(false);
+        activeRopeRender.ActivateRope(isGrappling);
     }
 
     public void StartReeling()
     {
+        if (!isGrappling) return;
         characterContoller.SetPlayerState(PlayerState.Reeling);
+        // Reeling 시 Spring, Damper 값 조절 (선택)
         joint.spring = 200f;
         joint.damper = 50f;
     }
+
     public void StopReeling()
     {
-        if (isGrappling)
-        {
-            characterContoller.SetPlayerState(PlayerState.Swinging);
-            ropeLength = Vector3.Distance(anchorRb.position, grapplePoint);
-            SetJoint(isGrappling);
-        }
-        else
-        {
-            characterContoller.SetPlayerState(PlayerState.OnAir);
-            SetJoint(isGrappling);
-            grapplingRope.SetRope(false);
-        }
-    }
-
-    private void ShortenRope()
-    {
-        ropeLength -= reelSpeed * Time.fixedDeltaTime;
-        if (ropeLength <= 0f)
-        {
-            ropeLength = 0f;
-        }
-        joint.maxDistance = ropeLength * maxRope;
-        joint.minDistance = ropeLength * minRope;
-        Debug.Log(ropeLength);
+        if (!isGrappling) return;
+        characterContoller.SetPlayerState(PlayerState.Swinging);
+        SetJoint(true); // 원래 Spring, Damper 값으로 복원
     }
 
     public Vector3 GetGrapplePoint()
     {
-        return grapplePoint;
+        return bendPoints.Last();
     }
 
-    private void AdjustGrapplePoint()
+    private void ShortenRope()
     {
-        Vector3 from = firePoint.position;
-        Vector3 to = grapplePoint;
-        Vector3 dir = (to - from).normalized;
-        float dist = Vector3.Distance(from, to);
-
-        if (Physics.Raycast(from, dir, out RaycastHit hit, dist, grappleLayerMask))
-        {
-            grapplePoint = hit.point;
-            joint.connectedAnchor = grapplePoint;
-            ropeLength = Vector3.Distance(anchorRb.position, grapplePoint);
-            joint.maxDistance = ropeLength * maxRope;
-            joint.minDistance = ropeLength * minRope;
-            grapplingRope.BendRope();
-        }
+        currentRopeLength -= reelSpeed * Time.fixedDeltaTime;
+        currentRopeLength = Mathf.Max(currentRopeLength, 1.0f); // 최소 길이
     }
 
-    private void SetJoint(bool active = true)
+    private void HandleRopePhysics()
+    {
+        // 로프 풀기
+        if (bendPoints.Count > 1)
+        {
+            Vector3 lastPoint = bendPoints.Last();
+            Vector3 prevPoint = bendPoints[bendPoints.Count - 2];
+
+            // 로프가 둔각으로 펴졌을 때만 풀림 검사
+            Vector3 dirToPlayer = (firePoint.position - lastPoint).normalized;
+            Vector3 dirToPrev = (prevPoint - lastPoint).normalized;
+            if (Vector3.Dot(dirToPlayer, dirToPrev) < 0)
+            {
+                // 플레이어와 이전 꺾임점 사이에 장애물이 없다면
+                float distToPrev = Vector3.Distance(firePoint.position, prevPoint);
+                if (!Physics.Raycast(firePoint.position, (prevPoint - firePoint.position).normalized, distToPrev - 0.1f, grappleLayerMask))
+                {
+                    bendPoints.RemoveAt(bendPoints.Count - 1);
+                }
+            }
+        }
+
+        // 로프 감기
+        Vector3 playerToLastPointDir = (bendPoints.Last() - firePoint.position).normalized;
+        float distToLastPoint = Vector3.Distance(firePoint.position, bendPoints.Last());
+
+        if (Physics.Raycast(firePoint.position, playerToLastPointDir, out RaycastHit hit, distToLastPoint - 0.1f, grappleLayerMask))
+        {
+            if (Vector3.Distance(hit.point, bendPoints.Last()) > 0.5f)
+            {
+                Vector3 offsetHitPoint = hit.point + hit.normal * 0.1f;
+                bendPoints.Add(offsetHitPoint);
+            }
+        }
+
+        UpdateJoint();
+    }
+
+    private void UpdateJoint()
+    {
+        joint.connectedAnchor = bendPoints.Last();
+
+        float wrappedLength = 0;
+        if (bendPoints.Count > 1)
+        {
+            for (int i = 0; i < bendPoints.Count - 1; i++)
+            {
+                wrappedLength += Vector3.Distance(bendPoints[i], bendPoints[i + 1]);
+            }
+        }
+
+        joint.maxDistance = (currentRopeLength - wrappedLength) * maxRope;
+    }
+
+    private void SetJoint(bool active)
     {
         if (active)
         {
-            isGrappling = true;
-            joint.connectedAnchor = grapplePoint;
-            joint.maxDistance = ropeLength * maxRope;
-            joint.minDistance = ropeLength * minRope;
             joint.spring = spring;
             joint.damper = damper;
             joint.massScale = massScale;
+            UpdateJoint();
         }
         else
         {
-            isGrappling = false;
-            joint.connectedAnchor = anchorRb.position;
-            joint.maxDistance = 0;
-            joint.minDistance = 0;
             joint.spring = 0;
             joint.damper = 0;
             joint.massScale = 0;
+            joint.connectedAnchor = anchorRb.position;
         }
-
     }
+
     private void UpdateGrappleIndicator()
     {
-        if (grappleIndicatorUI == null) return; // UI가 할당되지 않았으면 실행하지 않음
-
-        if (isGrappleable)
-        {
-            grappleIndicatorUI.color = grappleableColor;
-        }
-        else
-        {
-            grappleIndicatorUI.color = nonGrappleableColor;
-        }
+        if (grappleIndicatorUI == null) return;
+        grappleIndicatorUI.color = isGrappleable ? grappleableColor : nonGrappleableColor;
     }
 }

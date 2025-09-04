@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -13,6 +14,10 @@ public enum PlayerState
 
 public class RagdollCharacterController : MonoBehaviour
 {
+    [Header("Essencial")]
+    public TextMeshProUGUI currStateUI;
+    public TextMeshProUGUI currGlideStateUI;
+
     [Header("Essencial")]
     public LayerMask groundLayer;
     public Transform camTarget;
@@ -148,6 +153,12 @@ public class RagdollCharacterController : MonoBehaviour
     public void SetPlayerState(PlayerState state)
     {
         CurrState = state;
+        currStateUI.text = state.ToString();
+
+        if (CurrState != PlayerState.Gliding)
+        {
+            currGlideStateUI.text = ("");
+        }
         switch (state)
         {
             case PlayerState.Standing:
@@ -182,8 +193,6 @@ public class RagdollCharacterController : MonoBehaviour
             if (currentGlideBoost < 0)
                 currentGlideBoost = 0;
         }
-
-        Debug.Log(currentGlideBoost);
 
         if (moveInput.sqrMagnitude < 0.01f && mainRb.linearVelocity.sqrMagnitude < 0.01f)
             return;
@@ -364,6 +373,8 @@ public class RagdollCharacterController : MonoBehaviour
                 currentGlideState = GlideState.Diving;
             }
         }
+
+        currGlideStateUI.text = currentGlideState.ToString();
 
         // --- 상태별 실제 행동 로직 ---
         switch (currentGlideState)

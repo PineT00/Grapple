@@ -171,8 +171,11 @@ public class RagdollAnimator : MonoBehaviour
                 leftForeArmJoint.slerpDrive = armDrive;
                 rightArmJoint.slerpDrive = armDrive;
                 rightForeArmJoint.slerpDrive = armDrive;
+
                 leftLegJoint.slerpDrive = armDrive;
                 rightLegJoint.slerpDrive = armDrive;
+                leftCarfJoint.slerpDrive = armDrive;
+                rightCarfJoint.slerpDrive = armDrive;
 
                 normalRig.weight = 1.0f;
                 swingRig.weight = 0f;
@@ -209,6 +212,8 @@ public class RagdollAnimator : MonoBehaviour
 
                 leftLegJoint.slerpDrive = armDrive;
                 rightLegJoint.slerpDrive = armDrive;
+                leftCarfJoint.slerpDrive = armDrive;
+                rightCarfJoint.slerpDrive = armDrive;
 
                 normalRig.weight = 0f;
                 swingRig.weight = 0f;
