@@ -100,15 +100,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   material: {fileID: 2100000, guid: f1afeda92f621874a846b19f72e51319, type: 2}
-  sides: 3
-  radius: 0.1
-  textureTiling: 1
-  quality: 300
-  damper: 15
+  sides: 8
+  radius: 0.07
+  textureTiling: 0.8
+  quality: 200
+  damper: 10
   strength: 500
   initialVelocity: 20
   waveCount: 3
-  waveHeight: 5
+  waveHeight: 4
   affectCurve:
     serializedVersion: 2
     m_Curve:

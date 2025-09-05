@@ -6,7 +6,7 @@ using UnityEngine;
 public class RopeMeshGenerator : MonoBehaviour
 {
     [Header("Rope Settings")]
-    [Tooltip("로프 메시에 적용할 재질(Material)")]
+    [Tooltip("로프 메시에 적용할 재질")]
     public Material material;
     [Tooltip("로프 단면의 원형 해상도 (값이 높을수록 부드러움)")]
     [Range(3, 16)] public int sides = 8;
@@ -28,7 +28,7 @@ public class RopeMeshGenerator : MonoBehaviour
     private Mesh mesh;
     private Spring spring;
 
-    // 메시 생성을 위한 데이터 리스트
+    // 메시 생성 데이터 리스트
     private List<Vector3> vertices = new List<Vector3>();
     private List<int> triangles = new List<int>();
     private List<Vector2> uvs = new List<Vector2>();
@@ -61,7 +61,7 @@ public class RopeMeshGenerator : MonoBehaviour
         }
     }
 
-    public void UpdateRopeVisuals(Vector3 firePoint, List<Vector3> bendPoints, Transform cameraTransform)
+    public void UpdateRopeVisuals(Vector3 firePoint, List<BendPoint> bendPoints, Transform cameraTransform)
     {
         if (bendPoints == null || bendPoints.Count == 0)
         {
@@ -72,12 +72,53 @@ public class RopeMeshGenerator : MonoBehaviour
         spring.Calculate(Time.deltaTime);
 
         List<Vector3> ropePositions = new List<Vector3> { firePoint };
-        ropePositions.AddRange(bendPoints.AsEnumerable().Reverse());
+        ropePositions.AddRange(bendPoints.Select(p => p.position).Reverse());
 
-        List<Vector3> finalRopePositions = CalculateWobble(ropePositions, cameraTransform);
+        List<Vector3> resampledPositions = ResamplePath(ropePositions, quality);
+
+        List<Vector3> finalRopePositions = CalculateWobble(resampledPositions, cameraTransform);
 
         GenerateMesh(finalRopePositions);
     }
+
+    //--추가: 경로를 세분화하는 함수
+    private List<Vector3> ResamplePath(List<Vector3> path, int numPoints)
+    {
+        if (path.Count < 2) return path;
+
+        var resampled = new List<Vector3>();
+        float totalLength = 0f;
+
+        // 전체 경로 길이 계산
+        for (int i = 0; i < path.Count - 1; i++)
+        {
+            totalLength += Vector3.Distance(path[i], path[i + 1]);
+        }
+
+        float segmentLength = totalLength / (numPoints - 1);
+        float currentDist = 0f;
+        int pathIndex = 0;
+
+        resampled.Add(path[0]); // 시작점 추가
+
+        for (int i = 1; i < numPoints - 1; i++)
+        {
+            float targetDist = i * segmentLength;
+
+            while (currentDist + Vector3.Distance(path[pathIndex], path[pathIndex + 1]) < targetDist)
+            {
+                currentDist += Vector3.Distance(path[pathIndex], path[pathIndex + 1]);
+                pathIndex++;
+            }
+
+            float ratio = (targetDist - currentDist) / Vector3.Distance(path[pathIndex], path[pathIndex + 1]);
+            resampled.Add(Vector3.Lerp(path[pathIndex], path[pathIndex + 1], ratio));
+        }
+
+        resampled.Add(path.Last()); // 끝점 추가
+        return resampled;
+    }
+
 
     private List<Vector3> CalculateWobble(List<Vector3> basePositions, Transform cameraTransform)
     {
@@ -90,10 +131,12 @@ public class RopeMeshGenerator : MonoBehaviour
             totalRopeLength += Vector3.Distance(basePositions[i], basePositions[i + 1]);
         }
 
+        if (totalRopeLength <= 0f) return basePositions;
+
         List<Vector3> wobbledPositions = new List<Vector3>();
         float distanceCovered = 0;
 
-        // 경로의 각 지점에 출렁임 오프셋 적용
+        // 경로의 각 지점에 출렁임 오프셋
         for (int i = 0; i < basePositions.Count; i++)
         {
             if (i > 0)
@@ -117,13 +160,11 @@ public class RopeMeshGenerator : MonoBehaviour
 
         if (points.Count < 2) return;
 
-        Quaternion lastRotation = Quaternion.identity;
+        float distanceCovered = 0f;
 
         // 경로의 각 지점을 따라 순회하며 원형 단면(Ring)을 생성하고 연결
         for (int i = 0; i < points.Count; i++)
         {
-            float distanceCovered = 0f;
-
             Vector3 currentPoint = points[i];
             Vector3 direction = (i < points.Count - 1) ? (points[i + 1] - currentPoint).normalized : (currentPoint - points[i - 1]).normalized;
 
@@ -141,11 +182,8 @@ public class RopeMeshGenerator : MonoBehaviour
                 Vector3 vertexOffset = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0) * radius;
                 vertices.Add(currentPoint + rotation * vertexOffset);
 
-                // UV 좌표 설정 (U: 원주, V: 로프 길이 방향)
-                //uvs.Add(new Vector2((float)j / sides, (float)i / (points.Count - 1)));
-
                 float u = (float)j / sides;
-                float v = distanceCovered * textureTiling; // 이전 답변의 타일링 로직 포함
+                float v = distanceCovered * textureTiling;
                 uvs.Add(new Vector2(u, v));
             }
 

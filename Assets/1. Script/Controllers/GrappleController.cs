@@ -3,6 +3,12 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
+public struct BendPoint
+{
+    public Vector3 position;
+    public Vector3 normal;
+}
+
 public class GrappleController : MonoBehaviour
 {
     [Header("필수")]
@@ -10,11 +16,9 @@ public class GrappleController : MonoBehaviour
     public Camera cam;
     public Transform firePoint;
     public LayerMask grappleLayerMask;
-    public LineRenderer lineRendererPrefab;
     public GameObject ropePrefab;
-    private LineRenderer lineRenderer;
+    public Transform visualAnchor;
     private RagdollCharacterController characterContoller;
-    //private GrapplingRope grapplingRope;
     private RopeMeshGenerator activeRopeRender;
 
     [Header("UI")]
@@ -36,26 +40,21 @@ public class GrappleController : MonoBehaviour
     private float minRope = 0.4f;
 
     private Vector3 potentialGrapplePoint;
+    private Vector3 potentialGrappleNormal;
     private bool isGrappleable = false;
     private bool isGrappling = false;
     private SpringJoint joint;
-    private List<Vector3> bendPoints = new List<Vector3>();
+    private List<BendPoint> bendPoints = new List<BendPoint>();
     private float currentRopeLength;
+
     void Start()
     {
         characterContoller = GetComponent<RagdollCharacterController>();
-        lineRenderer = Instantiate(lineRendererPrefab);
-        lineRenderer.transform.SetParent(anchorRb.transform);
-        lineRenderer.positionCount = 0;
 
         joint = anchorRb.gameObject.AddComponent<SpringJoint>();
         joint.autoConfigureConnectedAnchor = false;
         joint.anchor = joint.transform.InverseTransformPoint(firePoint.position);
         joint.minDistance = minRope;
-
-        // grapplingRope 스크립트가 있다면 초기화
-        //grapplingRope = GetComponent<GrapplingRope>();
-        //grapplingRope.SetLineRenderer(lineRenderer);
 
         activeRopeRender = Instantiate(ropePrefab).GetComponent<RopeMeshGenerator>();
 
@@ -70,7 +69,6 @@ public class GrappleController : MonoBehaviour
         if (isGrappling)
         {
             HandleRopePhysics();
-            //grapplingRope.UpdateRopeVisuals(firePoint.position, bendPoints);
             activeRopeRender.UpdateRopeVisuals(firePoint.position, bendPoints, cam.transform);
         }
 
@@ -87,6 +85,7 @@ public class GrappleController : MonoBehaviour
         {
             isGrappleable = true;
             potentialGrapplePoint = hit.point;
+            potentialGrappleNormal = hit.normal;
         }
         else
         {
@@ -100,13 +99,12 @@ public class GrappleController : MonoBehaviour
         isGrappling = true;
 
         bendPoints.Clear();
-        bendPoints.Add(potentialGrapplePoint);
+        bendPoints.Add(new BendPoint { position = potentialGrapplePoint, normal = potentialGrappleNormal });
 
         currentRopeLength = Vector3.Distance(firePoint.position, potentialGrapplePoint);
 
         characterContoller.SetPlayerState(PlayerState.Swinging);
         SetJoint(true);
-        //grapplingRope.ActivateRope(true);
         activeRopeRender.ActivateRope(isGrappling);
     }
 
@@ -117,7 +115,6 @@ public class GrappleController : MonoBehaviour
 
         characterContoller.SetPlayerState(PlayerState.OnAir);
         SetJoint(false);
-        //grapplingRope.ActivateRope(false);
         activeRopeRender.ActivateRope(isGrappling);
     }
 
@@ -139,13 +136,13 @@ public class GrappleController : MonoBehaviour
 
     public Vector3 GetGrapplePoint()
     {
-        return bendPoints.Last();
+        return bendPoints.Last().position;
     }
 
     private void ShortenRope()
     {
         currentRopeLength -= reelSpeed * Time.fixedDeltaTime;
-        currentRopeLength = Mathf.Max(currentRopeLength, 1.0f); // 최소 길이
+        currentRopeLength = Mathf.Max(currentRopeLength, 0.1f); // 최소 길이
     }
 
     private void HandleRopePhysics()
@@ -153,8 +150,8 @@ public class GrappleController : MonoBehaviour
         // 로프 풀기
         if (bendPoints.Count > 1)
         {
-            Vector3 lastPoint = bendPoints.Last();
-            Vector3 prevPoint = bendPoints[bendPoints.Count - 2];
+            Vector3 lastPoint = bendPoints.Last().position;
+            Vector3 prevPoint = bendPoints[bendPoints.Count - 2].position;
 
             // 로프가 둔각으로 펴졌을 때만 풀림 검사
             Vector3 dirToPlayer = (firePoint.position - lastPoint).normalized;
@@ -170,16 +167,27 @@ public class GrappleController : MonoBehaviour
             }
         }
 
-        // 로프 감기
-        Vector3 playerToLastPointDir = (bendPoints.Last() - firePoint.position).normalized;
-        float distToLastPoint = Vector3.Distance(firePoint.position, bendPoints.Last());
+        // 로프 꺾기
+        Vector3 lastBendPosition = bendPoints.Last().position;
+        Vector3 playerToLastPointDir = (lastBendPosition - firePoint.position).normalized;
+        float distToLastPoint = Vector3.Distance(firePoint.position, lastBendPosition);
 
         if (Physics.Raycast(firePoint.position, playerToLastPointDir, out RaycastHit hit, distToLastPoint - 0.1f, grappleLayerMask))
         {
-            if (Vector3.Distance(hit.point, bendPoints.Last()) > 0.5f)
+            if (Vector3.Distance(hit.point, lastBendPosition) > 0.5f)
             {
-                Vector3 offsetHitPoint = hit.point + hit.normal * 0.1f;
-                bendPoints.Add(offsetHitPoint);
+                // 1. 이전 꺾임점의 저장된 normal과 새로 충돌한 지점의 normal을 가져옵니다.
+                Vector3 lastNormal = bendPoints.Last().normal;
+                Vector3 newNormal = hit.normal;
+
+                // 2. 두 normal 벡터를 더해서 모서리의 바깥 방향을 계산합니다.
+                Vector3 offsetDirection = (lastNormal + newNormal).normalized;
+
+                // 3. 계산된 방향으로 새 지점에 오프셋을 적용합니다.
+                Vector3 finalPoint = hit.point + offsetDirection * 0.18f;
+
+                // 4. 새 꺾임점을 {위치, 노말} 데이터와 함께 리스트에 추가합니다.
+                bendPoints.Add(new BendPoint { position = finalPoint, normal = newNormal });
             }
         }
 
@@ -188,14 +196,14 @@ public class GrappleController : MonoBehaviour
 
     private void UpdateJoint()
     {
-        joint.connectedAnchor = bendPoints.Last();
+        joint.connectedAnchor = bendPoints.Last().position;
 
         float wrappedLength = 0;
         if (bendPoints.Count > 1)
         {
             for (int i = 0; i < bendPoints.Count - 1; i++)
             {
-                wrappedLength += Vector3.Distance(bendPoints[i], bendPoints[i + 1]);
+                wrappedLength += Vector3.Distance(bendPoints[i].position, bendPoints[i + 1].position);
             }
         }
 
