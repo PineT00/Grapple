@@ -29,6 +29,8 @@ public class RagdollAnimator : MonoBehaviour
     public Rig normalRig;
     public Rig glideRig;
     public Rig swingRig;
+    public Rig rollingRig;
+
     private Quaternion leftInitialRotation;
     private Quaternion rightInitialRotation;
     private Quaternion headInitialRotation;
@@ -79,11 +81,6 @@ public class RagdollAnimator : MonoBehaviour
         }
     }
 
-    public void ReelingToward(Quaternion targetRot)
-    {
-        //mainHipJoint.targetRotation = targetRot;
-    }
-
     public void SetHookTarget(Vector3 targetPos)
     {
         swingTarget.position = targetPos;
@@ -97,7 +94,6 @@ public class RagdollAnimator : MonoBehaviour
             Vector3 currentEuler = moveFrame.eulerAngles;
             float targetYaw = Quaternion.LookRotation(worldDirection.normalized, Vector3.up).eulerAngles.y;
             float newYaw = Mathf.MoveTowardsAngle(currentEuler.y, targetYaw, turnSpeed * Time.fixedDeltaTime);
-            //mainHipJoint.targetRotation = Quaternion.Euler(0, newYaw, 0);
             animHipTrans.localRotation = Quaternion.Euler(0, newYaw, 0);
         }
     }
@@ -111,6 +107,30 @@ public class RagdollAnimator : MonoBehaviour
             float newYaw = Mathf.LerpAngle(currentYaw, targetYaw, turnSmoothing * Time.fixedDeltaTime);
             animHipTrans.localRotation = Quaternion.Euler(0, newYaw, 0);
         }
+    }
+
+    public float maxSpinSpeed = 360f; // 초당 회전할 각도 (360이면 1초에 한 바퀴)
+    private float currentSpinAngle = 0f; // 현재까지 회전한 각도를 저장할 변수
+    public void SmoothRotateAndSpin(Vector3 worldDirection, float turnSmoothing)
+    {
+        worldDirection.y = 0f;
+        float newYaw = moveFrame.eulerAngles.y; // 기본값은 현재 Y축 회전
+
+        if (worldDirection.sqrMagnitude > 0.01f)
+        {
+            float targetYaw = Quaternion.LookRotation(worldDirection.normalized, Vector3.up).eulerAngles.y;
+            float currentYaw = moveFrame.eulerAngles.y;
+            newYaw = Mathf.LerpAngle(currentYaw, targetYaw, turnSmoothing * Time.fixedDeltaTime);
+        }
+
+        Quaternion yawRotation = Quaternion.Euler(0, newYaw, 0);
+
+        // 빙글빙글
+        currentSpinAngle += maxSpinSpeed *Time.fixedDeltaTime;
+
+        Quaternion spinRotation = Quaternion.Euler(currentSpinAngle, 0, 0);
+
+        animHipTrans.localRotation = yawRotation * spinRotation;
     }
 
     public void RotateForGliding(Vector3 worldDirection)
@@ -179,6 +199,28 @@ public class RagdollAnimator : MonoBehaviour
 
                 normalRig.weight = 1.0f;
                 swingRig.weight = 0f;
+                rollingRig.weight = 0f;
+                glideRig.weight = 0f;
+                break;
+            case PlayerState.OnAir:
+                hipDrive.positionSpring = standBodyDrive;
+                spineJoint.slerpDrive = hipDrive;
+                mainHipJoint.slerpDrive = hipDrive;
+
+                armDrive.positionSpring = glideArmDrive;
+                leftArmJoint.slerpDrive = armDrive;
+                leftForeArmJoint.slerpDrive = armDrive;
+                rightArmJoint.slerpDrive = armDrive;
+                rightForeArmJoint.slerpDrive = armDrive;
+
+                leftLegJoint.slerpDrive = armDrive;
+                rightLegJoint.slerpDrive = armDrive;
+                leftCarfJoint.slerpDrive = armDrive;
+                rightCarfJoint.slerpDrive = armDrive;
+
+                normalRig.weight = 0f;
+                swingRig.weight = 0f;
+                rollingRig.weight = 1.0f;
                 glideRig.weight = 0f;
                 break;
             case PlayerState.Swinging:
@@ -193,6 +235,7 @@ public class RagdollAnimator : MonoBehaviour
 
                 normalRig.weight = 0f;
                 swingRig.weight = 1.0f;
+                rollingRig.weight = 0f;
                 glideRig.weight = 0f;
                 break;
             case PlayerState.Reeling:
@@ -217,6 +260,7 @@ public class RagdollAnimator : MonoBehaviour
 
                 normalRig.weight = 0f;
                 swingRig.weight = 0f;
+                rollingRig.weight = 0f;
                 glideRig.weight = 1.0f;
                 break;
 

@@ -176,17 +176,11 @@ public class GrappleController : MonoBehaviour
         {
             if (Vector3.Distance(hit.point, lastBendPosition) > 0.5f)
             {
-                // 1. 이전 꺾임점의 저장된 normal과 새로 충돌한 지점의 normal을 가져옵니다.
                 Vector3 lastNormal = bendPoints.Last().normal;
                 Vector3 newNormal = hit.normal;
-
-                // 2. 두 normal 벡터를 더해서 모서리의 바깥 방향을 계산합니다.
                 Vector3 offsetDirection = (lastNormal + newNormal).normalized;
-
-                // 3. 계산된 방향으로 새 지점에 오프셋을 적용합니다.
                 Vector3 finalPoint = hit.point + offsetDirection * 0.18f;
 
-                // 4. 새 꺾임점을 {위치, 노말} 데이터와 함께 리스트에 추가합니다.
                 bendPoints.Add(new BendPoint { position = finalPoint, normal = newNormal });
             }
         }

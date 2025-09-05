@@ -169,7 +169,7 @@ public class RagdollCharacterController : MonoBehaviour
                 ragdollAnimator.SetAnimation(PlayerState.Swinging);
                 break;
             case PlayerState.OnAir:
-                ragdollAnimator.SetAnimation(PlayerState.Standing);
+                ragdollAnimator.SetAnimation(PlayerState.OnAir);
                 break;
             case PlayerState.Walking:
                 ragdollAnimator.SetAnimation(PlayerState.Walking);
@@ -231,8 +231,9 @@ public class RagdollCharacterController : MonoBehaviour
                     {
                         targetVelocity *= maxAirSpeed;
                         velocityChange = targetVelocity - horizontalVelocity;
-                        ragdollAnimator.SmoothRotate(worldDirection, airTurnSpeed);
                         mainRb.AddForce(velocityChange * airControlForce, ForceMode.Acceleration);
+                        ragdollAnimator.SmoothRotateAndSpin(worldDirection, airTurnSpeed);
+
                     }
                     else
                     {
@@ -376,7 +377,7 @@ public class RagdollCharacterController : MonoBehaviour
 
         currGlideStateUI.text = currentGlideState.ToString();
 
-        // --- 상태별 실제 행동 로직 ---
+        // 글라이딩 세부
         switch (currentGlideState)
         {
             case GlideState.Dashing:
