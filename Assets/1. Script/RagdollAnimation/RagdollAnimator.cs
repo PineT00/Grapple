@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 
@@ -26,6 +27,7 @@ public class RagdollAnimator : MonoBehaviour
     [SerializeField] private ConfigurableJoint rightForeArmJoint;
 
     [Header("Rigs")]
+    public float rigTransitionSpeed = 0.5f;
     public Rig normalRig;
     public Rig glideRig;
     public Rig swingRig;
@@ -57,10 +59,21 @@ public class RagdollAnimator : MonoBehaviour
     private PlayerState currState;
     private float timeCounter = 0f;
 
+    private Dictionary<Rig, float> targetRigWeights = new Dictionary<Rig, float>();
+    private List<Rig> allRigs;
+
+
     void Awake()
     {
         leftInitialRotation = leftLegJoint.transform.localRotation;
         rightInitialRotation = rightLegJoint.transform.localRotation;
+        currentYawAngle = transform.eulerAngles.y;
+
+        allRigs = new List<Rig> { normalRig, swingRig, rollingRig, glideRig };
+        foreach (var rig in allRigs)
+        {
+            if (rig != null) targetRigWeights[rig] = rig.weight;
+        }
     }
 
     void FixedUpdate()
@@ -80,6 +93,13 @@ public class RagdollAnimator : MonoBehaviour
                 break;
         }
     }
+
+    void Update()
+    {
+        SmoothlyUpdateRigWeights();
+    }
+
+
 
     public void SetHookTarget(Vector3 targetPos)
     {
@@ -111,26 +131,31 @@ public class RagdollAnimator : MonoBehaviour
 
     public float maxSpinSpeed = 360f; // 초당 회전할 각도 (360이면 1초에 한 바퀴)
     private float currentSpinAngle = 0f; // 현재까지 회전한 각도를 저장할 변수
+    private float currentYawAngle;
     public void SmoothRotateAndSpin(Vector3 worldDirection, float turnSmoothing)
     {
         worldDirection.y = 0f;
-        float newYaw = moveFrame.eulerAngles.y; // 기본값은 현재 Y축 회전
-
         if (worldDirection.sqrMagnitude > 0.01f)
         {
-            float targetYaw = Quaternion.LookRotation(worldDirection.normalized, Vector3.up).eulerAngles.y;
-            float currentYaw = moveFrame.eulerAngles.y;
-            newYaw = Mathf.LerpAngle(currentYaw, targetYaw, turnSmoothing * Time.fixedDeltaTime);
+            // 목표 방향 벡터를 바라보는 각도를 계산합니다.
+            float targetYawAngle = Quaternion.LookRotation(worldDirection).eulerAngles.y;
+
+            // 현재 각도에서 목표 각도로 부드럽게 변경합니다.
+            // LerpAngle은 359도 -> 1도 같은 경계값도 잘 처리해줍니다.
+            currentYawAngle = Mathf.LerpAngle(currentYawAngle, targetYawAngle, turnSmoothing * Time.fixedDeltaTime);
         }
 
-        Quaternion yawRotation = Quaternion.Euler(0, newYaw, 0);
+        // 2. 공중제비(Spin) 각도 계산 (X축 회전만)
+        // 매 프레임 spin 속도만큼 각도를 더해줍니다.
+        currentSpinAngle += maxSpinSpeed * Time.fixedDeltaTime;
 
-        // 빙글빙글
-        currentSpinAngle += maxSpinSpeed *Time.fixedDeltaTime;
+        // 3. 독립적으로 계산된 각도로 최종 회전값(Quaternion) 생성 및 결합
+        // Yaw 회전을 먼저 적용하고, 그 다음에 로컬 축 기준으로 Spin 회전을 적용합니다.
+        Quaternion yawRotation = Quaternion.Euler(0f, currentYawAngle, 0f);
+        Quaternion spinRotation = Quaternion.Euler(currentSpinAngle, 0f, 0f);
 
-        Quaternion spinRotation = Quaternion.Euler(currentSpinAngle, 0, 0);
-
-        animHipTrans.localRotation = yawRotation * spinRotation;
+        // 최종 회전 적용: 방향을 먼저 돌고 -> 그 방향으로 공중제비
+        animHipTrans.rotation = yawRotation * spinRotation;
     }
 
     public void RotateForGliding(Vector3 worldDirection)
@@ -172,7 +197,7 @@ public class RagdollAnimator : MonoBehaviour
         rightForeArmJoint.transform.rotation = Quaternion.Slerp(rightForeArmJoint.transform.rotation, targetRot, Time.deltaTime * armReachSpeed);
     }
 
-    public void SetAnimation(PlayerState state)
+    public void SetAnimation1(PlayerState state)
     {
         currState = state;
         JointDrive hipDrive = mainHipJoint.slerpDrive;
@@ -220,8 +245,11 @@ public class RagdollAnimator : MonoBehaviour
 
                 normalRig.weight = 0f;
                 swingRig.weight = 0f;
-                rollingRig.weight = 1.0f;
-                glideRig.weight = 0f;
+                rollingRig.weight = 0f;
+                glideRig.weight = 1f;
+
+                currentSpinAngle = animHipTrans.localEulerAngles.x;
+                Debug.Log(currentSpinAngle);
                 break;
             case PlayerState.Swinging:
                 hipDrive.positionSpring = fallDrive;
@@ -265,6 +293,112 @@ public class RagdollAnimator : MonoBehaviour
                 break;
 
         }
+    }
+
+    /// <summary>
+    /// 플레이어의 상태를 설정하고, 그에 맞는 물리/애니메이션 설정을 시작합니다.
+    /// </summary>
+    public void SetAnimation(PlayerState state)
+    {
+        currState = state;
+
+        // 1. 상태에 맞는 물리 Joint Drive 값 설정
+        SetJointDrivesForState(state);
+
+        // 2. 상태에 맞는 애니메이션 Rig의 '목표' Weight 값 설정
+        SetTargetRigWeightsForState(state);
+    }
+    private void SetJointDrivesForState(PlayerState state)
+    {
+        switch (state)
+        {
+            case PlayerState.Standing:
+            case PlayerState.Walking:
+                SetTorsoDrives(standBodyDrive);
+                SetLimbDrives(normalArmDrive, normalArmDrive); // 팔, 다리
+                break;
+
+            case PlayerState.OnAir:
+                SetTorsoDrives(standBodyDrive, true); // 척추 포함
+                SetLimbDrives(glideArmDrive, glideArmDrive); // 팔, 다리
+                currentSpinAngle = animHipTrans.localEulerAngles.x;
+                break;
+            case PlayerState.Gliding:
+                SetTorsoDrives(standBodyDrive, true); // 척추 포함
+                SetLimbDrives(glideArmDrive, glideArmDrive); // 팔, 다리
+                break;
+
+            case PlayerState.Swinging:
+                SetTorsoDrives(fallDrive);
+                SetLimbDrives(normalArmDrive, 0); // 팔만 설정, 다리는 0 또는 기본값
+                break;
+
+            case PlayerState.Reeling:
+                SetTorsoDrives(fallDrive);
+                // Reeling 상태에서는 팔/다리 Drive를 변경하지 않음
+                break;
+        }
+    }
+
+    /// <summary>
+    /// 현재 상태에 따라 목표 Rig Weight를 설정하는 헬퍼 함수
+    /// </summary>
+    private void SetTargetRigWeightsForState(PlayerState state)
+    {
+        targetRigWeights[normalRig] = (state == PlayerState.Standing || state == PlayerState.Walking) ? 1f : 0f;
+        targetRigWeights[swingRig] = (state == PlayerState.Swinging) ? 1f : 0f;
+        targetRigWeights[rollingRig] = (state == PlayerState.OnAir ) ? 1f : 0f;
+        targetRigWeights[glideRig] = (state == PlayerState.Gliding) ? 1f : 0f;
+    }
+
+    /// <summary>
+    /// 매 프레임 호출되어 Rig Weight를 부드럽게 갱신합니다.
+    /// </summary>
+    private void SmoothlyUpdateRigWeights()
+    {
+        foreach (var rig in allRigs)
+        {
+            if (rig != null && targetRigWeights.ContainsKey(rig))
+            {
+                // MoveTowards를 사용하여 현재 값에서 목표 값으로 일정 속도로 이동
+                rig.weight = Mathf.MoveTowards(rig.weight, targetRigWeights[rig], rigTransitionSpeed * Time.deltaTime);
+            }
+        }
+    }
+
+    // --- 물리 설정 헬퍼 함수들 ---
+
+    private void SetTorsoDrives(float hipSpring, bool includeSpine = false)
+    {
+        SetJointDrive(mainHipJoint, hipSpring);
+        if (includeSpine)
+        {
+            SetJointDrive(spineJoint, hipSpring);
+        }
+    }
+
+    private void SetLimbDrives(float armSpring, float legSpring)
+    {
+        // 팔
+        SetJointDrive(leftArmJoint, armSpring);
+        SetJointDrive(leftForeArmJoint, armSpring);
+        SetJointDrive(rightArmJoint, armSpring);
+        SetJointDrive(rightForeArmJoint, armSpring);
+
+        // 다리
+        SetJointDrive(leftLegJoint, legSpring);
+        SetJointDrive(rightLegJoint, legSpring);
+        SetJointDrive(leftCarfJoint, legSpring);
+        SetJointDrive(rightCarfJoint, legSpring);
+    }
+
+    private void SetJointDrive(ConfigurableJoint joint, float springValue)
+    {
+        if (joint == null || springValue <= 0) return; // 유효성 검사
+
+        JointDrive drive = joint.slerpDrive;
+        drive.positionSpring = springValue;
+        joint.slerpDrive = drive;
     }
 
 }

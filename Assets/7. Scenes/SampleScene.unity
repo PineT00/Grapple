@@ -5716,6 +5716,37 @@ Transform:
   - {fileID: 1487852154}
   m_Father: {fileID: 1010289295}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &186917040
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 186917041}
+  m_Layer: 6
+  m_Name: Tip
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &186917041
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 186917040}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0, y: 0.375, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 750792884}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &193237903
 GameObject:
   m_ObjectHideFlags: 0
@@ -7309,7 +7340,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.6648595, y: 3.0237606, z: -19.689999}
+  m_LocalPosition: {x: 2.068826, y: 3.0237606, z: -19.689999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -16520,10 +16551,11 @@ Transform:
   m_GameObject: {fileID: 750792883}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.051, z: -0}
   m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 186917041}
   m_Father: {fileID: 4903013982844768330}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &750792886
@@ -19280,7 +19312,7 @@ Transform:
   m_GameObject: {fileID: 939819600}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.6648595, y: 3.0237606, z: -19.689999}
+  m_LocalPosition: {x: 2.068826, y: 3.0237606, z: -19.689999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -31242,7 +31274,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2040965035
 Transform:
   m_ObjectHideFlags: 0
@@ -32550,6 +32582,7 @@ MonoBehaviour:
   rightArmJoint: {fileID: 14033632}
   leftForeArmJoint: {fileID: 1154100423}
   rightForeArmJoint: {fileID: 2025648125}
+  rigTransitionSpeed: 4
   normalRig: {fileID: 120162897}
   glideRig: {fileID: 1047712258}
   swingRig: {fileID: 1432191015}
@@ -32564,7 +32597,7 @@ MonoBehaviour:
   glideArmDrive: 9999
   swingTarget: {fileID: 1625468861}
   armReachSpeed: 10
-  maxSpinSpeed: 480
+  maxSpinSpeed: -240
 --- !u!114 &919132149617612267
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -32584,7 +32617,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   ropePrefab: {fileID: 5785456351690974822, guid: a21bb32b7c476754aaa1b5bec26570c2, type: 3}
-  visualAnchor: {fileID: 0}
+  visualAnchor: {fileID: 186917041}
   grappleIndicatorUI: {fileID: 445317144}
   grappleableColor: {r: 0, g: 1, b: 0, a: 1}
   nonGrappleableColor: {r: 0.4811321, g: 0.4788626, b: 0.4788626, a: 1}

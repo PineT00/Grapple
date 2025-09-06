@@ -152,6 +152,9 @@ public class RagdollCharacterController : MonoBehaviour
 
     public void SetPlayerState(PlayerState state)
     {
+        if (CurrState == state)
+            return;
+
         CurrState = state;
         currStateUI.text = state.ToString();
 

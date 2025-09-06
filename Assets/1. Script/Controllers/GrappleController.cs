@@ -69,7 +69,7 @@ public class GrappleController : MonoBehaviour
         if (isGrappling)
         {
             HandleRopePhysics();
-            activeRopeRender.UpdateRopeVisuals(firePoint.position, bendPoints, cam.transform);
+            activeRopeRender.UpdateRopeVisuals(visualAnchor.position, bendPoints, cam.transform);
         }
 
         if (characterContoller.CurrState == PlayerState.Reeling)
