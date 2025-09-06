@@ -33,6 +33,14 @@ public class RopeMeshGenerator : MonoBehaviour
     private List<int> triangles = new List<int>();
     private List<Vector2> uvs = new List<Vector2>();
 
+
+    //테스트
+    public float continuousWobbleSpeed = 5f;
+    [Tooltip("지속적인 출렁임 효과의 강도")]
+    public float continuousWobbleMagnitude = 0.5f;
+
+    private bool isWobblingContinuously = false;
+
     void Awake()
     {
         // 메시 컴포넌트 초기화
@@ -67,6 +75,14 @@ public class RopeMeshGenerator : MonoBehaviour
         {
             ClearMesh();
             return;
+        }
+
+        if (isWobblingContinuously)
+        {
+            // 시간에 따라 사인파(Sin wave)를 생성하여 스프링의 목표 값을 계속 변경합니다.
+            // 이렇게 하면 스프링이 계속해서 움직이게 되어 지속적인 출렁임 효과를 만듭니다.
+            float wobbleTarget = Mathf.Sin(Time.time * continuousWobbleSpeed) * continuousWobbleMagnitude;
+            spring.SetTarget(wobbleTarget);
         }
 
         spring.Calculate(Time.deltaTime);
@@ -225,6 +241,17 @@ public class RopeMeshGenerator : MonoBehaviour
         if (mesh != null)
         {
             mesh.Clear();
+        }
+    }
+
+
+    public void SetContinuousWobble(bool enabled)
+    {
+        isWobblingContinuously = enabled;
+        if (!enabled)
+        {
+            // 출렁임이 멈추면 스프링이 0으로 자연스럽게 수렴하도록 타겟을 재설정합니다.
+            spring.SetTarget(0);
         }
     }
 }

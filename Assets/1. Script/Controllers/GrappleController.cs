@@ -69,6 +69,7 @@ public class GrappleController : MonoBehaviour
         if (isGrappling)
         {
             HandleRopePhysics();
+            CheckRopeVisualDistance();
             activeRopeRender.UpdateRopeVisuals(visualAnchor.position, bendPoints, cam.transform);
         }
 
@@ -76,6 +77,20 @@ public class GrappleController : MonoBehaviour
         {
             ShortenRope();
         }
+    }
+
+    private void CheckRopeVisualDistance()
+    {
+        float distance = Vector3.Distance(firePoint.position, bendPoints.Last().position);
+        if(distance < joint.maxDistance)
+        {
+            activeRopeRender.SetContinuousWobble(true);
+        }
+        else
+        {
+            activeRopeRender.SetContinuousWobble(false);
+        }
+
     }
 
     private void CheckForGrapplePoint()
