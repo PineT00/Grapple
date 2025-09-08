@@ -1,3 +1,4 @@
+using MoreMountains.Feedbacks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -6,6 +7,7 @@ public enum PlayerState
 {
     Standing,
     Walking,
+    Rolling,
     OnAir,
     Swinging,
     Reeling,
@@ -24,19 +26,24 @@ public class RagdollCharacterController : MonoBehaviour
     public GameObject charCenterPart;
     public Transform moveFrame; //No x,z turn
     public PlayerState CurrState { get; private set; }
+    public PlayerState PrevState { get; private set; }
 
     [Header("Ground Settings")]
     public float moveForce = 30f;
     public float maxRunSpeed = 5f;
     public float turnSpeed = 5f;
     public float groundCheckDistance = 0.7f;
+    public MMF_Player jumpFeedback;
 
     [Header("Air Settings")]
+    public float jumpForce = 7f;
+    public float jumpMoveForce = 10f;
+    public float jumpMaxMoveForce = 15f;
+
     public float maxAirSpeed = 30f;
     public float airControlForce = 15f;
     public float airBrakeForce = 2f;
     public float swingMoveForce = 10f;
-    public float jumpForce = 7f;
     public float airTurnSpeed = 3f;
 
     [Header("Glide Settings")]
@@ -113,6 +120,7 @@ public class RagdollCharacterController : MonoBehaviour
             if (CurrState == PlayerState.Walking || CurrState == PlayerState.Standing)
             {
                 JumpControl(jumpForce);
+                jumpFeedback?.PlayFeedbacks();
             }
             else if (CurrState == PlayerState.Swinging)
             {
@@ -146,7 +154,7 @@ public class RagdollCharacterController : MonoBehaviour
             if (CurrState != PlayerState.Gliding)
                 return;
 
-            SetPlayerState(PlayerState.OnAir);
+            SetPlayerState(PlayerState.Rolling);
         }
     }
 
@@ -155,6 +163,7 @@ public class RagdollCharacterController : MonoBehaviour
         if (CurrState == state)
             return;
 
+        PrevState = CurrState;
         CurrState = state;
         currStateUI.text = state.ToString();
 
@@ -167,6 +176,9 @@ public class RagdollCharacterController : MonoBehaviour
             case PlayerState.Standing:
                 ragdollAnimator.SetAnimation(PlayerState.Standing);
                 break;
+            case PlayerState.Walking:
+                ragdollAnimator.SetAnimation(PlayerState.Walking);
+                break;
             case PlayerState.Swinging:
                 ragdollAnimator.SetHookTarget(grappleController.GetGrapplePoint());
                 ragdollAnimator.SetAnimation(PlayerState.Swinging);
@@ -174,8 +186,8 @@ public class RagdollCharacterController : MonoBehaviour
             case PlayerState.OnAir:
                 ragdollAnimator.SetAnimation(PlayerState.OnAir);
                 break;
-            case PlayerState.Walking:
-                ragdollAnimator.SetAnimation(PlayerState.Walking);
+            case PlayerState.Rolling:
+                ragdollAnimator.SetAnimation(PlayerState.Rolling);
                 break;
             case PlayerState.Reeling:
                 ragdollAnimator.SetAnimation(PlayerState.Reeling);
@@ -184,6 +196,37 @@ public class RagdollCharacterController : MonoBehaviour
                 currentGlideState = GlideState.Dashing;
                 ragdollAnimator.SetAnimation(PlayerState.Gliding);
                 break;
+        }
+    }
+    private void CheckCurrState()
+    {
+        if (CurrState == PlayerState.Swinging || CurrState == PlayerState.Reeling)
+            return;
+
+        if (IsGrounded())
+        {
+            if (moveInput.sqrMagnitude < 0.1f)
+            {
+                SetPlayerState(PlayerState.Standing);
+            }
+            else
+            {
+                SetPlayerState(PlayerState.Walking);
+            }
+        }
+        else
+        {
+            if (CurrState == PlayerState.Gliding)
+                return;
+
+            if (PrevState == PlayerState.Swinging || PrevState == PlayerState.Gliding)
+            {
+                SetPlayerState(PlayerState.Rolling);
+            }
+            else
+            {
+                SetPlayerState(PlayerState.OnAir);
+            }
         }
     }
 
@@ -232,6 +275,23 @@ public class RagdollCharacterController : MonoBehaviour
                 {
                     if (worldDirection.sqrMagnitude > 0.01f)
                     {
+                        targetVelocity *= jumpMaxMoveForce;
+                        velocityChange = targetVelocity - horizontalVelocity;
+                        mainRb.AddForce(velocityChange * jumpForce, ForceMode.Acceleration);
+                        ragdollAnimator.SmoothRotate(worldDirection, airTurnSpeed);
+
+                    }
+                    else
+                    {
+                        velocityChange = -horizontalVelocity * airBrakeForce;
+                        mainRb.AddForce(velocityChange, ForceMode.Acceleration);
+                    }
+                }
+                break;
+            case PlayerState.Rolling:
+                {
+                    if (worldDirection.sqrMagnitude > 0.01f)
+                    {
                         targetVelocity *= maxAirSpeed;
                         velocityChange = targetVelocity - horizontalVelocity;
                         mainRb.AddForce(velocityChange * airControlForce, ForceMode.Acceleration);
@@ -266,30 +326,7 @@ public class RagdollCharacterController : MonoBehaviour
         }
     }
 
-    private void CheckCurrState()
-    {
-        if (CurrState == PlayerState.Swinging || CurrState == PlayerState.Reeling)
-            return;
 
-        if (IsGrounded())
-        {
-            if (mainRb.linearVelocity.sqrMagnitude < 0.08f)
-            {
-                SetPlayerState(PlayerState.Standing);
-            }
-            else
-            {
-                SetPlayerState(PlayerState.Walking);
-            }
-        }
-        else
-        {
-            if (CurrState == PlayerState.Gliding)
-                return;
-
-            SetPlayerState(PlayerState.OnAir);
-        }
-    }
 
     public void ReduceMomentum(float amount) //예측불가능하게 움직일 수 있으니 꼭 필요한 상황외엔 사용X 목표힘만큼 역방향 가속을 사용할것.
     {
@@ -312,10 +349,6 @@ public class RagdollCharacterController : MonoBehaviour
         vel.y = 0;
         mainRb.linearVelocity = vel;
         mainRb.AddForce(Vector3.up * force, ForceMode.Impulse);
-
-        Vector3 effectPos = moveFrame.position;
-        effectPos.y -= 1f;
-        ParticleManager.Instance.Play("SmokeEffect", effectPos, moveFrame.rotation);
     }
 
     private bool IsGrounded()

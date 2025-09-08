@@ -137,24 +137,15 @@ public class RagdollAnimator : MonoBehaviour
         worldDirection.y = 0f;
         if (worldDirection.sqrMagnitude > 0.01f)
         {
-            // 목표 방향 벡터를 바라보는 각도를 계산합니다.
             float targetYawAngle = Quaternion.LookRotation(worldDirection).eulerAngles.y;
-
-            // 현재 각도에서 목표 각도로 부드럽게 변경합니다.
-            // LerpAngle은 359도 -> 1도 같은 경계값도 잘 처리해줍니다.
             currentYawAngle = Mathf.LerpAngle(currentYawAngle, targetYawAngle, turnSmoothing * Time.fixedDeltaTime);
         }
-
-        // 2. 공중제비(Spin) 각도 계산 (X축 회전만)
-        // 매 프레임 spin 속도만큼 각도를 더해줍니다.
+        // 공중제비
         currentSpinAngle += maxSpinSpeed * Time.fixedDeltaTime;
 
-        // 3. 독립적으로 계산된 각도로 최종 회전값(Quaternion) 생성 및 결합
-        // Yaw 회전을 먼저 적용하고, 그 다음에 로컬 축 기준으로 Spin 회전을 적용합니다.
         Quaternion yawRotation = Quaternion.Euler(0f, currentYawAngle, 0f);
         Quaternion spinRotation = Quaternion.Euler(currentSpinAngle, 0f, 0f);
 
-        // 최종 회전 적용: 방향을 먼저 돌고 -> 그 방향으로 공중제비
         animHipTrans.rotation = yawRotation * spinRotation;
     }
 
@@ -317,8 +308,11 @@ public class RagdollAnimator : MonoBehaviour
                 SetTorsoDrives(standBodyDrive);
                 SetLimbDrives(normalArmDrive, normalArmDrive); // 팔, 다리
                 break;
-
             case PlayerState.OnAir:
+                SetTorsoDrives(standBodyDrive);
+                SetLimbDrives(normalArmDrive, normalArmDrive); // 팔, 다리
+                break;
+            case PlayerState.Rolling:
                 SetTorsoDrives(standBodyDrive, true); // 척추 포함
                 SetLimbDrives(glideArmDrive, glideArmDrive); // 팔, 다리
                 currentSpinAngle = animHipTrans.localEulerAngles.x;
@@ -327,7 +321,6 @@ public class RagdollAnimator : MonoBehaviour
                 SetTorsoDrives(standBodyDrive, true); // 척추 포함
                 SetLimbDrives(glideArmDrive, glideArmDrive); // 팔, 다리
                 break;
-
             case PlayerState.Swinging:
                 SetTorsoDrives(fallDrive);
                 SetLimbDrives(normalArmDrive, 0); // 팔만 설정, 다리는 0 또는 기본값
@@ -345,9 +338,9 @@ public class RagdollAnimator : MonoBehaviour
     /// </summary>
     private void SetTargetRigWeightsForState(PlayerState state)
     {
-        targetRigWeights[normalRig] = (state == PlayerState.Standing || state == PlayerState.Walking) ? 1f : 0f;
+        targetRigWeights[normalRig] = (state == PlayerState.Standing || state == PlayerState.Walking || state == PlayerState.OnAir) ? 1f : 0f;
         targetRigWeights[swingRig] = (state == PlayerState.Swinging) ? 1f : 0f;
-        targetRigWeights[rollingRig] = (state == PlayerState.OnAir ) ? 1f : 0f;
+        targetRigWeights[rollingRig] = (state == PlayerState.Rolling) ? 1f : 0f;
         targetRigWeights[glideRig] = (state == PlayerState.Gliding) ? 1f : 0f;
     }
 
