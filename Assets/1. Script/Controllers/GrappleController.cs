@@ -82,7 +82,7 @@ public class GrappleController : MonoBehaviour
     private void CheckRopeVisualDistance()
     {
         float distance = Vector3.Distance(firePoint.position, bendPoints.Last().position);
-        if(distance < joint.maxDistance)
+        if (distance < joint.maxDistance)
         {
             activeRopeRender.SetContinuousWobble(true);
         }
@@ -118,7 +118,7 @@ public class GrappleController : MonoBehaviour
 
         currentRopeLength = Vector3.Distance(firePoint.position, potentialGrapplePoint);
 
-        characterContoller.SetPlayerState(PlayerState.Swinging);
+        //characterContoller.SetPlayerState(PlayerState.Swinging);
         SetJoint(true);
         activeRopeRender.ActivateRope(isGrappling);
     }
@@ -128,7 +128,7 @@ public class GrappleController : MonoBehaviour
         if (!isGrappling) return;
         isGrappling = false;
 
-        characterContoller.SetPlayerState(PlayerState.OnAir);
+        //characterContoller.SetPlayerState(PlayerState.OnAir);
         SetJoint(false);
         activeRopeRender.ActivateRope(isGrappling);
     }
@@ -136,7 +136,7 @@ public class GrappleController : MonoBehaviour
     public void StartReeling()
     {
         if (!isGrappling) return;
-        characterContoller.SetPlayerState(PlayerState.Reeling);
+        //characterContoller.SetPlayerState(PlayerState.Reeling);
         // Reeling 시 Spring, Damper 값 조절 (선택)
         joint.spring = 200f;
         joint.damper = 50f;
@@ -145,7 +145,7 @@ public class GrappleController : MonoBehaviour
     public void StopReeling()
     {
         if (!isGrappling) return;
-        characterContoller.SetPlayerState(PlayerState.Swinging);
+        //characterContoller.SetPlayerState(PlayerState.Swinging);
         SetJoint(true); // 원래 Spring, Damper 값으로 복원
     }
 
