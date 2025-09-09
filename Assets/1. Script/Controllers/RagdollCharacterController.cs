@@ -29,14 +29,14 @@ public class RagdollCharacterController : MonoBehaviour
     public Transform camTarget;
     public GameObject charCenterPart;
     public Transform moveFrame;
-    // 상태 클래스에서 접근할 수 있도록 public으로 변경하거나 public property로 만듭니다.
+
+    // 상태 클래스에서 접근할 수 있도록
     [HideInInspector] public Rigidbody mainRb;
     [HideInInspector] public GrappleController grappleController;
     [HideInInspector] public RagdollAnimator ragdollAnimator;
 
     [Header("Input")]
-    // 상태 클래스에서 입력을 읽을 수 있도록 public으로 변경합니다.
-    public Vector2 moveInput;
+    [HideInInspector] public Vector2 moveInput;
 
     [Header("Ground Settings")]
     public float moveForce = 30f;
@@ -171,7 +171,17 @@ public class RagdollCharacterController : MonoBehaviour
         {
             targetVelocity *= jumpMaxMoveForce;
             velocityChange = targetVelocity - horizontalVelocity;
+            if (horizontalVelocity.sqrMagnitude < targetVelocity.sqrMagnitude)
+            {
+                velocityChange *= jumpMoveForce;
+                Debug.Log("가속상황!");
+            }
+            else
+            {
+                Debug.Log("감속");
+            }
             ragdollAnimator.SmoothRotate(worldDirection, airTurnSpeed);
+
         }
         else
         {
@@ -202,7 +212,7 @@ public class RagdollCharacterController : MonoBehaviour
 
     public bool IsGrounded()
     {
-        Vector3 origin = mainRb.position + Vector3.up * 0.1f;
+        Vector3 origin = moveFrame.position + Vector3.up * 0.1f;
         return Physics.Raycast(origin, Vector3.down, groundCheckDistance + 0.1f, groundLayer);
     }
 
@@ -214,8 +224,14 @@ public class RagdollCharacterController : MonoBehaviour
         AntiGravity(targetGlideGravity);
     }
 
-    public void HandleStandardGlidingMovement(Vector3 glideDirection)
+    public void HandleStandardGlidingMovement(Vector3 direction)
     {
+        Vector3 currDir = moveFrame.forward;
+        Vector3 targetDir = direction;
+        targetDir.y = 0f;
+        targetDir.Normalize();
+
+        Vector3 glideDirection = Vector3.Lerp(currDir, targetDir, glideTurnSpeed * Time.fixedDeltaTime);
         ApplyGlidingForce(glideDirection);
         AntiGravity(targetGlideGravity);
     }
@@ -248,7 +264,6 @@ public class RagdollCharacterController : MonoBehaviour
     {
         ragdollAnimator.RotateForGliding(direction);
 
-        // private 변수 대신 public 프로퍼티를 사용합니다.
         float currentMaxSpeed = maxGlideSpeed + CurrentGlideBoost;
 
         Vector3 targetVelocity = direction * currentMaxSpeed;

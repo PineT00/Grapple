@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class GlidingState : PlayerBaseState
 {
@@ -97,7 +98,6 @@ public class GlidingState : PlayerBaseState
                 break;
         }
 
-        // 4. 메인 상태(GlidingState)를 끝낼 조건을 확인합니다.
         if (_controller.IsGrounded())
         {
             _controller.SwitchState(new StandingState(_controller));
@@ -108,5 +108,13 @@ public class GlidingState : PlayerBaseState
     {
         _controller.CurrentGlideBoost = 0f;
         _controller.currGlideStateUI.text = "";
+    }
+
+    public override void OnGlide(InputAction.CallbackContext context)
+    {
+        if (context.canceled)
+        {
+            _controller.SwitchState(new OnAirState(_controller));
+        }
     }
 }

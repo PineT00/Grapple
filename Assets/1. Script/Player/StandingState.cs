@@ -7,6 +7,10 @@ public class StandingState : PlayerBaseState
 
     public override void EnterState()
     {
+        Quaternion standRot = _ragdollAnimator.animHipTrans.localRotation;
+        standRot.x = 0f;
+        standRot.z = 0f;
+        _ragdollAnimator.animHipTrans.localRotation = standRot;
         _ragdollAnimator.SetAnimation(PlayerState.Standing);
     }
 
@@ -30,6 +34,7 @@ public class StandingState : PlayerBaseState
         if (context.started)
         {
             _controller.JumpControl(_controller.jumpForce);
+            _controller.jumpFeedback.PlayFeedbacks();
             _controller.SwitchState(new OnAirState(_controller));
         }
     }

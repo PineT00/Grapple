@@ -328,14 +328,10 @@ public class RagdollAnimator : MonoBehaviour
 
             case PlayerState.Reeling:
                 SetTorsoDrives(fallDrive);
-                // Reeling 상태에서는 팔/다리 Drive를 변경하지 않음
                 break;
         }
     }
 
-    /// <summary>
-    /// 현재 상태에 따라 목표 Rig Weight를 설정하는 헬퍼 함수
-    /// </summary>
     private void SetTargetRigWeightsForState(PlayerState state)
     {
         targetRigWeights[normalRig] = (state == PlayerState.Standing || state == PlayerState.Walking || state == PlayerState.OnAir) ? 1f : 0f;
@@ -344,22 +340,18 @@ public class RagdollAnimator : MonoBehaviour
         targetRigWeights[glideRig] = (state == PlayerState.Gliding) ? 1f : 0f;
     }
 
-    /// <summary>
-    /// 매 프레임 호출되어 Rig Weight를 부드럽게 갱신합니다.
-    /// </summary>
     private void SmoothlyUpdateRigWeights()
     {
         foreach (var rig in allRigs)
         {
             if (rig != null && targetRigWeights.ContainsKey(rig))
             {
-                // MoveTowards를 사용하여 현재 값에서 목표 값으로 일정 속도로 이동
                 rig.weight = Mathf.MoveTowards(rig.weight, targetRigWeights[rig], rigTransitionSpeed * Time.deltaTime);
             }
         }
     }
 
-    // --- 물리 설정 헬퍼 함수들 ---
+    // 물리 설정 헬퍼들
 
     private void SetTorsoDrives(float hipSpring, bool includeSpine = false)
     {

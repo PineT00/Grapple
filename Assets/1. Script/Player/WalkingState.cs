@@ -31,7 +31,9 @@ public class WalkingState : PlayerBaseState
     {
         if (context.started)
         {
+            _controller.ReduceMomentum(0.5f);
             _controller.JumpControl(_controller.jumpForce);
+            _controller.jumpFeedback.PlayFeedbacks();
             _controller.SwitchState(new OnAirState(_controller));
         }
     }

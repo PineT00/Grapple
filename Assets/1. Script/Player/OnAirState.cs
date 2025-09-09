@@ -3,9 +3,7 @@ using UnityEngine.InputSystem;
 
 public class OnAirState : PlayerBaseState
 {
-    public OnAirState(RagdollCharacterController controller) : base(controller)
-    {
-    }
+    public OnAirState(RagdollCharacterController controller) : base(controller){}
 
     public override void EnterState()
     {
@@ -21,5 +19,13 @@ public class OnAirState : PlayerBaseState
         }
 
         _controller.HandleAirMovement();
+    }
+
+    public override void OnGlide(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            _controller.SwitchState(new GlidingState(_controller));
+        }
     }
 }
