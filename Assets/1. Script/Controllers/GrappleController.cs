@@ -35,7 +35,6 @@ public class GrappleController : MonoBehaviour
 
     [SerializeField]
     private float maxRope = 0.7f;
-
     [SerializeField]
     private float minRope = 0.4f;
     public bool IsGrappleable { get; private set; }
@@ -53,7 +52,6 @@ public class GrappleController : MonoBehaviour
         joint = anchorRb.gameObject.AddComponent<SpringJoint>();
         joint.autoConfigureConnectedAnchor = false;
         joint.anchor = joint.transform.InverseTransformPoint(firePoint.position);
-        joint.minDistance = minRope;
 
         activeRopeRender = Instantiate(ropePrefab).GetComponent<RopeMeshGenerator>();
 
@@ -63,18 +61,15 @@ public class GrappleController : MonoBehaviour
     void FixedUpdate()
     {
         CheckForGrapplePoint();
+    }
+
+    private void LateUpdate()
+    {
         UpdateGrappleIndicator();
 
         if (isGrappling)
         {
-            HandleRopePhysics();
-            CheckRopeVisualDistance();
             activeRopeRender.UpdateRopeVisuals(visualAnchor.position, bendPoints, cam.transform);
-        }
-
-        if (characterContoller.CurrState == PlayerState.Reeling)
-        {
-            ShortenRope();
         }
     }
 
@@ -131,17 +126,13 @@ public class GrappleController : MonoBehaviour
 
     public void StartReeling()
     {
-        if (!isGrappling) return;
-        //characterContoller.SetPlayerState(PlayerState.Reeling);
         // Reeling 시 Spring, Damper 값 조절 (선택)
         joint.spring = 200f;
-        joint.damper = 50f;
+        joint.damper = 30f;
     }
 
     public void StopReeling()
     {
-        if (!isGrappling) return;
-        //characterContoller.SetPlayerState(PlayerState.Swinging);
         SetJoint(true); // 원래 Spring, Damper 값으로 복원
     }
 
@@ -150,13 +141,17 @@ public class GrappleController : MonoBehaviour
         return bendPoints.Last().position;
     }
 
-    private void ShortenRope()
+    public void ShortenRope()
     {
         currentRopeLength -= reelSpeed * Time.fixedDeltaTime;
-        currentRopeLength = Mathf.Max(currentRopeLength, 0.1f); // 최소 길이
+        if (currentRopeLength <= 0)
+        {
+            currentRopeLength = 0;
+        }
+        //currentRopeLength = Mathf.Max(currentRopeLength, 0.1f); // 최소 길이
     }
 
-    private void HandleRopePhysics()
+    public void HandleRopePhysics()
     {
         // 로프 풀기
         if (bendPoints.Count > 1)
@@ -213,6 +208,7 @@ public class GrappleController : MonoBehaviour
         }
 
         joint.maxDistance = (currentRopeLength - wrappedLength) * maxRope;
+        joint.minDistance = (currentRopeLength - wrappedLength) * minRope;
     }
 
     private void SetJoint(bool active)

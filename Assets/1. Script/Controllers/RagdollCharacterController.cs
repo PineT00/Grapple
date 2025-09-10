@@ -93,8 +93,7 @@ public class RagdollCharacterController : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Confined;
 
-        // 초기 상태를 설정합니다. StandingState가 아직 없으므로 우선 WalkingState로 시작합니다.
-        // 나중에 StandingState를 만들고 new StandingState(this)로 바꾸면 됩니다.
+        // 초기 상태
         SwitchState(new StandingState(this));
     }
 
@@ -162,7 +161,7 @@ public class RagdollCharacterController : MonoBehaviour
         mainRb.AddForce(velocityChange * moveForce, ForceMode.Acceleration);
     }
 
-    public void HandleAirMovement()
+    public void HandleAirMove()
     {
         UpdateMoveInfo();
 
@@ -186,6 +185,25 @@ public class RagdollCharacterController : MonoBehaviour
         {
             velocityChange = -horizontalVelocity * airBrakeForce;
         }
+        mainRb.AddForce(velocityChange, ForceMode.Acceleration);
+    }
+
+    public void HandleAirRolling()
+    {
+        UpdateMoveInfo();
+
+        Vector3 velocityChange;
+
+        if (worldDirection.sqrMagnitude > 0.01f)
+        {
+            targetVelocity *= maxAirSpeed;
+            velocityChange = (targetVelocity - horizontalVelocity) * airSpeed;
+        }
+        else
+        {
+            velocityChange = -horizontalVelocity * airBrakeForce;
+        }
+        ragdollAnimator.SmoothRotateAndSpin(worldDirection, airTurnSpeed);
         mainRb.AddForce(velocityChange, ForceMode.Acceleration);
     }
 

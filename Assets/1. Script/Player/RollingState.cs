@@ -1,13 +1,13 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class OnAirState : PlayerBaseState
+public class RollingState : PlayerBaseState
 {
-    public OnAirState(RagdollCharacterController controller) : base(controller) { }
+    public RollingState(RagdollCharacterController controller) : base(controller){}
 
     public override void EnterState()
     {
-        _ragdollAnimator.SetAnimation(PlayerState.OnAir);
+        _ragdollAnimator.SetAnimation(PlayerState.Rolling);
     }
 
     public override void FixedUpdateState()
@@ -18,7 +18,7 @@ public class OnAirState : PlayerBaseState
             return;
         }
 
-        _controller.HandleAirMove();
+        _controller.HandleAirRolling();
     }
 
     public override void OnGlide(InputAction.CallbackContext context)

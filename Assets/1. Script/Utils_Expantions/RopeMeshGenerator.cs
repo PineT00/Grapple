@@ -79,8 +79,6 @@ public class RopeMeshGenerator : MonoBehaviour
 
         if (isWobblingContinuously)
         {
-            // 시간에 따라 사인파(Sin wave)를 생성하여 스프링의 목표 값을 계속 변경합니다.
-            // 이렇게 하면 스프링이 계속해서 움직이게 되어 지속적인 출렁임 효과를 만듭니다.
             float wobbleTarget = Mathf.Sin(Time.time * continuousWobbleSpeed) * continuousWobbleMagnitude;
             spring.SetTarget(wobbleTarget);
         }

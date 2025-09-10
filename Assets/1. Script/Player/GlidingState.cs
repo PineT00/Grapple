@@ -114,7 +114,7 @@ public class GlidingState : PlayerBaseState
     {
         if (context.canceled)
         {
-            _controller.SwitchState(new OnAirState(_controller));
+            _controller.SwitchState(new RollingState(_controller));
         }
     }
 }
