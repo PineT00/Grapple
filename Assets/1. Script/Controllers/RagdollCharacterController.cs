@@ -47,18 +47,18 @@ public class RagdollCharacterController : MonoBehaviour
 
     [Header("Air Settings")]
     public float jumpForce = 7f;
-    public float jumpMoveForce = 10f;
-    public float jumpMaxMoveForce = 15f;
-
-    public float maxAirSpeed = 30f;
-    public float airControlForce = 15f;
-    public float airBrakeForce = 2f;
-    public float swingMoveForce = 10f;
+    public float airSpeed = 10f;
+    public float maxAirSpeed = 15f;
     public float airTurnSpeed = 3f;
+    public float airBrakeForce = 1.3f;
+
+    [Header("Swing Settings")]
+    public float swingMoveForce = 10f;
+    public float swingTurnSpeed = 300f;
 
     [Header("Glide Settings")]
-    public float maxGlideSpeed = 50f;
     public float glideSpeed = 15f;
+    public float maxGlideSpeed = 50f;
     public float glideTurnSpeed = 300f;
     public float glideDashTime = 1f;
     public float dashSpeed = 15f;
@@ -76,10 +76,8 @@ public class RagdollCharacterController : MonoBehaviour
     public float glideBoostDecayRate = 2f;
     private Rigidbody[] allRigidbodies;
 
-
     public float CurrentGlideBoost { get; set; }
     public Vector3 DashDir { get; set; }
-
 
     Vector3 inputDirection;
     public Vector3 worldDirection;
@@ -130,6 +128,13 @@ public class RagdollCharacterController : MonoBehaviour
     {
         CurrentState?.OnGlide(context);
     }
+    public void OnGrapple(InputAction.CallbackContext context)
+    {
+        if (context.ReadValue<float>() > 0 && !grappleController.IsGrappleable)
+            return;
+
+        CurrentState?.OnGrapple(context);
+    }
 
     public void UpdateMoveInfo()
     {
@@ -145,17 +150,13 @@ public class RagdollCharacterController : MonoBehaviour
     {
         UpdateMoveInfo();
 
-        Vector3 velocityChange;
+        Vector3 velocityChange = Vector3.zero;
 
         if (worldDirection.sqrMagnitude > 0.01f)
         {
             targetVelocity *= maxRunSpeed;
             velocityChange = targetVelocity - horizontalVelocity;
             ragdollAnimator.RotateDirection(worldDirection, turnSpeed);
-        }
-        else
-        {
-            velocityChange = -horizontalVelocity * 0.2f;
         }
         velocityChange.y = 0f;
         mainRb.AddForce(velocityChange * moveForce, ForceMode.Acceleration);
@@ -169,25 +170,36 @@ public class RagdollCharacterController : MonoBehaviour
 
         if (worldDirection.sqrMagnitude > 0.01f)
         {
-            targetVelocity *= jumpMaxMoveForce;
+            targetVelocity *= maxAirSpeed;
             velocityChange = targetVelocity - horizontalVelocity;
             if (horizontalVelocity.sqrMagnitude < targetVelocity.sqrMagnitude)
             {
-                velocityChange *= jumpMoveForce;
-                Debug.Log("가속상황!");
+                velocityChange *= airSpeed;
             }
             else
             {
                 Debug.Log("감속");
             }
             ragdollAnimator.SmoothRotate(worldDirection, airTurnSpeed);
-
         }
         else
         {
             velocityChange = -horizontalVelocity * airBrakeForce;
         }
         mainRb.AddForce(velocityChange, ForceMode.Acceleration);
+    }
+
+    public void HandleSwingMovement()
+    {
+        UpdateMoveInfo();
+
+        mainRb.AddForce(worldDirection.normalized * swingMoveForce, ForceMode.Acceleration);
+        if (mainRb.linearVelocity.magnitude > maxAirSpeed)
+        {
+            Vector3 limitedVelocity = mainRb.linearVelocity.normalized * maxAirSpeed;
+            mainRb.linearVelocity = limitedVelocity;
+        }
+        ragdollAnimator.SmoothRotate(mainRb.linearVelocity.normalized, swingTurnSpeed);
     }
 
     public void JumpControl(float force)

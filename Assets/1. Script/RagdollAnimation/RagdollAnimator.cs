@@ -33,24 +33,21 @@ public class RagdollAnimator : MonoBehaviour
     public Rig swingRig;
     public Rig rollingRig;
 
-    private Quaternion leftInitialRotation;
-    private Quaternion rightInitialRotation;
+    private Quaternion leftLegInitialRotation;
+    private Quaternion rightLegInitialRotation;
     private Quaternion headInitialRotation;
     private Quaternion hipInitialRotation;
-
-    [Header("Targets")]
-    public Transform leftTarget;
-    public Transform rightTarget;
 
     [Header("스텝 설정")]
     public float stepAngle = 30f; // 다리를 내미는 각도
     public float stepSpeed = 2f;
     private float offsetBetweenLegs = Mathf.PI;
 
-    [Header("일반 상태 설정")]
+    [Header("Drive 설정")]
     public float standBodyDrive = 3000f;
     public float fallDrive = 100f;
     public float normalArmDrive = 30f;
+    public float swingArmDrive = 999f;
     public float glideArmDrive = 999f;
 
     [Header("스윙 액션 설정")]
@@ -62,11 +59,10 @@ public class RagdollAnimator : MonoBehaviour
     private Dictionary<Rig, float> targetRigWeights = new Dictionary<Rig, float>();
     private List<Rig> allRigs;
 
-
     void Awake()
     {
-        leftInitialRotation = leftLegJoint.transform.localRotation;
-        rightInitialRotation = rightLegJoint.transform.localRotation;
+        leftLegInitialRotation = leftLegJoint.transform.localRotation;
+        rightLegInitialRotation = rightLegJoint.transform.localRotation;
         currentYawAngle = transform.eulerAngles.y;
 
         allRigs = new List<Rig> { normalRig, swingRig, rollingRig, glideRig };
@@ -98,8 +94,6 @@ public class RagdollAnimator : MonoBehaviour
     {
         SmoothlyUpdateRigWeights();
     }
-
-
 
     public void SetHookTarget(Vector3 targetPos)
     {
@@ -163,132 +157,15 @@ public class RagdollAnimator : MonoBehaviour
         float leftAngle = Mathf.Sin(timeCounter) * stepAngle;
         float rightAngle = Mathf.Sin(timeCounter + offsetBetweenLegs) * stepAngle;
 
-        leftLegJoint.transform.localRotation = leftInitialRotation * Quaternion.Euler(leftAngle, 0f, 0f);
-        rightLegJoint.transform.localRotation = rightInitialRotation * Quaternion.Euler(rightAngle, 0f, 0f);
+        leftLegJoint.transform.localRotation = leftLegInitialRotation * Quaternion.Euler(leftAngle, 0f, 0f);
+        rightLegJoint.transform.localRotation = rightLegInitialRotation * Quaternion.Euler(rightAngle, 0f, 0f);
     }
 
     private void Swinging()
     {
         animHipTrans.localRotation = mainHipJoint.transform.localRotation;
-        SwayWithHand();
     }
 
-    public void SwayWithHand()
-    {
-        Vector3 toTarget = swingTarget.position - rightForeArmJoint.transform.position;
-        if (toTarget.sqrMagnitude < 0.001f)
-            return;
-        Quaternion lookRot = Quaternion.LookRotation(toTarget, Vector3.up);
-
-        // 조인트 축 보정
-        Quaternion correction = Quaternion.Euler(90f, 0f, 0f);
-        Quaternion targetRot = lookRot * correction;
-
-        rightArmJoint.transform.rotation = Quaternion.Slerp(rightArmJoint.transform.rotation, targetRot, Time.deltaTime * armReachSpeed);
-        rightForeArmJoint.transform.rotation = Quaternion.Slerp(rightForeArmJoint.transform.rotation, targetRot, Time.deltaTime * armReachSpeed);
-    }
-
-    public void SetAnimation1(PlayerState state)
-    {
-        currState = state;
-        JointDrive hipDrive = mainHipJoint.slerpDrive;
-        JointDrive armDrive = leftArmJoint.slerpDrive;
-        JointDrive legDrive = leftLegJoint.slerpDrive;
-
-        switch (state)
-        {
-            case PlayerState.Standing:
-            case PlayerState.Walking:
-                hipDrive.positionSpring = standBodyDrive;
-                mainHipJoint.slerpDrive = hipDrive;
-
-                armDrive.positionSpring = normalArmDrive;
-                leftArmJoint.slerpDrive = armDrive;
-                leftForeArmJoint.slerpDrive = armDrive;
-                rightArmJoint.slerpDrive = armDrive;
-                rightForeArmJoint.slerpDrive = armDrive;
-
-                leftLegJoint.slerpDrive = armDrive;
-                rightLegJoint.slerpDrive = armDrive;
-                leftCarfJoint.slerpDrive = armDrive;
-                rightCarfJoint.slerpDrive = armDrive;
-
-                normalRig.weight = 1.0f;
-                swingRig.weight = 0f;
-                rollingRig.weight = 0f;
-                glideRig.weight = 0f;
-                break;
-            case PlayerState.OnAir:
-                hipDrive.positionSpring = standBodyDrive;
-                spineJoint.slerpDrive = hipDrive;
-                mainHipJoint.slerpDrive = hipDrive;
-
-                armDrive.positionSpring = glideArmDrive;
-                leftArmJoint.slerpDrive = armDrive;
-                leftForeArmJoint.slerpDrive = armDrive;
-                rightArmJoint.slerpDrive = armDrive;
-                rightForeArmJoint.slerpDrive = armDrive;
-
-                leftLegJoint.slerpDrive = armDrive;
-                rightLegJoint.slerpDrive = armDrive;
-                leftCarfJoint.slerpDrive = armDrive;
-                rightCarfJoint.slerpDrive = armDrive;
-
-                normalRig.weight = 0f;
-                swingRig.weight = 0f;
-                rollingRig.weight = 0f;
-                glideRig.weight = 1f;
-
-                currentSpinAngle = animHipTrans.localEulerAngles.x;
-                Debug.Log(currentSpinAngle);
-                break;
-            case PlayerState.Swinging:
-                hipDrive.positionSpring = fallDrive;
-                mainHipJoint.slerpDrive = hipDrive;
-
-                armDrive.positionSpring = normalArmDrive;
-                leftArmJoint.slerpDrive = armDrive;
-                leftForeArmJoint.slerpDrive = armDrive;
-                rightArmJoint.slerpDrive = armDrive;
-                rightForeArmJoint.slerpDrive = armDrive;
-
-                normalRig.weight = 0f;
-                swingRig.weight = 1.0f;
-                rollingRig.weight = 0f;
-                glideRig.weight = 0f;
-                break;
-            case PlayerState.Reeling:
-                hipDrive.positionSpring = fallDrive;
-                mainHipJoint.slerpDrive = hipDrive;
-                break;
-            case PlayerState.Gliding:
-                hipDrive.positionSpring = standBodyDrive;
-                spineJoint.slerpDrive = hipDrive;
-                mainHipJoint.slerpDrive = hipDrive;
-
-                armDrive.positionSpring = glideArmDrive;
-                leftArmJoint.slerpDrive = armDrive;
-                leftForeArmJoint.slerpDrive = armDrive;
-                rightArmJoint.slerpDrive = armDrive;
-                rightForeArmJoint.slerpDrive = armDrive;
-
-                leftLegJoint.slerpDrive = armDrive;
-                rightLegJoint.slerpDrive = armDrive;
-                leftCarfJoint.slerpDrive = armDrive;
-                rightCarfJoint.slerpDrive = armDrive;
-
-                normalRig.weight = 0f;
-                swingRig.weight = 0f;
-                rollingRig.weight = 0f;
-                glideRig.weight = 1.0f;
-                break;
-
-        }
-    }
-
-    /// <summary>
-    /// 플레이어의 상태를 설정하고, 그에 맞는 물리/애니메이션 설정을 시작합니다.
-    /// </summary>
     public void SetAnimation(PlayerState state)
     {
         currState = state;
@@ -323,9 +200,8 @@ public class RagdollAnimator : MonoBehaviour
                 break;
             case PlayerState.Swinging:
                 SetTorsoDrives(fallDrive);
-                SetLimbDrives(normalArmDrive, 0); // 팔만 설정, 다리는 0 또는 기본값
+                SetLimbDrives(swingArmDrive, normalArmDrive); // 팔만 설정, 다리는 0 또는 기본값
                 break;
-
             case PlayerState.Reeling:
                 SetTorsoDrives(fallDrive);
                 break;

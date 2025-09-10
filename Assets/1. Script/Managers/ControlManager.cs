@@ -72,16 +72,8 @@ public class ControlManager : MonoBehaviour
         if (context.ReadValue<float>() > 0)
         {
             if (IsPointerOverUI(Mouse.current.position.ReadValue())) return;
-
-            grappleController.OnGrapple();
-
         }
-        else
-        {
-            if (IsPointerOverUI(Mouse.current.position.ReadValue())) return;
-
-            grappleController.OnRelease();
-        }
+        characterController.OnGrapple(context);
     }
 
     public void OnRightClick(InputAction.CallbackContext context)

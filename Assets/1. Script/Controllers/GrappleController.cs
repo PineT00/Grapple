@@ -38,10 +38,9 @@ public class GrappleController : MonoBehaviour
 
     [SerializeField]
     private float minRope = 0.4f;
-
+    public bool IsGrappleable { get; private set; }
     private Vector3 potentialGrapplePoint;
     private Vector3 potentialGrappleNormal;
-    private bool isGrappleable = false;
     private bool isGrappling = false;
     private SpringJoint joint;
     private List<BendPoint> bendPoints = new List<BendPoint>();
@@ -98,27 +97,25 @@ public class GrappleController : MonoBehaviour
         Ray ray = cam.ScreenPointToRay(new Vector2(Screen.width / 2f, Screen.height / 2f));
         if (Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, grappleLayerMask))
         {
-            isGrappleable = true;
+            IsGrappleable = true;
             potentialGrapplePoint = hit.point;
             potentialGrappleNormal = hit.normal;
         }
         else
         {
-            isGrappleable = false;
+            IsGrappleable = false;
         }
     }
 
     public void OnGrapple()
     {
-        if (!isGrappleable) return;
+        if (!IsGrappleable) return;
         isGrappling = true;
 
         bendPoints.Clear();
         bendPoints.Add(new BendPoint { position = potentialGrapplePoint, normal = potentialGrappleNormal });
-
         currentRopeLength = Vector3.Distance(firePoint.position, potentialGrapplePoint);
 
-        //characterContoller.SetPlayerState(PlayerState.Swinging);
         SetJoint(true);
         activeRopeRender.ActivateRope(isGrappling);
     }
@@ -128,7 +125,6 @@ public class GrappleController : MonoBehaviour
         if (!isGrappling) return;
         isGrappling = false;
 
-        //characterContoller.SetPlayerState(PlayerState.OnAir);
         SetJoint(false);
         activeRopeRender.ActivateRope(isGrappling);
     }
@@ -240,6 +236,6 @@ public class GrappleController : MonoBehaviour
     private void UpdateGrappleIndicator()
     {
         if (grappleIndicatorUI == null) return;
-        grappleIndicatorUI.color = isGrappleable ? grappleableColor : nonGrappleableColor;
+        grappleIndicatorUI.color = IsGrappleable ? grappleableColor : nonGrappleableColor;
     }
 }

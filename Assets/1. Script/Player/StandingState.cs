@@ -38,4 +38,12 @@ public class StandingState : PlayerBaseState
             _controller.SwitchState(new OnAirState(_controller));
         }
     }
+
+    public override void OnGrapple(InputAction.CallbackContext context)
+    {
+        if (context.ReadValue<float>() > 0)
+        {
+            _controller.SwitchState(new SwingingState(_controller));
+        }
+    }
 }
