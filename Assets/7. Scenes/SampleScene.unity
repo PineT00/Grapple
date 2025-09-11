@@ -22558,7 +22558,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: fc3f1d70875657647a04b2e54d9eda14, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -51607,12 +51607,17 @@ MonoBehaviour:
   grappleableColor: {r: 0, g: 1, b: 0, a: 1}
   nonGrappleableColor: {r: 0.4811321, g: 0.4788626, b: 0.4788626, a: 1}
   maxRayDistance: 40
+  ropeLaunchSpeed: 120
   spring: 30
   damper: 25
   massScale: 3
-  reelSpeed: 20
+  reelSpeed: 10
   maxRope: 0.5
   minRope: 0.2
+  minNewBendDistance: 0.3
+  ropeUnwrapAngleThreshold: -0.8
+  raycastOffset: 0.1
+  bendPointOffset: 0.15
 --- !u!114 &919132149617612268
 MonoBehaviour:
   m_ObjectHideFlags: 0

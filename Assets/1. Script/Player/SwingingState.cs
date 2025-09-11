@@ -10,13 +10,17 @@ public class SwingingState : PlayerBaseState
     public override void EnterState()
     {
         _controller.grappleController.OnGrapple();
-        _ragdollAnimator.SetHookTarget(_controller.grappleController.GetGrapplePoint());
         _ragdollAnimator.SetAnimation(PlayerState.Swinging);
     }
 
     public override void FixedUpdateState()
     {
-        if(!isReeling)
+        if (!_controller.grappleController.IsAttached)
+        {
+            return; // 아직 발사 중이면 아무것도 하지 않음
+        }
+
+        if (!isReeling)
         {
             _controller.HandleSwingMovement();
         }
@@ -45,10 +49,12 @@ public class SwingingState : PlayerBaseState
         if (context.started)
         {
             isReeling = true;
+            _controller.grappleController.StartReeling();
         }
         else if (context.canceled)
         {
             isReeling = false;
+            _controller.grappleController.StopReeling();
         }
     }
 }
