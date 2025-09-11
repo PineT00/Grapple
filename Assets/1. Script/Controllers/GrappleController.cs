@@ -11,6 +11,10 @@ public struct BendPoint
 
 public class GrappleController : MonoBehaviour
 {
+    private enum GrappleState { None, Launching, Attached }
+    private GrappleState currentState = GrappleState.None;
+    public bool IsAttached => currentState == GrappleState.Attached;
+
     [Header("필수")]
     public Rigidbody anchorRb;
     public Camera cam;
@@ -22,28 +26,40 @@ public class GrappleController : MonoBehaviour
     private RopeMeshGenerator activeRopeRender;
 
     [Header("UI")]
-    public Image grappleIndicatorUI; // 화면 중앙의 점 역할을 할 UI 이미지
-    public Color grappleableColor = Color.green; // 그래플 가능할 때의 색상
-    public Color nonGrappleableColor = Color.white; // 그래플 불가능할 때의 색상
+    public Image grappleIndicatorUI; // 화면 중앙의 점 이미지
+    public Color grappleableColor = Color.green; // 그래플 가능할 때
+    public Color nonGrappleableColor = Color.white; // 그래플 불가능할 때
 
     [Header("파라미터")]
     public float maxRayDistance = 30f;
+    public float ropeLaunchSpeed = 80f; // 로프 발사 속도
     public float spring = 70f;
     public float damper = 7f;
     public float massScale = 4.5f;
     public float reelSpeed = 25f;
-
     [SerializeField]
     private float maxRope = 0.7f;
     [SerializeField]
     private float minRope = 0.4f;
+
+    [Header("로프 물리")]
+    [Tooltip("로프가 새로 꺾이기 위해 필요한 최소 거리")]
+    public float minNewBendDistance = 0.5f;
+    [Tooltip("로프가 풀리기 시작하는 각도의 임계값 (Dot Product)")]
+    [Range(-1f, 1f)]
+    public float ropeUnwrapAngleThreshold = 0.1f;
+    [Tooltip("Raycast가 자기 자신을 감지하지 않도록 주는 오프셋")]
+    public float raycastOffset = 0.1f;
+    [Tooltip("새 꺾임 지점을 벽에서 살짝 띄우는 거리")]
+    public float bendPointOffset = 0.1f;
     public bool IsGrappleable { get; private set; }
     private Vector3 potentialGrapplePoint;
     private Vector3 potentialGrappleNormal;
-    private bool isGrappling = false;
     private SpringJoint joint;
     private List<BendPoint> bendPoints = new List<BendPoint>();
     private float currentRopeLength;
+    private Vector3 launchTargetPoint;
+    private float launchProgress;
 
     void Start()
     {
@@ -67,7 +83,11 @@ public class GrappleController : MonoBehaviour
     {
         UpdateGrappleIndicator();
 
-        if (isGrappling)
+        if (currentState == GrappleState.Launching)
+        {
+            HandleRopeLaunchVisuals();
+        }
+        else if (currentState == GrappleState.Attached)
         {
             activeRopeRender.UpdateRopeVisuals(visualAnchor.position, bendPoints, cam.transform);
         }
@@ -104,30 +124,30 @@ public class GrappleController : MonoBehaviour
 
     public void OnGrapple()
     {
-        if (!IsGrappleable) return;
-        isGrappling = true;
+        if (!IsGrappleable || currentState != GrappleState.None) return;
+
+        currentState = GrappleState.Launching;
+        launchTargetPoint = potentialGrapplePoint;
+        launchProgress = 0f;
 
         bendPoints.Clear();
-        bendPoints.Add(new BendPoint { position = potentialGrapplePoint, normal = potentialGrappleNormal });
-        currentRopeLength = Vector3.Distance(firePoint.position, potentialGrapplePoint);
-
-        SetJoint(true);
-        activeRopeRender.ActivateRope(isGrappling);
+        bendPoints.Add(new BendPoint { position = firePoint.position }); // 시작점은 플레이어 위치
+        activeRopeRender.ActivateRope(true);
     }
 
     public void OnRelease()
     {
-        if (!isGrappling) return;
-        isGrappling = false;
+        if (currentState == GrappleState.None) return;
 
+        currentState = GrappleState.None;
         SetJoint(false);
-        activeRopeRender.ActivateRope(isGrappling);
+        activeRopeRender.ActivateRope(false);
     }
 
     public void StartReeling()
     {
         // Reeling 시 Spring, Damper 값 조절 (선택)
-        joint.spring = 200f;
+        joint.spring = 100f;
         joint.damper = 30f;
     }
 
@@ -148,7 +168,6 @@ public class GrappleController : MonoBehaviour
         {
             currentRopeLength = 0;
         }
-        //currentRopeLength = Mathf.Max(currentRopeLength, 0.1f); // 최소 길이
     }
 
     public void HandleRopePhysics()
@@ -159,14 +178,13 @@ public class GrappleController : MonoBehaviour
             Vector3 lastPoint = bendPoints.Last().position;
             Vector3 prevPoint = bendPoints[bendPoints.Count - 2].position;
 
-            // 로프가 둔각으로 펴졌을 때만 풀림 검사
             Vector3 dirToPlayer = (firePoint.position - lastPoint).normalized;
             Vector3 dirToPrev = (prevPoint - lastPoint).normalized;
-            if (Vector3.Dot(dirToPlayer, dirToPrev) < 0)
+
+            if (Vector3.Dot(dirToPlayer, dirToPrev) > ropeUnwrapAngleThreshold)
             {
-                // 플레이어와 이전 꺾임점 사이에 장애물이 없다면
                 float distToPrev = Vector3.Distance(firePoint.position, prevPoint);
-                if (!Physics.Raycast(firePoint.position, (prevPoint - firePoint.position).normalized, distToPrev - 0.1f, grappleLayerMask))
+                if (!Physics.Raycast(firePoint.position, (prevPoint - firePoint.position).normalized, distToPrev - raycastOffset, grappleLayerMask))
                 {
                     bendPoints.RemoveAt(bendPoints.Count - 1);
                 }
@@ -178,16 +196,14 @@ public class GrappleController : MonoBehaviour
         Vector3 playerToLastPointDir = (lastBendPosition - firePoint.position).normalized;
         float distToLastPoint = Vector3.Distance(firePoint.position, lastBendPosition);
 
-        if (Physics.Raycast(firePoint.position, playerToLastPointDir, out RaycastHit hit, distToLastPoint - 0.1f, grappleLayerMask))
-        {
-            if (Vector3.Distance(hit.point, lastBendPosition) > 0.5f)
-            {
-                Vector3 lastNormal = bendPoints.Last().normal;
-                Vector3 newNormal = hit.normal;
-                Vector3 offsetDirection = (lastNormal + newNormal).normalized;
-                Vector3 finalPoint = hit.point + offsetDirection * 0.18f;
+        Vector3 rayStartPoint = firePoint.position + playerToLastPointDir * raycastOffset;
 
-                bendPoints.Add(new BendPoint { position = finalPoint, normal = newNormal });
+        if (Physics.Raycast(rayStartPoint, playerToLastPointDir, out RaycastHit hit, distToLastPoint - raycastOffset, grappleLayerMask))
+        {
+            if (Vector3.Distance(hit.point, lastBendPosition) > minNewBendDistance)
+            {
+                Vector3 newBendPos = hit.point + hit.normal * bendPointOffset;
+                bendPoints.Add(new BendPoint { position = newBendPos, normal = hit.normal });
             }
         }
 
@@ -234,4 +250,30 @@ public class GrappleController : MonoBehaviour
         if (grappleIndicatorUI == null) return;
         grappleIndicatorUI.color = IsGrappleable ? grappleableColor : nonGrappleableColor;
     }
+    private void HandleRopeLaunchVisuals()
+    {
+        Vector3 startPoint = firePoint.position;
+        float totalDistance = Vector3.Distance(startPoint, launchTargetPoint);
+
+        if (totalDistance > 0)
+        {
+            launchProgress += (ropeLaunchSpeed * Time.deltaTime) / totalDistance;
+        }
+        launchProgress = Mathf.Clamp01(launchProgress);
+
+        Vector3 currentTipPosition = Vector3.Lerp(startPoint, launchTargetPoint, launchProgress);
+
+        bendPoints[0] = new BendPoint { position = currentTipPosition };
+
+        activeRopeRender.UpdateRopeVisuals(visualAnchor.position, bendPoints, cam.transform);
+
+        if (launchProgress >= 1f)
+        {
+            currentState = GrappleState.Attached;
+            currentRopeLength = Vector3.Distance(firePoint.position, launchTargetPoint);
+            bendPoints[0] = new BendPoint { position = launchTargetPoint, normal = potentialGrappleNormal };
+            SetJoint(true); // 물리 조인트
+        }
+    }
+
 }

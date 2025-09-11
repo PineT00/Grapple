@@ -49,6 +49,9 @@ public class RagdollAnimator : MonoBehaviour
     public float normalArmDrive = 30f;
     public float swingArmDrive = 999f;
     public float glideArmDrive = 999f;
+    public float normalDamper = 20f;
+    public float glideDamper = 100f;
+
 
     [Header("스윙 액션 설정")]
     public Transform swingTarget;
