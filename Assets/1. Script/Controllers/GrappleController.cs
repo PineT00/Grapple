@@ -52,7 +52,7 @@ public class GrappleController : MonoBehaviour
     public float raycastOffset = 0.1f;
     [Tooltip("새 꺾임 지점을 벽에서 살짝 띄우는 거리")]
     public float bendPointOffset = 0.1f;
-    public bool IsGrappleable { get; private set; }
+    public bool GrappleReady { get; private set; }
     private Vector3 potentialGrapplePoint;
     private Vector3 potentialGrappleNormal;
     private SpringJoint joint;
@@ -112,19 +112,19 @@ public class GrappleController : MonoBehaviour
         Ray ray = cam.ScreenPointToRay(new Vector2(Screen.width / 2f, Screen.height / 2f));
         if (Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, grappleLayerMask))
         {
-            IsGrappleable = true;
+            GrappleReady = true;
             potentialGrapplePoint = hit.point;
             potentialGrappleNormal = hit.normal;
         }
         else
         {
-            IsGrappleable = false;
+            GrappleReady = false;
         }
     }
 
     public void OnGrapple()
     {
-        if (!IsGrappleable || currentState != GrappleState.None) return;
+        if (!GrappleReady || currentState != GrappleState.None) return;
 
         currentState = GrappleState.Launching;
         launchTargetPoint = potentialGrapplePoint;
@@ -248,7 +248,7 @@ public class GrappleController : MonoBehaviour
     private void UpdateGrappleIndicator()
     {
         if (grappleIndicatorUI == null) return;
-        grappleIndicatorUI.color = IsGrappleable ? grappleableColor : nonGrappleableColor;
+        grappleIndicatorUI.color = GrappleReady ? grappleableColor : nonGrappleableColor;
     }
     private void HandleRopeLaunchVisuals()
     {

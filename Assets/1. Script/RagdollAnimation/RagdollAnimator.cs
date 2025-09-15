@@ -55,7 +55,6 @@ public class RagdollAnimator : MonoBehaviour
 
     [Header("스윙 액션 설정")]
     public Transform swingTarget;
-    public float armReachSpeed = 10f;
     private PlayerState currState;
     private float timeCounter = 0f;
 
@@ -231,7 +230,6 @@ public class RagdollAnimator : MonoBehaviour
     }
 
     // 물리 설정 헬퍼들
-
     private void SetTorsoDrives(float hipSpring, bool includeSpine = false)
     {
         SetJointDrive(mainHipJoint, hipSpring);
