@@ -202,10 +202,11 @@ public class RagdollAnimator : MonoBehaviour
                 break;
             case PlayerState.Swinging:
                 SetTorsoDrives(fallDrive);
-                SetLimbDrives(swingArmDrive, normalArmDrive); // 팔만 설정, 다리는 0 또는 기본값
+                SetLimbDrives(swingArmDrive, normalArmDrive);
                 break;
             case PlayerState.Reeling:
                 SetTorsoDrives(fallDrive);
+                SetLimbDrives(swingArmDrive, normalArmDrive);
                 break;
         }
     }

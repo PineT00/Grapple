@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 
 public class SwingingState : PlayerBaseState
 {
-    public SwingingState(RagdollCharacterController controller) : base(controller) {}
+    public SwingingState(RagdollCharacterController controller) : base(controller) { }
 
     bool isReeling = false;
 
@@ -17,12 +17,12 @@ public class SwingingState : PlayerBaseState
     {
         if (!_controller.grappleController.IsAttached)
         {
-            return; // 아직 발사 중이면 아무것도 하지 않음
+            return;
         }
 
         if (!isReeling)
         {
-            _controller.HandleSwingMovement();
+            _controller.HandleSwingMovement2();
         }
         else
         {
@@ -50,11 +50,13 @@ public class SwingingState : PlayerBaseState
         {
             isReeling = true;
             _controller.grappleController.StartReeling();
+            _controller.ragdollAnimator.SetAnimation(PlayerState.Reeling);
         }
         else if (context.canceled)
         {
             isReeling = false;
             _controller.grappleController.StopReeling();
+            _controller.ragdollAnimator.SetAnimation(PlayerState.Swinging);
         }
     }
 }

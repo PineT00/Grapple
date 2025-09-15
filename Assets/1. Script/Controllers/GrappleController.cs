@@ -22,7 +22,6 @@ public class GrappleController : MonoBehaviour
     public LayerMask grappleLayerMask;
     public GameObject ropePrefab;
     public Transform visualAnchor;
-    private RagdollCharacterController characterContoller;
     private RopeMeshGenerator activeRopeRender;
 
     [Header("UI")]
@@ -63,8 +62,6 @@ public class GrappleController : MonoBehaviour
 
     void Start()
     {
-        characterContoller = GetComponent<RagdollCharacterController>();
-
         joint = anchorRb.gameObject.AddComponent<SpringJoint>();
         joint.autoConfigureConnectedAnchor = false;
         joint.anchor = joint.transform.InverseTransformPoint(firePoint.position);
@@ -149,6 +146,7 @@ public class GrappleController : MonoBehaviour
         // Reeling 시 Spring, Damper 값 조절 (선택)
         joint.spring = 100f;
         joint.damper = 30f;
+
     }
 
     public void StopReeling()

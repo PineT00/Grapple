@@ -48,7 +48,7 @@ public class RagdollCharacterController : MonoBehaviour
     [Header("Air Settings")]
     public float jumpForce = 7f;
     public float airSpeed = 10f;
-    public float maxAirSpeed = 15f;
+    //public float maxAirSpeed = 15f;
     public float airTurnSpeed = 3f;
     public float airBrakeForce = 1.3f;
 
@@ -100,6 +100,7 @@ public class RagdollCharacterController : MonoBehaviour
     void FixedUpdate()
     {
         CurrentState?.FixedUpdateState();
+        Debug.Log(mainRb.linearVelocity.sqrMagnitude);
     }
 
     // 상태를 전환하는 유일한 통로입니다.
@@ -314,5 +315,93 @@ public class RagdollCharacterController : MonoBehaviour
         float speedDifference = targetAntiGravity - currentVerticalSpeed;
         Vector3 correctionForce = Vector3.up * speedDifference * verticalCorrectionForce;
         mainRb.AddForce(correctionForce, ForceMode.Acceleration);
+    }
+
+
+    /// <summary>
+    /// new movement testing
+    /// </summary>
+
+    [Header("Movement Tuning")]
+    public float groundMoveForce = 20f;      // 지상에서의 기본 가속력
+    public float maxGroundSpeed = 8f;        // 지상에서의 목표 최대 속도
+
+    public float airMoveForce = 10f;         // 공중에서의 기본 가속력
+    public float maxAirSpeed = 12f;          // 공중에서의 목표 최대 속도
+
+    public float speedExceedMultiplier = 0.5f; // 최대 속도 초과 시, 가속력이 얼마나 빠르게 감소할지에 대한 계수
+    public float brakeForce = 15f;           // 입력이 없을 때의 제동력
+
+    public void HandleGroundMovement2()
+    {
+        HandleGeneralMovement(groundMoveForce, maxGroundSpeed, turnSpeed);
+    }
+
+    public void HandleAirMove2()
+    {
+        // 공중 구르기 등 다른 로직이 필요하다면 애니메이터 호출만 추가
+        // ragdollAnimator.SmoothRotate(worldDirection, airTurnSpeed);
+        HandleGeneralMovement(airMoveForce, maxAirSpeed, airTurnSpeed);
+    }
+
+    public void HandleSwingMovement2()
+    {
+        UpdateMoveInfo();
+
+        if (worldDirection.sqrMagnitude > 0.01f)
+        {
+            mainRb.AddForce(worldDirection.normalized * swingMoveForce, ForceMode.Acceleration);
+        }
+        else
+        {
+            Vector3 brake = -mainRb.linearVelocity.normalized * brakeForce;
+            // 현재 속도보다 제동력이 더 크면 멈추도록 처리
+            if (brake.sqrMagnitude > mainRb.linearVelocity.sqrMagnitude)
+            {
+                mainRb.linearVelocity = Vector3.zero;
+            }
+            else
+            {
+                mainRb.AddForce(brake, ForceMode.Acceleration);
+            }
+        }
+        ragdollAnimator.SmoothRotate(mainRb.linearVelocity.normalized, swingTurnSpeed);
+    }
+
+    private void HandleGeneralMovement(float moveForce, float maxSpeed, float turnSpeed)
+    {
+        UpdateMoveInfo();
+
+        Vector3 horizontalVelocity = new Vector3(mainRb.linearVelocity.x, 0, mainRb.linearVelocity.z);
+
+        if (worldDirection.sqrMagnitude > 0.01f)
+        {
+            float forwardSpeed = Vector3.Dot(horizontalVelocity, worldDirection.normalized);
+
+            float accelerationFactor = 1f;
+            if (forwardSpeed > maxSpeed)
+            {
+                accelerationFactor = Mathf.Clamp01(1f - (forwardSpeed - maxSpeed) / (maxSpeed * speedExceedMultiplier));
+            }
+
+            Vector3 finalForce = worldDirection * moveForce * accelerationFactor;
+            mainRb.AddForce(finalForce, ForceMode.Acceleration);
+
+            // 캐릭터 회전
+            ragdollAnimator.RotateDirection(worldDirection, turnSpeed);
+        }
+        else
+        {
+            Vector3 brake = -horizontalVelocity.normalized * brakeForce;
+            // 현재 속도보다 제동력이 더 크면 멈추도록 처리
+            if (brake.sqrMagnitude > horizontalVelocity.sqrMagnitude)
+            {
+                mainRb.linearVelocity = new Vector3(0, mainRb.linearVelocity.y, 0);
+            }
+            else
+            {
+                mainRb.AddForce(brake, ForceMode.Acceleration);
+            }
+        }
     }
 }

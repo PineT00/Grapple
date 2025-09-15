@@ -9595,7 +9595,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.475349, y: 2.8460922, z: -19.689999}
+  m_LocalPosition: {x: 1.4760768, y: 2.8460922, z: -19.689999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -27341,7 +27341,7 @@ Transform:
   m_GameObject: {fileID: 939819600}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.475349, y: 2.8460922, z: -19.689999}
+  m_LocalPosition: {x: 1.4760768, y: 2.8460922, z: -19.689999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -51583,7 +51583,7 @@ MonoBehaviour:
   normalDamper: 20
   glideDamper: 100
   swingTarget: {fileID: 1625468861}
-  maxSpinSpeed: -270
+  maxSpinSpeed: -360
 --- !u!114 &919132149617612267
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -51650,7 +51650,6 @@ MonoBehaviour:
   jumpFeedback: {fileID: 154923442}
   jumpForce: 65
   airSpeed: 10
-  maxAirSpeed: 20
   airTurnSpeed: 10
   airBrakeForce: 1.3
   swingMoveForce: 15
@@ -51671,6 +51670,12 @@ MonoBehaviour:
   glideTransitionDuration: 0.3
   glideBoostDecayRate: 8
   worldDirection: {x: 0, y: 0, z: 0}
+  groundMoveForce: 50
+  maxGroundSpeed: 8
+  airMoveForce: 10
+  maxAirSpeed: 20
+  speedExceedMultiplier: 0.5
+  brakeForce: 1
 --- !u!4 &1236524299012655480
 Transform:
   m_ObjectHideFlags: 0
