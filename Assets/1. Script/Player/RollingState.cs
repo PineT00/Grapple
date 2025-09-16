@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 
 public class RollingState : PlayerBaseState
 {
-    public RollingState(RagdollCharacterController controller) : base(controller){}
+    public RollingState(RagdollCharacterController controller) : base(controller) { }
 
     public override void EnterState()
     {
@@ -18,7 +18,8 @@ public class RollingState : PlayerBaseState
             return;
         }
 
-        _controller.HandleAirRolling();
+        //_controller.HandleAirRolling();
+        _controller.HandleAirMove();
     }
 
     public override void OnGlide(InputAction.CallbackContext context)

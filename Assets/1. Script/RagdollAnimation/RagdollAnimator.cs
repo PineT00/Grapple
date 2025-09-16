@@ -147,7 +147,7 @@ public class RagdollAnimator : MonoBehaviour
 
     public void RotateForGliding(Vector3 worldDirection)
     {
-        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection) * Quaternion.Euler(70, 0, 0);
+        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection) * Quaternion.Euler(60, 0, 0);
         animHipTrans.localRotation = targetWorldRotation;
     }
 
@@ -214,7 +214,7 @@ public class RagdollAnimator : MonoBehaviour
     private void SetTargetRigWeightsForState(PlayerState state)
     {
         targetRigWeights[normalRig] = (state == PlayerState.Standing || state == PlayerState.Walking || state == PlayerState.OnAir) ? 1f : 0f;
-        targetRigWeights[swingRig] = (state == PlayerState.Swinging) ? 1f : 0f;
+        targetRigWeights[swingRig] = (state == PlayerState.Swinging || state == PlayerState.Reeling) ? 1f : 0f;
         targetRigWeights[rollingRig] = (state == PlayerState.Rolling) ? 1f : 0f;
         targetRigWeights[glideRig] = (state == PlayerState.Gliding) ? 1f : 0f;
     }

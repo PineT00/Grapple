@@ -18,7 +18,7 @@ public class OnAirState : PlayerBaseState
             return;
         }
 
-        _controller.HandleAirMove2();
+        _controller.HandleAirMove();
     }
 
     public override void OnGlide(InputAction.CallbackContext context)

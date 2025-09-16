@@ -22,7 +22,7 @@ public class SwingingState : PlayerBaseState
 
         if (!isReeling)
         {
-            _controller.HandleSwingMovement2();
+            _controller.HandleSwingMovement();
         }
         else
         {
@@ -34,6 +34,7 @@ public class SwingingState : PlayerBaseState
     public override void ExitState()
     {
         _controller.grappleController.OnRelease();
+        //_controller.MultiflyHorizontalforce();
     }
 
     public override void OnGrapple(InputAction.CallbackContext context)

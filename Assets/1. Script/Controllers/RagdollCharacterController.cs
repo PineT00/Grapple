@@ -39,8 +39,8 @@ public class RagdollCharacterController : MonoBehaviour
     [HideInInspector] public Vector2 moveInput;
 
     [Header("Ground Settings")]
-    public float moveForce = 30f;
-    public float maxRunSpeed = 5f;
+    public float groundSpeed = 30f;
+    public float maxGroundSpeed = 5f;
     public float turnSpeed = 5f;
     public float groundCheckDistance = 0.7f;
     public MMF_Player jumpFeedback;
@@ -48,9 +48,10 @@ public class RagdollCharacterController : MonoBehaviour
     [Header("Air Settings")]
     public float jumpForce = 7f;
     public float airSpeed = 10f;
-    //public float maxAirSpeed = 15f;
+    public float maxAirSpeed = 15f;
     public float airTurnSpeed = 3f;
     public float airBrakeForce = 1.3f;
+    public float additionalGravity = 10f;
 
     [Header("Swing Settings")]
     public float swingMoveForce = 10f;
@@ -67,12 +68,12 @@ public class RagdollCharacterController : MonoBehaviour
 
     [Header("Dive Settings")]
     public float maxDiveSpeed = 70f;
-    public float diveControlForce = 10f;
+    public float diveForce = 10f;
     public float diveSteeringFactor = 1.5f;
     public float diveDamper = 10f;
     public float diveToGlideSpeedConversion = 0.8f;
-    public float maxDiveSpeedBonus = 25f;
     public float glideTransitionDuration = 0.6f;
+    public float maxDiveSpeedBoost = 25f;
     public float glideBoostDecayRate = 2f;
     private Rigidbody[] allRigidbodies;
 
@@ -80,9 +81,9 @@ public class RagdollCharacterController : MonoBehaviour
     public Vector3 DashDir { get; set; }
 
     Vector3 inputDirection;
-    public Vector3 worldDirection;
     Vector3 horizontalVelocity;
     Vector3 targetVelocity;
+    [HideInInspector] public Vector3 worldDirection;
 
     void Awake()
     {
@@ -100,17 +101,21 @@ public class RagdollCharacterController : MonoBehaviour
     void FixedUpdate()
     {
         CurrentState?.FixedUpdateState();
-        Debug.Log(mainRb.linearVelocity.sqrMagnitude);
+
+        if (mainRb.linearVelocity.sqrMagnitude > 0.01f)
+        {
+            Debug.Log(mainRb.linearVelocity.sqrMagnitude);
+        }
     }
 
-    // 상태를 전환하는 유일한 통로입니다.
+    // 상태를 전환하는 유일한 통로
     public void SwitchState(PlayerBaseState newState)
     {
-        CurrentState?.ExitState(); // 이전 상태의 Exit 로직 호출
+        CurrentState?.ExitState();
         CurrentState = newState;
-        CurrentState.EnterState(); // 새 상태의 Enter 로직 호출
+        CurrentState.EnterState();
 
-        // UI 업데이트 (상태 클래스의 이름으로 표시)
+        // UI 업데이트
         currStateUI.text = newState.GetType().Name;
     }
 
@@ -136,6 +141,12 @@ public class RagdollCharacterController : MonoBehaviour
         CurrentState?.OnGrapple(context);
     }
 
+    public void JumpControl(float force)
+    {
+        ReduceMomentum(0.1f);
+        mainRb.AddForce(Vector3.up * force, ForceMode.Impulse);
+    }
+
     public void UpdateMoveInfo()
     {
         inputDirection = new Vector3(moveInput.x, 0f, moveInput.y);
@@ -154,12 +165,12 @@ public class RagdollCharacterController : MonoBehaviour
 
         if (worldDirection.sqrMagnitude > 0.01f)
         {
-            targetVelocity *= maxRunSpeed;
+            targetVelocity *= maxGroundSpeed;
             velocityChange = targetVelocity - horizontalVelocity;
             ragdollAnimator.RotateDirection(worldDirection, turnSpeed);
         }
         velocityChange.y = 0f;
-        mainRb.AddForce(velocityChange * moveForce, ForceMode.Acceleration);
+        mainRb.AddForce(velocityChange * groundSpeed, ForceMode.Acceleration);
     }
 
     public void HandleAirMove()
@@ -187,6 +198,7 @@ public class RagdollCharacterController : MonoBehaviour
             velocityChange = -horizontalVelocity * airBrakeForce;
         }
         mainRb.AddForce(velocityChange, ForceMode.Acceleration);
+        MultiflyGravity();
     }
 
     public void HandleAirRolling()
@@ -205,7 +217,14 @@ public class RagdollCharacterController : MonoBehaviour
         else
         {
             velocityChange = -horizontalVelocity * airBrakeForce;
-            ragdollAnimator.SmoothRotateAndSpin(horizontalVelocity.normalized, airTurnSpeed);
+            if (horizontalVelocity.sqrMagnitude < 0.01f)
+            {
+                ragdollAnimator.SmoothRotateAndSpin(moveFrame.forward, airTurnSpeed);
+            }
+            else
+            {
+                ragdollAnimator.SmoothRotateAndSpin(horizontalVelocity.normalized, airTurnSpeed);
+            }
         }
         mainRb.AddForce(velocityChange, ForceMode.Acceleration);
     }
@@ -215,29 +234,18 @@ public class RagdollCharacterController : MonoBehaviour
         UpdateMoveInfo();
 
         mainRb.AddForce(worldDirection.normalized * swingMoveForce, ForceMode.Acceleration);
-        if (mainRb.linearVelocity.magnitude > maxAirSpeed)
-        {
-            Vector3 limitedVelocity = mainRb.linearVelocity.normalized * maxAirSpeed;
-            mainRb.linearVelocity = limitedVelocity;
-        }
         ragdollAnimator.SmoothRotate(mainRb.linearVelocity.normalized, swingTurnSpeed);
     }
 
-    public void JumpControl(float force)
-    {
-        ReduceMomentum(0.1f);
-        mainRb.AddForce(Vector3.up * force, ForceMode.Impulse);
-    }
+
 
     public void ReduceMomentum(float amount) //예측불가능하게 움직일 수 있으니 꼭 필요한 상황외엔 사용X
     {
         if (allRigidbodies == null) return;
 
-        Vector3 reducedVelocity = Vector3.zero;
-
         foreach (var rb in allRigidbodies)
         {
-            reducedVelocity = rb.linearVelocity;
+            Vector3 reducedVelocity = rb.linearVelocity;
             reducedVelocity.y *= amount;
             rb.linearVelocity = reducedVelocity;
         }
@@ -249,8 +257,9 @@ public class RagdollCharacterController : MonoBehaviour
         return Physics.Raycast(origin, Vector3.down, groundCheckDistance + 0.1f, groundLayer);
     }
 
-
-    //글라이딩
+    /// <summary>
+    /// Gliding related
+    /// </summary>
     public void HandleDashingMovement(Vector3 dashDir)
     {
         ApplyGlidingForce(dashDir);
@@ -279,7 +288,7 @@ public class RagdollCharacterController : MonoBehaviour
         Vector3 targetVel = targetDirection * maxDiveSpeed;
         Vector3 velocityDiff = targetVel - mainRb.linearVelocity;
 
-        mainRb.AddForce(velocityDiff * diveControlForce * dampingFactor, ForceMode.Acceleration);
+        mainRb.AddForce(velocityDiff * diveForce * dampingFactor, ForceMode.Acceleration);
 
         if (mainRb.linearVelocity.sqrMagnitude > 0.1f)
         {
@@ -317,91 +326,19 @@ public class RagdollCharacterController : MonoBehaviour
         mainRb.AddForce(correctionForce, ForceMode.Acceleration);
     }
 
-
-    /// <summary>
-    /// new movement testing
-    /// </summary>
-
-    [Header("Movement Tuning")]
-    public float groundMoveForce = 20f;      // 지상에서의 기본 가속력
-    public float maxGroundSpeed = 8f;        // 지상에서의 목표 최대 속도
-
-    public float airMoveForce = 10f;         // 공중에서의 기본 가속력
-    public float maxAirSpeed = 12f;          // 공중에서의 목표 최대 속도
-
-    public float speedExceedMultiplier = 0.5f; // 최대 속도 초과 시, 가속력이 얼마나 빠르게 감소할지에 대한 계수
-    public float brakeForce = 15f;           // 입력이 없을 때의 제동력
-
-    public void HandleGroundMovement2()
+    private void MultiflyGravity()
     {
-        HandleGeneralMovement(groundMoveForce, maxGroundSpeed, turnSpeed);
-    }
-
-    public void HandleAirMove2()
-    {
-        // 공중 구르기 등 다른 로직이 필요하다면 애니메이터 호출만 추가
-        // ragdollAnimator.SmoothRotate(worldDirection, airTurnSpeed);
-        HandleGeneralMovement(airMoveForce, maxAirSpeed, airTurnSpeed);
-    }
-
-    public void HandleSwingMovement2()
-    {
-        UpdateMoveInfo();
-
-        if (worldDirection.sqrMagnitude > 0.01f)
+        foreach (var rb in allRigidbodies)
         {
-            mainRb.AddForce(worldDirection.normalized * swingMoveForce, ForceMode.Acceleration);
-        }
-        else
-        {
-            Vector3 brake = -mainRb.linearVelocity.normalized * brakeForce;
-            // 현재 속도보다 제동력이 더 크면 멈추도록 처리
-            if (brake.sqrMagnitude > mainRb.linearVelocity.sqrMagnitude)
-            {
-                mainRb.linearVelocity = Vector3.zero;
-            }
-            else
-            {
-                mainRb.AddForce(brake, ForceMode.Acceleration);
-            }
-        }
-        ragdollAnimator.SmoothRotate(mainRb.linearVelocity.normalized, swingTurnSpeed);
-    }
-
-    private void HandleGeneralMovement(float moveForce, float maxSpeed, float turnSpeed)
-    {
-        UpdateMoveInfo();
-
-        Vector3 horizontalVelocity = new Vector3(mainRb.linearVelocity.x, 0, mainRb.linearVelocity.z);
-
-        if (worldDirection.sqrMagnitude > 0.01f)
-        {
-            float forwardSpeed = Vector3.Dot(horizontalVelocity, worldDirection.normalized);
-
-            float accelerationFactor = 1f;
-            if (forwardSpeed > maxSpeed)
-            {
-                accelerationFactor = Mathf.Clamp01(1f - (forwardSpeed - maxSpeed) / (maxSpeed * speedExceedMultiplier));
-            }
-
-            Vector3 finalForce = worldDirection * moveForce * accelerationFactor;
-            mainRb.AddForce(finalForce, ForceMode.Acceleration);
-
-            // 캐릭터 회전
-            ragdollAnimator.RotateDirection(worldDirection, turnSpeed);
-        }
-        else
-        {
-            Vector3 brake = -horizontalVelocity.normalized * brakeForce;
-            // 현재 속도보다 제동력이 더 크면 멈추도록 처리
-            if (brake.sqrMagnitude > horizontalVelocity.sqrMagnitude)
-            {
-                mainRb.linearVelocity = new Vector3(0, mainRb.linearVelocity.y, 0);
-            }
-            else
-            {
-                mainRb.AddForce(brake, ForceMode.Acceleration);
-            }
+            rb.AddForce(Vector3.down * additionalGravity, ForceMode.Acceleration);
         }
     }
+    public void MultiflyHorizontalforce()
+    {
+        Vector3 horizontalDir = mainRb.linearVelocity.normalized;
+        horizontalDir.y = 0f;
+        mainRb.AddForce(horizontalDir * 100f, ForceMode.VelocityChange);
+        Debug.Log("인공중력 작동!");
+    }
+
 }
