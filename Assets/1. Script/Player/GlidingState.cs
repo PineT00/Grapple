@@ -15,16 +15,25 @@ public class GlidingState : PlayerBaseState
 
     public override void EnterState()
     {
-        _ragdollAnimator.SetAnimation(PlayerState.Gliding);
+        _ragdollAnimator.SetAnimation(PlayerAnimState.Gliding);
+
+        _controller.UpdateMoveInfo();
 
         _currentSubState = GlideSubState.Dashing;
         _glideDashTimer = _controller.glideDashTime;
 
         _controller.CurrentGlideBoost = _controller.dashSpeed;
 
-        Vector3 initialDashDir = _controller.camTarget.forward;
-        initialDashDir.y = 0f;
-        _controller.DashDir = initialDashDir.normalized;
+        if (_controller.worldDirection.sqrMagnitude > 0.1f)
+        {
+            _controller.DashDir = _controller.worldDirection;
+        }
+        else
+        {
+            Vector3 initialDashDir = _controller.camTarget.forward;
+            initialDashDir.y = 0f;
+            _controller.DashDir = initialDashDir.normalized;
+        }
     }
 
     public override void FixedUpdateState()
@@ -38,6 +47,8 @@ public class GlidingState : PlayerBaseState
             if (_glideDashTimer <= 0f)
             {
                 _currentSubState = GlideSubState.Gliding;
+                _controller.worldDirection = _controller.DashDir;
+                _glideDashTimer = 0f;
             }
         }
 
@@ -115,6 +126,14 @@ public class GlidingState : PlayerBaseState
         if (context.canceled)
         {
             _controller.SwitchState(new RollingState(_controller));
+        }
+    }
+
+    public override void OnGrapple(InputAction.CallbackContext context)
+    {
+        if (context.ReadValue<float>() > 0)
+        {
+            _controller.SwitchState(new SwingingState(_controller));
         }
     }
 }

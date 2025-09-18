@@ -7,7 +7,7 @@ public class WalkingState : PlayerBaseState
 
     public override void EnterState()
     {
-        _ragdollAnimator.SetAnimation(PlayerState.Walking);
+        _ragdollAnimator.SetAnimation(PlayerAnimState.Walking);
     }
 
     public override void FixedUpdateState()

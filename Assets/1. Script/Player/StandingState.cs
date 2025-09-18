@@ -11,7 +11,7 @@ public class StandingState : PlayerBaseState
         standRot.x = 0f;
         standRot.z = 0f;
         _ragdollAnimator.animHipTrans.localRotation = standRot;
-        _ragdollAnimator.SetAnimation(PlayerState.Standing);
+        _ragdollAnimator.SetAnimation(PlayerAnimState.Standing);
     }
 
     public override void FixedUpdateState()

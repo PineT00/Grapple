@@ -10,7 +10,7 @@ public class SwingingState : PlayerBaseState
     public override void EnterState()
     {
         _controller.grappleController.OnGrapple();
-        _ragdollAnimator.SetAnimation(PlayerState.Swinging);
+        _ragdollAnimator.SetAnimation(PlayerAnimState.Swinging);
     }
 
     public override void FixedUpdateState()
@@ -34,7 +34,7 @@ public class SwingingState : PlayerBaseState
     public override void ExitState()
     {
         _controller.grappleController.OnRelease();
-        //_controller.MultiflyHorizontalforce();
+        _controller.MultiflyHorizontalforce();
     }
 
     public override void OnGrapple(InputAction.CallbackContext context)
@@ -51,13 +51,13 @@ public class SwingingState : PlayerBaseState
         {
             isReeling = true;
             _controller.grappleController.StartReeling();
-            _controller.ragdollAnimator.SetAnimation(PlayerState.Reeling);
+            _controller.ragdollAnimator.SetAnimation(PlayerAnimState.Reeling);
         }
         else if (context.canceled)
         {
             isReeling = false;
             _controller.grappleController.StopReeling();
-            _controller.ragdollAnimator.SetAnimation(PlayerState.Swinging);
+            _controller.ragdollAnimator.SetAnimation(PlayerAnimState.Swinging);
         }
     }
 }

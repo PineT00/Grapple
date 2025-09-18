@@ -2626,7 +2626,7 @@ Transform:
   m_GameObject: {fileID: 88960082}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.2, y: 1.2839999, z: 0.7290001}
+  m_LocalPosition: {x: -0.2, y: 1.4, z: 0.8}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -18244,7 +18244,7 @@ Transform:
   m_GameObject: {fileID: 584757765}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.2, y: 1.284, z: 0.729}
+  m_LocalPosition: {x: 0.2, y: 1.4, z: 0.8}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -27660,7 +27660,7 @@ Transform:
   m_GameObject: {fileID: 976776569}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.2, y: 0.33, z: 0.3}
+  m_LocalPosition: {x: -0.2, y: 0.059999913, z: -0.2610008}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -31198,7 +31198,7 @@ Transform:
   m_GameObject: {fileID: 1114566806}
   serializedVersion: 2
   m_LocalRotation: {x: -2.4868996e-14, y: 5.217807e-19, z: -2.3873903e-11, w: 1}
-  m_LocalPosition: {x: -0.5, y: 1, z: 0.10099965}
+  m_LocalPosition: {x: -0.5, y: 1, z: -0.5880005}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -37281,7 +37281,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1432191014
 Transform:
   m_ObjectHideFlags: 0
@@ -38685,7 +38685,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1501819469
 Transform:
   m_ObjectHideFlags: 0
@@ -41358,13 +41358,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1536149478}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.5, y: 0, z: 0, w: 0.8660254}
-  m_LocalPosition: {x: -0.001, y: 1.494, z: 0.106}
+  m_LocalRotation: {x: 0.3420201, y: 0, z: 0, w: 0.9396927}
+  m_LocalPosition: {x: -0.001, y: 1.496, z: 0.084}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 344384594}
-  m_LocalEulerAnglesHint: {x: 60, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 40, y: 0, z: 0}
 --- !u!1 &1536425975
 GameObject:
   m_ObjectHideFlags: 0
@@ -41796,7 +41796,7 @@ Transform:
   m_GameObject: {fileID: 1564175560}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.2, y: 0.27000007, z: 0.21400052}
+  m_LocalPosition: {x: 0.2, y: -0, z: -0.347}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -49382,7 +49382,7 @@ Transform:
   m_GameObject: {fileID: 2049419369}
   serializedVersion: 2
   m_LocalRotation: {x: -2.4868996e-14, y: 5.217807e-19, z: -2.3873903e-11, w: 1}
-  m_LocalPosition: {x: 0.5, y: 1, z: 0.101}
+  m_LocalPosition: {x: 0.5, y: 1, z: -0.5880001}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -51075,7 +51075,7 @@ MonoBehaviour:
   normalDamper: 20
   glideDamper: 100
   swingTarget: {fileID: 1625468861}
-  maxSpinSpeed: -360
+  maxSpinSpeed: -240
 --- !u!114 &919132149617612267
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -51099,8 +51099,8 @@ MonoBehaviour:
   grappleIndicatorUI: {fileID: 445317144}
   grappleableColor: {r: 0, g: 1, b: 0, a: 1}
   nonGrappleableColor: {r: 0.4811321, g: 0.4788626, b: 0.4788626, a: 1}
-  maxRayDistance: 35
-  ropeLaunchSpeed: 110
+  maxRayDistance: 50
+  ropeLaunchSpeed: 120
   spring: 35
   damper: 25
   massScale: 3
@@ -51140,7 +51140,7 @@ MonoBehaviour:
   turnSpeed: 800
   groundCheckDistance: 0.7
   jumpFeedback: {fileID: 154923442}
-  jumpForce: 90
+  jumpForce: 120
   airSpeed: 10
   maxAirSpeed: 20
   airTurnSpeed: 8
@@ -51148,11 +51148,12 @@ MonoBehaviour:
   additionalGravity: 10
   swingMoveForce: 15
   swingTurnSpeed: 300
+  swingEndDashSpeed: 15
   glideSpeed: 20
   maxGlideSpeed: 25
   glideTurnSpeed: 3
-  glideDashTime: 0.2
-  dashSpeed: 0.2
+  glideDashTime: 0.1
+  dashSpeed: 0.1
   targetGlideGravity: -1.8
   verticalCorrectionForce: 20
   maxDiveSpeed: 40

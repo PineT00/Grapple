@@ -13,21 +13,14 @@ public class SimpleFollow : MonoBehaviour
         if (!target) return;
 
         transform.position = target.position;
+        Vector3 targetForward = target.forward;
+        targetForward.y = 0;
 
-        Vector3 tgt = target.eulerAngles;
-
-        float finalX = followRotX ? tgt.x : 0;
-        float finalY = followRotY ? tgt.y : 0;
-        float finalZ = followRotZ ? tgt.z : 0;
-
-        if (target.up.y < 0)
+        if (targetForward.sqrMagnitude > 0.001f)
         {
-            if (followRotY) // Y축을 따라갈 때만 보정
-            {
-                finalY += 180f;
-            }
-        }
+            Quaternion newRotation = Quaternion.LookRotation(targetForward);
 
-        transform.rotation = Quaternion.Euler(finalX, finalY, finalZ);
+            transform.rotation = newRotation;
+        }
     }
 }

@@ -55,7 +55,7 @@ public class RagdollAnimator : MonoBehaviour
 
     [Header("스윙 액션 설정")]
     public Transform swingTarget;
-    private PlayerState currState;
+    private PlayerAnimState currState;
     private float timeCounter = 0f;
 
     private Dictionary<Rig, float> targetRigWeights = new Dictionary<Rig, float>();
@@ -65,7 +65,7 @@ public class RagdollAnimator : MonoBehaviour
     {
         leftLegInitialRotation = leftLegJoint.transform.localRotation;
         rightLegInitialRotation = rightLegJoint.transform.localRotation;
-        currentYawAngle = transform.eulerAngles.y;
+        newYawAngle = transform.eulerAngles.y;
 
         allRigs = new List<Rig> { normalRig, swingRig, rollingRig, glideRig };
         foreach (var rig in allRigs)
@@ -78,16 +78,16 @@ public class RagdollAnimator : MonoBehaviour
     {
         switch (currState)
         {
-            case PlayerState.Walking:
+            case PlayerAnimState.Walking:
                 Walking();
                 break;
-            case PlayerState.Swinging:
+            case PlayerAnimState.Swinging:
                 Swinging();
                 break;
-            case PlayerState.Reeling:
+            case PlayerAnimState.Reeling:
                 Swinging();
                 break;
-            case PlayerState.Gliding:
+            case PlayerAnimState.Gliding:
                 break;
         }
     }
@@ -127,19 +127,20 @@ public class RagdollAnimator : MonoBehaviour
 
     public float maxSpinSpeed = 360f; // 초당 회전할 각도 (360이면 1초에 한 바퀴)
     private float currentSpinAngle = 0f; // 현재까지 회전한 각도를 저장할 변수
-    private float currentYawAngle;
+    private float newYawAngle;
     public void SmoothRotateAndSpin(Vector3 worldDirection, float turnSmoothing)
     {
         worldDirection.y = 0f;
         if (worldDirection.sqrMagnitude > 0.01f)
         {
-            float targetYawAngle = Quaternion.LookRotation(worldDirection).eulerAngles.y;
-            currentYawAngle = Mathf.LerpAngle(currentYawAngle, targetYawAngle, turnSmoothing * Time.fixedDeltaTime);
+            float targetYaw = Quaternion.LookRotation(worldDirection.normalized, Vector3.up).eulerAngles.y;
+            float currentYaw = moveFrame.eulerAngles.y;
+            newYawAngle = Mathf.LerpAngle(currentYaw, targetYaw, turnSmoothing * Time.fixedDeltaTime);
         }
         // 공중제비
         currentSpinAngle += maxSpinSpeed * Time.fixedDeltaTime;
 
-        Quaternion yawRotation = Quaternion.Euler(0f, currentYawAngle, 0f);
+        Quaternion yawRotation = Quaternion.Euler(0f, newYawAngle, 0f);
         Quaternion spinRotation = Quaternion.Euler(currentSpinAngle, 0f, 0f);
 
         animHipTrans.rotation = yawRotation * spinRotation;
@@ -147,7 +148,7 @@ public class RagdollAnimator : MonoBehaviour
 
     public void RotateForGliding(Vector3 worldDirection)
     {
-        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection) * Quaternion.Euler(60, 0, 0);
+        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection) * Quaternion.Euler(70, 0, 0);
         animHipTrans.localRotation = targetWorldRotation;
     }
 
@@ -168,7 +169,7 @@ public class RagdollAnimator : MonoBehaviour
         animHipTrans.localRotation = mainHipJoint.transform.localRotation;
     }
 
-    public void SetAnimation(PlayerState state)
+    public void SetAnimation(PlayerAnimState state)
     {
         currState = state;
 
@@ -178,45 +179,45 @@ public class RagdollAnimator : MonoBehaviour
         // 2. 상태에 맞는 애니메이션 Rig의 '목표' Weight 값 설정
         SetTargetRigWeightsForState(state);
     }
-    private void SetJointDrivesForState(PlayerState state)
+    private void SetJointDrivesForState(PlayerAnimState state)
     {
         switch (state)
         {
-            case PlayerState.Standing:
-            case PlayerState.Walking:
+            case PlayerAnimState.Standing:
+            case PlayerAnimState.Walking:
                 SetTorsoDrives(standBodyDrive);
                 SetLimbDrives(normalArmDrive, normalArmDrive); // 팔, 다리
                 break;
-            case PlayerState.OnAir:
+            case PlayerAnimState.OnAir:
                 SetTorsoDrives(standBodyDrive);
                 SetLimbDrives(normalArmDrive, normalArmDrive); // 팔, 다리
                 break;
-            case PlayerState.Rolling:
+            case PlayerAnimState.Rolling:
                 SetTorsoDrives(standBodyDrive, true); // 척추 포함
-                SetLimbDrives(glideArmDrive, glideArmDrive); // 팔, 다리
+                SetLimbDrives(normalArmDrive, normalArmDrive); // 팔, 다리
                 currentSpinAngle = animHipTrans.localEulerAngles.x;
                 break;
-            case PlayerState.Gliding:
+            case PlayerAnimState.Gliding:
                 SetTorsoDrives(standBodyDrive, true); // 척추 포함
                 SetLimbDrives(glideArmDrive, glideArmDrive); // 팔, 다리
                 break;
-            case PlayerState.Swinging:
+            case PlayerAnimState.Swinging:
                 SetTorsoDrives(fallDrive);
                 SetLimbDrives(swingArmDrive, normalArmDrive);
                 break;
-            case PlayerState.Reeling:
+            case PlayerAnimState.Reeling:
                 SetTorsoDrives(fallDrive);
                 SetLimbDrives(swingArmDrive, normalArmDrive);
                 break;
         }
     }
 
-    private void SetTargetRigWeightsForState(PlayerState state)
+    private void SetTargetRigWeightsForState(PlayerAnimState state)
     {
-        targetRigWeights[normalRig] = (state == PlayerState.Standing || state == PlayerState.Walking || state == PlayerState.OnAir) ? 1f : 0f;
-        targetRigWeights[swingRig] = (state == PlayerState.Swinging || state == PlayerState.Reeling) ? 1f : 0f;
-        targetRigWeights[rollingRig] = (state == PlayerState.Rolling) ? 1f : 0f;
-        targetRigWeights[glideRig] = (state == PlayerState.Gliding) ? 1f : 0f;
+        targetRigWeights[normalRig] = (state == PlayerAnimState.Standing || state == PlayerAnimState.Walking || state == PlayerAnimState.OnAir) ? 1f : 0f;
+        targetRigWeights[swingRig] = (state == PlayerAnimState.Swinging || state == PlayerAnimState.Reeling) ? 1f : 0f;
+        targetRigWeights[rollingRig] = (state == PlayerAnimState.Rolling) ? 1f : 0f;
+        targetRigWeights[glideRig] = (state == PlayerAnimState.Gliding) ? 1f : 0f;
     }
 
     private void SmoothlyUpdateRigWeights()
@@ -261,6 +262,30 @@ public class RagdollAnimator : MonoBehaviour
 
         JointDrive drive = joint.slerpDrive;
         drive.positionSpring = springValue;
+        joint.slerpDrive = drive;
+    }
+
+    private void SetLimbDamper(float armDamper, float legDamper)
+    {
+        // 팔
+        SetJointDamper(leftArmJoint, armDamper);
+        SetJointDamper(leftForeArmJoint, armDamper);
+        SetJointDamper(rightArmJoint, armDamper);
+        SetJointDamper(rightForeArmJoint, armDamper);
+
+        // 다리
+        SetJointDamper(leftLegJoint, legDamper);
+        SetJointDamper(rightLegJoint, legDamper);
+        SetJointDamper(leftCarfJoint, legDamper);
+        SetJointDamper(rightCarfJoint, legDamper);
+    }
+
+    private void SetJointDamper(ConfigurableJoint joint, float DamperValue)
+    {
+        if (joint == null || DamperValue <= 0) return; // 유효성 검사
+
+        JointDrive drive = joint.slerpDrive;
+        drive.positionDamper = DamperValue;
         joint.slerpDrive = drive;
     }
 

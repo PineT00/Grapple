@@ -69,7 +69,7 @@ public class ThirdPersonCameraController : MonoBehaviour
 
         float targetDistance;
 
-        if (playerController.CurrState == PlayerState.Walking || playerController.CurrState == PlayerState.Standing)
+        if (playerController.CurrState == PlayerAnimState.Walking || playerController.CurrState == PlayerAnimState.Standing)
         {
             distCheck = true;
         }

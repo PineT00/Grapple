@@ -7,7 +7,7 @@ public class RollingState : PlayerBaseState
 
     public override void EnterState()
     {
-        _ragdollAnimator.SetAnimation(PlayerState.Rolling);
+        _ragdollAnimator.SetAnimation(PlayerAnimState.Rolling);
     }
 
     public override void FixedUpdateState()
@@ -18,7 +18,6 @@ public class RollingState : PlayerBaseState
             return;
         }
 
-        //_controller.HandleAirRolling();
         _controller.HandleAirMove();
     }
 

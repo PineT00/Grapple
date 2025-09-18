@@ -7,7 +7,7 @@ public class OnAirState : PlayerBaseState
 
     public override void EnterState()
     {
-        _ragdollAnimator.SetAnimation(PlayerState.OnAir);
+        _ragdollAnimator.SetAnimation(PlayerAnimState.OnAir);
     }
 
     public override void FixedUpdateState()
