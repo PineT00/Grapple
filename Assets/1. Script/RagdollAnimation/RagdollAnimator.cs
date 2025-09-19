@@ -47,8 +47,9 @@ public class RagdollAnimator : MonoBehaviour
     public float standBodyDrive = 3000f;
     public float fallDrive = 100f;
     public float normalArmDrive = 30f;
+    public float normalLegDrive = 30f;
     public float swingArmDrive = 999f;
-    public float glideArmDrive = 999f;
+    public float glideDrive = 999f;
     public float normalDamper = 20f;
     public float glideDamper = 100f;
 
@@ -72,6 +73,9 @@ public class RagdollAnimator : MonoBehaviour
         {
             if (rig != null) targetRigWeights[rig] = rig.weight;
         }
+
+        initialLeftFootPos = leftFootTarget.transform.localPosition;
+        initialRightFootPos = rightFootTarget.transform.localPosition;
     }
 
     void FixedUpdate()
@@ -152,16 +156,43 @@ public class RagdollAnimator : MonoBehaviour
         animHipTrans.localRotation = targetWorldRotation;
     }
 
+
+    float stepTimer = 0f;
+    public float stepTime = 1f;
+    public float stepDistance = 1f;
+    public float stepHeight = 1f;
+    Vector3 initialLeftFootPos;
+    Vector3 initialRightFootPos;
+    public Transform leftFootTarget;
+    public Transform rightFootTarget;
+
     private void Walking()
     {
-        timeCounter += Time.deltaTime * stepSpeed * Mathf.PI * 2f;
+        // timeCounter += Time.deltaTime * stepSpeed * Mathf.PI * 2f;
 
-        // 사인파 기반 회전
-        float leftAngle = Mathf.Sin(timeCounter) * stepAngle;
-        float rightAngle = Mathf.Sin(timeCounter + offsetBetweenLegs) * stepAngle;
+        // // 사인파 기반 회전
+        // float leftAngle = Mathf.Sin(timeCounter) * stepAngle;
+        // float rightAngle = Mathf.Sin(timeCounter + offsetBetweenLegs) * stepAngle;
 
-        leftLegJoint.transform.localRotation = leftLegInitialRotation * Quaternion.Euler(leftAngle, 0f, 0f);
-        rightLegJoint.transform.localRotation = rightLegInitialRotation * Quaternion.Euler(rightAngle, 0f, 0f);
+        // leftLegJoint.transform.localRotation = leftLegInitialRotation * Quaternion.Euler(leftAngle, 0f, 0f);
+        // rightLegJoint.transform.localRotation = rightLegInitialRotation * Quaternion.Euler(rightAngle, 0f, 0f);
+
+        stepTimer += Time.deltaTime;
+        float progress = Mathf.PingPong(stepTimer, stepTime) / stepTime;
+        float zOffset = Mathf.Cos(progress * 2 * Mathf.PI) * stepDistance;
+
+        Vector3 newLeftPos = initialLeftFootPos + Vector3.forward * zOffset;
+        Vector3 newRightPos = initialRightFootPos - Vector3.forward * zOffset;
+
+        float leftHeight = Mathf.Sin(progress * 2 * Mathf.PI + Mathf.PI) * 0.5f + 0.5f;
+        float rightHeight = Mathf.Sin(progress * 2 * Mathf.PI) * 0.5f + 0.5f;
+
+        newLeftPos.y += leftHeight * stepHeight;
+        newRightPos.y += rightHeight * stepHeight;
+
+        // 계산된 최종 위치를 각 타겟의 localPosition에 적용
+        if (leftFootTarget) leftFootTarget.localPosition = newLeftPos;
+        if (rightFootTarget) rightFootTarget.localPosition = newRightPos;
     }
 
     private void Swinging()
@@ -186,11 +217,11 @@ public class RagdollAnimator : MonoBehaviour
             case PlayerAnimState.Standing:
             case PlayerAnimState.Walking:
                 SetTorsoDrives(standBodyDrive);
-                SetLimbDrives(normalArmDrive, normalArmDrive); // 팔, 다리
+                SetLimbDrives(normalArmDrive, normalLegDrive); // 팔, 다리
                 break;
             case PlayerAnimState.OnAir:
                 SetTorsoDrives(standBodyDrive);
-                SetLimbDrives(normalArmDrive, normalArmDrive); // 팔, 다리
+                SetLimbDrives(normalArmDrive, normalLegDrive); // 팔, 다리
                 break;
             case PlayerAnimState.Rolling:
                 SetTorsoDrives(standBodyDrive, true); // 척추 포함
@@ -199,7 +230,7 @@ public class RagdollAnimator : MonoBehaviour
                 break;
             case PlayerAnimState.Gliding:
                 SetTorsoDrives(standBodyDrive, true); // 척추 포함
-                SetLimbDrives(glideArmDrive, glideArmDrive); // 팔, 다리
+                SetLimbDrives(glideDrive, glideDrive); // 팔, 다리
                 break;
             case PlayerAnimState.Swinging:
                 SetTorsoDrives(fallDrive);

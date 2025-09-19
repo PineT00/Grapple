@@ -41,6 +41,7 @@ public class ActiveRagdoll : MonoBehaviour
                     startLocalRotation = joint.transform.localRotation
                 };
                 jointDataList.Add(data);
+                Debug.Log(joint.name);
             }
         }
     }

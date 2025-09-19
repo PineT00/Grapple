@@ -179,10 +179,7 @@ public class RagdollCharacterController : MonoBehaviour
         {
             targetVelocity *= maxAirSpeed;
             velocityChange = targetVelocity - horizontalVelocity;
-            if (horizontalVelocity.sqrMagnitude < targetVelocity.sqrMagnitude)
-            {
-                velocityChange *= airSpeed;
-            }
+            velocityChange *= airSpeed;
             ragdollAnimator.SmoothRotate(worldDirection, airTurnSpeed);
         }
         else
