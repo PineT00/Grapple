@@ -19,6 +19,7 @@ public class OnAirState : PlayerBaseState
         }
 
         _controller.HandleAirMove();
+        _controller.MultiflyGravity();
     }
 
     public override void OnGlide(InputAction.CallbackContext context)

@@ -11,6 +11,7 @@ public class ActiveRagdoll : MonoBehaviour
     [Header("동기화 기준 뼈")]
     public Transform animationHips;
     public Transform ragdollHips;
+    private Joint hipJoint;
 
     // 조인트와 초기 '로컬' 회전 값을 저장할 내부 클래스
     private class JointData
@@ -37,18 +38,17 @@ public class ActiveRagdoll : MonoBehaviour
                 {
                     joint = joint,
                     animationBone = matchingBone,
-                    // 게임 시작 시의 '로컬' 회전 값을 기준점으로 저장
                     startLocalRotation = joint.transform.localRotation
                 };
                 jointDataList.Add(data);
                 Debug.Log(joint.name);
             }
         }
+        hipJoint = ragdollHips.GetComponent<ConfigurableJoint>();
     }
 
     void FixedUpdate()
     {
-        // 1. 위치 및 회전 동기화
         Vector3 bodyPositionOffset = ragdollHips.position - animationHips.position;
         animationRoot.position += bodyPositionOffset;
 
@@ -59,7 +59,14 @@ public class ActiveRagdoll : MonoBehaviour
     {
         foreach (var data in jointDataList)
         {
-            ConfigurableJointExtensions.SetTargetRotationLocal(data.joint, data.animationBone.localRotation, data.startLocalRotation);
+            if (data.joint != hipJoint)
+            {
+                ConfigurableJointExtensions.SetTargetRotationLocal(data.joint, data.animationBone.localRotation, data.startLocalRotation);
+            }
+            else
+            {
+                //data.animationBone.rotation = data.joint.transform.rotation;
+            }
         }
     }
 }

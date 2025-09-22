@@ -11,6 +11,7 @@ public class RagdollAnimator : MonoBehaviour
     [Header("Body Parts")]
     public Transform moveFrame;
     public Transform animHipTrans;
+    public Transform ragdollHipTrans;
 
 
     [Header("Joints")]
@@ -33,15 +34,9 @@ public class RagdollAnimator : MonoBehaviour
     public Rig swingRig;
     public Rig rollingRig;
 
-    private Quaternion leftLegInitialRotation;
-    private Quaternion rightLegInitialRotation;
-    private Quaternion headInitialRotation;
-    private Quaternion hipInitialRotation;
-
     [Header("스텝 설정")]
     public float stepAngle = 30f; // 다리를 내미는 각도
     public float stepSpeed = 2f;
-    private float offsetBetweenLegs = Mathf.PI;
 
     [Header("Drive 설정")]
     public float standBodyDrive = 3000f;
@@ -57,15 +52,12 @@ public class RagdollAnimator : MonoBehaviour
     [Header("스윙 액션 설정")]
     public Transform swingTarget;
     private PlayerAnimState currState;
-    private float timeCounter = 0f;
 
     private Dictionary<Rig, float> targetRigWeights = new Dictionary<Rig, float>();
     private List<Rig> allRigs;
 
     void Awake()
     {
-        leftLegInitialRotation = leftLegJoint.transform.localRotation;
-        rightLegInitialRotation = rightLegJoint.transform.localRotation;
         newYawAngle = transform.eulerAngles.y;
 
         allRigs = new List<Rig> { normalRig, swingRig, rollingRig, glideRig };
@@ -86,10 +78,10 @@ public class RagdollAnimator : MonoBehaviour
                 Walking();
                 break;
             case PlayerAnimState.Swinging:
-                Swinging();
+                //Swinging();
                 break;
             case PlayerAnimState.Reeling:
-                Swinging();
+                //Swinging();
                 break;
             case PlayerAnimState.Gliding:
                 break;
@@ -104,29 +96,6 @@ public class RagdollAnimator : MonoBehaviour
     public void SetHookTarget(Vector3 targetPos)
     {
         swingTarget.position = targetPos;
-    }
-
-    public void RotateDirection(Vector3 worldDirection, float turnSpeed)
-    {
-        worldDirection.y = 0f;
-        if (worldDirection.sqrMagnitude > 0.01f)
-        {
-            Vector3 currentEuler = moveFrame.eulerAngles;
-            float targetYaw = Quaternion.LookRotation(worldDirection.normalized, Vector3.up).eulerAngles.y;
-            float newYaw = Mathf.MoveTowardsAngle(currentEuler.y, targetYaw, turnSpeed * Time.fixedDeltaTime);
-            animHipTrans.localRotation = Quaternion.Euler(0, newYaw, 0);
-        }
-    }
-    public void SmoothRotate(Vector3 worldDirection, float turnSmoothing)
-    {
-        worldDirection.y = 0f;
-        if (worldDirection.sqrMagnitude > 0.01f)
-        {
-            float targetYaw = Quaternion.LookRotation(worldDirection.normalized, Vector3.up).eulerAngles.y;
-            float currentYaw = moveFrame.eulerAngles.y;
-            float newYaw = Mathf.LerpAngle(currentYaw, targetYaw, turnSmoothing * Time.fixedDeltaTime);
-            animHipTrans.localRotation = Quaternion.Euler(0, newYaw, 0);
-        }
     }
 
     public float maxSpinSpeed = 360f; // 초당 회전할 각도 (360이면 1초에 한 바퀴)
@@ -150,12 +119,6 @@ public class RagdollAnimator : MonoBehaviour
         animHipTrans.rotation = yawRotation * spinRotation;
     }
 
-    public void RotateForGliding(Vector3 worldDirection)
-    {
-        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection) * Quaternion.Euler(70, 0, 0);
-        animHipTrans.localRotation = targetWorldRotation;
-    }
-
 
     float stepTimer = 0f;
     public float stepTime = 1f;
@@ -168,15 +131,6 @@ public class RagdollAnimator : MonoBehaviour
 
     private void Walking()
     {
-        // timeCounter += Time.deltaTime * stepSpeed * Mathf.PI * 2f;
-
-        // // 사인파 기반 회전
-        // float leftAngle = Mathf.Sin(timeCounter) * stepAngle;
-        // float rightAngle = Mathf.Sin(timeCounter + offsetBetweenLegs) * stepAngle;
-
-        // leftLegJoint.transform.localRotation = leftLegInitialRotation * Quaternion.Euler(leftAngle, 0f, 0f);
-        // rightLegJoint.transform.localRotation = rightLegInitialRotation * Quaternion.Euler(rightAngle, 0f, 0f);
-
         stepTimer += Time.deltaTime;
         float progress = Mathf.PingPong(stepTimer, stepTime) / stepTime;
         float zOffset = Mathf.Cos(progress * 2 * Mathf.PI) * stepDistance;
@@ -195,19 +149,10 @@ public class RagdollAnimator : MonoBehaviour
         if (rightFootTarget) rightFootTarget.localPosition = newRightPos;
     }
 
-    private void Swinging()
-    {
-        animHipTrans.localRotation = mainHipJoint.transform.localRotation;
-    }
-
     public void SetAnimation(PlayerAnimState state)
     {
         currState = state;
-
-        // 1. 상태에 맞는 물리 Joint Drive 값 설정
         SetJointDrivesForState(state);
-
-        // 2. 상태에 맞는 애니메이션 Rig의 '목표' Weight 값 설정
         SetTargetRigWeightsForState(state);
     }
     private void SetJointDrivesForState(PlayerAnimState state)

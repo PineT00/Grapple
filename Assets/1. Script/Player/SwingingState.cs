@@ -29,6 +29,7 @@ public class SwingingState : PlayerBaseState
             _controller.grappleController.ShortenRope();
         }
         _controller.grappleController.HandleRopePhysics();
+        _controller.MultiflyGravity();
     }
 
     public override void ExitState()

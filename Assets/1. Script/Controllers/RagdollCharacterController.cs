@@ -32,6 +32,7 @@ public class RagdollCharacterController : MonoBehaviour
 
     // 상태 클래스에서 접근할 수 있도록
     [HideInInspector] public Rigidbody mainRb;
+    [HideInInspector] public ConfigurableJoint mainJoint;
     [HideInInspector] public GrappleController grappleController;
     [HideInInspector] public RagdollAnimator ragdollAnimator;
 
@@ -59,7 +60,7 @@ public class RagdollCharacterController : MonoBehaviour
     public float swingEndDashSpeed = 15f;
 
     [Header("Glide Settings")]
-    public float glideSpeed = 15f;
+    public float glideAccel = 15f;
     public float maxGlideSpeed = 50f;
     public float glideTurnSpeed = 300f;
     public float glideDashTime = 1f;
@@ -89,6 +90,7 @@ public class RagdollCharacterController : MonoBehaviour
     void Awake()
     {
         mainRb = charCenterPart.GetComponent<Rigidbody>();
+        mainJoint = charCenterPart.GetComponent<ConfigurableJoint>();
         grappleController = GetComponent<GrappleController>();
         ragdollAnimator = GetComponent<RagdollAnimator>();
         allRigidbodies = GetComponentsInChildren<Rigidbody>();
@@ -137,12 +139,6 @@ public class RagdollCharacterController : MonoBehaviour
         CurrentState?.OnGrapple(context);
     }
 
-    public void JumpControl(float force)
-    {
-        ReduceMomentum(0.1f);
-        mainRb.AddForce(Vector3.up * force, ForceMode.Impulse);
-    }
-
     public void UpdateMoveInfo()
     {
         inputDirection = new Vector3(moveInput.x, 0f, moveInput.y);
@@ -163,7 +159,7 @@ public class RagdollCharacterController : MonoBehaviour
         {
             targetVelocity *= maxGroundSpeed;
             velocityChange = targetVelocity - horizontalVelocity;
-            ragdollAnimator.RotateDirection(worldDirection, turnSpeed);
+            RotateDirection(worldDirection);
         }
         velocityChange.y = 0f;
         mainRb.AddForce(velocityChange * groundSpeed, ForceMode.Acceleration);
@@ -180,49 +176,13 @@ public class RagdollCharacterController : MonoBehaviour
             targetVelocity *= maxAirSpeed;
             velocityChange = targetVelocity - horizontalVelocity;
             velocityChange *= airSpeed;
-            ragdollAnimator.SmoothRotate(worldDirection, airTurnSpeed);
+            RotateDirectionSmooth(worldDirection, airTurnSpeed);
         }
         else
         {
             velocityChange = -horizontalVelocity * airBrakeForce;
         }
         mainRb.AddForce(velocityChange, ForceMode.Acceleration);
-        MultiflyGravity();
-    }
-
-    public void HandleMidAirMove() //상승땐 롤링, 하강땐 글라이딩 추락자세
-    {
-        UpdateMoveInfo();
-
-        Vector3 velocityChange;
-
-        if (worldDirection.sqrMagnitude > 0.01f)
-        {
-            targetVelocity *= maxAirSpeed;
-            velocityChange = targetVelocity - horizontalVelocity;
-            if (horizontalVelocity.sqrMagnitude < targetVelocity.sqrMagnitude)
-            {
-                velocityChange *= airSpeed;
-            }
-        }
-        else
-        {
-            velocityChange = -horizontalVelocity * airBrakeForce;
-        }
-
-        //자세
-        if (mainRb.linearVelocity.y > 0)
-        {
-            ragdollAnimator.SmoothRotateAndSpin(worldDirection, airTurnSpeed);
-        }
-        else
-        {
-            ragdollAnimator.RotateForGliding(worldDirection);
-        }
-
-
-        mainRb.AddForce(velocityChange, ForceMode.Acceleration);
-        MultiflyGravity();
     }
 
     public void HandleSwingMovement()
@@ -230,28 +190,9 @@ public class RagdollCharacterController : MonoBehaviour
         UpdateMoveInfo();
 
         mainRb.AddForce(worldDirection.normalized * swingMoveForce, ForceMode.Acceleration);
-        ragdollAnimator.SmoothRotate(mainRb.linearVelocity.normalized, swingTurnSpeed);
+        RotateDirection(mainRb.linearVelocity);
     }
 
-
-
-    public void ReduceMomentum(float amount) //예측불가능하게 움직일 수 있으니 꼭 필요한 상황외엔 사용X
-    {
-        if (allRigidbodies == null) return;
-
-        foreach (var rb in allRigidbodies)
-        {
-            Vector3 reducedVelocity = rb.linearVelocity;
-            reducedVelocity.y *= amount;
-            rb.linearVelocity = reducedVelocity;
-        }
-    }
-
-    public bool IsGrounded()
-    {
-        Vector3 origin = moveFrame.position + Vector3.up * 0.1f;
-        return Physics.Raycast(origin, Vector3.down, groundCheckDistance + 0.1f, groundLayer);
-    }
 
     /// <summary>
     /// Gliding related
@@ -259,6 +200,7 @@ public class RagdollCharacterController : MonoBehaviour
     public void HandleDashingMovement(Vector3 dashDir)
     {
         ApplyGlidingForce(dashDir);
+        RotateForGliding(dashDir);
         AntiGravity(targetGlideGravity);
     }
 
@@ -270,9 +212,11 @@ public class RagdollCharacterController : MonoBehaviour
 
         Vector3 currentForward = moveFrame.forward;
         currentForward.y = 0f;
+        currentForward.Normalize();
         Vector3 newForward = Vector3.Slerp(currentForward, targetDir, glideTurnSpeed * Time.fixedDeltaTime);
 
         ApplyGlidingForce(newForward);
+        RotateForGliding(newForward);
         AntiGravity(targetGlideGravity);
     }
 
@@ -290,7 +234,7 @@ public class RagdollCharacterController : MonoBehaviour
 
         if (mainRb.linearVelocity.sqrMagnitude > 0.1f)
         {
-            ragdollAnimator.RotateForGliding(mainRb.linearVelocity.normalized);
+            RotateForGliding(mainRb.linearVelocity);
         }
     }
 
@@ -306,11 +250,49 @@ public class RagdollCharacterController : MonoBehaviour
         Vector3 targetVelocity = direction * currentMaxSpeed;
         Vector3 velocityChange = targetVelocity - mainRb.linearVelocity;
         velocityChange.y = 0;
-
-        Vector3 finalForce = velocityChange * glideSpeed;
+        Vector3 finalForce = velocityChange;
+        if (velocityChange.sqrMagnitude > 1f)
+        {
+            finalForce *= glideAccel;
+        }
         mainRb.AddForce(finalForce, ForceMode.Acceleration);
+    }
 
-        ragdollAnimator.RotateForGliding(direction);
+
+    /// <summary>
+    /// 공용 움직임 관련 변수들
+    /// </summary>
+    public void JumpControl(float force)
+    {
+        ReduceMomentum(0.1f);
+        mainRb.AddForce(Vector3.up * force, ForceMode.Impulse);
+    }
+
+    public void RotateDirection(Vector3 worldDirection)
+    {
+        worldDirection.y = 0f;
+        if (worldDirection.sqrMagnitude > 0.01f)
+        {
+            float targetYaw = Quaternion.LookRotation(worldDirection.normalized, Vector3.up).eulerAngles.y;
+            mainJoint.targetRotation = Quaternion.Euler(0, targetYaw, 0);
+        }
+    }
+    public void RotateDirectionSmooth(Vector3 worldDirection, float turnSpeed)
+    {
+        worldDirection.y = 0f;
+        if (worldDirection.sqrMagnitude > 0.01f)
+        {
+            Vector3 currentEuler = moveFrame.eulerAngles;
+            float targetYaw = Quaternion.LookRotation(worldDirection.normalized, Vector3.up).eulerAngles.y;
+            float newYaw = Mathf.LerpAngle(currentEuler.y, targetYaw, turnSpeed * Time.fixedDeltaTime);
+            mainJoint.targetRotation = Quaternion.Euler(0, newYaw, 0);
+        }
+    }
+
+    public void RotateForGliding(Vector3 worldDirection)
+    {
+        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up) * Quaternion.Euler(70, 0, 0);
+        mainJoint.SetTargetRotationLocal(targetWorldRotation, Quaternion.identity);
     }
 
     private void AntiGravity(float targetAntiGravity)
@@ -322,7 +304,7 @@ public class RagdollCharacterController : MonoBehaviour
         mainRb.AddForce(correctionForce, ForceMode.Acceleration);
     }
 
-    private void MultiflyGravity()
+    public void MultiflyGravity()
     {
         foreach (var rb in allRigidbodies)
         {
@@ -330,12 +312,29 @@ public class RagdollCharacterController : MonoBehaviour
         }
     }
 
-
     public void MultiflyHorizontalforce()
     {
         Vector3 horizontalDir = mainRb.linearVelocity.normalized;
         horizontalDir.y = 0f;
         mainRb.AddForce(horizontalDir * swingEndDashSpeed, ForceMode.VelocityChange);
+    }
+
+    public void ReduceMomentum(float amount) //예측불가능하게 움직일 수 있으니 꼭 필요한 상황외엔 사용X
+    {
+        if (allRigidbodies == null) return;
+
+        foreach (var rb in allRigidbodies)
+        {
+            Vector3 reducedVelocity = rb.linearVelocity;
+            reducedVelocity.y *= amount;
+            rb.linearVelocity = reducedVelocity;
+        }
+    }
+
+    public bool IsGrounded()
+    {
+        Vector3 origin = moveFrame.position + Vector3.up * 0.1f;
+        return Physics.Raycast(origin, Vector3.down, groundCheckDistance + 0.1f, groundLayer);
     }
 
 }

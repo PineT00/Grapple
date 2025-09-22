@@ -2,25 +2,38 @@ using UnityEngine;
 
 public class SimpleFollow : MonoBehaviour
 {
-    public bool followRotX = false;
-    public bool followRotY = false;
-    public bool followRotZ = false;
-
+    [Tooltip("따라갈 타겟 Transform")]
     public Transform target;
+
+    [Header("추적 옵션")]
+    [Tooltip("타겟의 위치를 따라갈지 여부")]
+    public bool followPosition = true;
+
+    [Header("회전 축 옵션")]
+    public bool followRotX = false;
+    public bool followRotY = true;
+    public bool followRotZ = false;
 
     void FixedUpdate()
     {
-        if (!target) return;
-
-        transform.position = target.position;
-        Vector3 targetForward = target.forward;
-        targetForward.y = 0;
-
-        if (targetForward.sqrMagnitude > 0.001f)
+        if (!target)
         {
-            Quaternion newRotation = Quaternion.LookRotation(targetForward);
-
-            transform.rotation = newRotation;
+            return;
         }
+
+        if (followPosition)
+        {
+            transform.position = target.position;
+        }
+
+        Vector3 currentEulerAngles = transform.eulerAngles;
+        Vector3 targetEulerAngles = target.eulerAngles;
+
+        float newRotX = followRotX ? targetEulerAngles.x : currentEulerAngles.x;
+        float newRotY = followRotY ? targetEulerAngles.y : currentEulerAngles.y;
+        float newRotZ = followRotZ ? targetEulerAngles.z : currentEulerAngles.z;
+
+        Quaternion targetRotation = Quaternion.Euler(newRotX, newRotY, newRotZ);
+        transform.rotation = targetRotation;
     }
 }
