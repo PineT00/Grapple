@@ -113,7 +113,6 @@ public class RagdollCharacterController : MonoBehaviour
         CurrentState = newState;
         CurrentState.EnterState();
 
-        // UI 업데이트
         currStateUI.text = newState.GetType().Name;
     }
 
@@ -241,6 +240,7 @@ public class RagdollCharacterController : MonoBehaviour
     public void HandleTransitionMovement(Vector3 transitionDirection)
     {
         ApplyGlidingForce(transitionDirection);
+        RotateForGliding(transitionDirection);
         AntiGravity(targetGlideGravity);
     }
 
@@ -291,7 +291,7 @@ public class RagdollCharacterController : MonoBehaviour
 
     public void RotateForGliding(Vector3 worldDirection)
     {
-        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up) * Quaternion.Euler(70, 0, 0);
+        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up) * Quaternion.Euler(60, 0, 0);
         mainJoint.SetTargetRotationLocal(targetWorldRotation, Quaternion.identity);
     }
 

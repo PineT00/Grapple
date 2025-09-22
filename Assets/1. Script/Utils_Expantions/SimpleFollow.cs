@@ -17,21 +17,41 @@ public class SimpleFollow : MonoBehaviour
     void FixedUpdate()
     {
         if (!target)
-        {
             return;
-        }
 
+        // 위치 추적
         if (followPosition)
         {
             transform.position = target.position;
         }
 
         Vector3 currentEulerAngles = transform.eulerAngles;
-        Vector3 targetEulerAngles = target.eulerAngles;
 
-        float newRotX = followRotX ? targetEulerAngles.x : currentEulerAngles.x;
-        float newRotY = followRotY ? targetEulerAngles.y : currentEulerAngles.y;
-        float newRotZ = followRotZ ? targetEulerAngles.z : currentEulerAngles.z;
+        float newRotX = currentEulerAngles.x;
+        float newRotY = currentEulerAngles.y;
+        float newRotZ = currentEulerAngles.z;
+
+        if (followRotX)
+            newRotX = target.eulerAngles.x;
+
+        if (followRotY)
+        {
+            Vector3 flatForward = target.forward;
+            flatForward.y = 0f;
+            if (flatForward.sqrMagnitude > 0.0001f)
+            {
+                Quaternion yawRotation = Quaternion.LookRotation(flatForward, Vector3.up);
+                newRotY = yawRotation.eulerAngles.y;
+
+                if (Vector3.Dot(target.up, Vector3.up) <= 0f)
+                {
+                    newRotY = (newRotY + 180f) % 360f;
+                }
+            }
+        }
+
+        if (followRotZ)
+            newRotZ = target.eulerAngles.z;
 
         Quaternion targetRotation = Quaternion.Euler(newRotX, newRotY, newRotZ);
         transform.rotation = targetRotation;
