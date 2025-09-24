@@ -51,7 +51,6 @@ public class ActiveRagdoll : MonoBehaviour
     {
         Vector3 bodyPositionOffset = ragdollHips.position - animationHips.position;
         animationRoot.position += bodyPositionOffset;
-
         AnimationSynchro();
     }
 

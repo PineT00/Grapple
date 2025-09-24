@@ -169,8 +169,8 @@ public class RagdollAnimator : MonoBehaviour
                 SetLimbDrives(normalArmDrive, normalLegDrive); // 팔, 다리
                 break;
             case PlayerAnimState.Rolling:
-                SetTorsoDrives(standBodyDrive, true); // 척추 포함
-                SetLimbDrives(normalArmDrive, normalArmDrive); // 팔, 다리
+                SetTorsoDrives(standBodyDrive); // 척추 포함
+                SetLimbDrives(glideDrive, glideDrive); // 팔, 다리
                 currentSpinAngle = animHipTrans.localEulerAngles.x;
                 break;
             case PlayerAnimState.Gliding:

@@ -53,6 +53,7 @@ public class RagdollCharacterController : MonoBehaviour
     public float airTurnSpeed = 3f;
     public float airBrakeForce = 1.3f;
     public float additionalGravity = 10f;
+    public float spinSpeed = 200f;
 
     [Header("Swing Settings")]
     public float swingMoveForce = 10f;
@@ -184,6 +185,30 @@ public class RagdollCharacterController : MonoBehaviour
         mainRb.AddForce(velocityChange, ForceMode.Acceleration);
     }
 
+    public void HandleAirMove2()
+    {
+        UpdateMoveInfo();
+
+        Vector3 velocityChange;
+
+        if (worldDirection.sqrMagnitude > 0.01f)
+        {
+            targetVelocity *= maxAirSpeed;
+            velocityChange = targetVelocity - horizontalVelocity;
+            velocityChange *= airSpeed;
+            //RotateDirectionSmooth(worldDirection, airTurnSpeed);
+            //ApplyGlidingForce(worldDirection);
+            //RotateForGliding(worldDirection);
+
+        }
+        else
+        {
+            velocityChange = -horizontalVelocity * airBrakeForce;
+        }
+        HandleGlidingRotation(worldDirection);
+        mainRb.AddForce(velocityChange, ForceMode.Acceleration);
+    }
+
     public void HandleSwingMovement()
     {
         UpdateMoveInfo();
@@ -293,6 +318,30 @@ public class RagdollCharacterController : MonoBehaviour
     {
         Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up) * Quaternion.Euler(60, 0, 0);
         mainJoint.SetTargetRotationLocal(targetWorldRotation, Quaternion.identity);
+    }
+
+    public float glidingYawSpeed = 5f;
+    public float glidingPitchSpeed = 5f;
+    public Vector2 glidingVelocityRange = new Vector2(-20f, 10f);
+    public Vector2 glidingPitchAngleRange = new Vector2(-45f, 30f);
+    public void HandleGlidingRotation(Vector3 worldDirection)
+    {
+        Quaternion currRotation = Quaternion.LookRotation(moveFrame.forward);
+        Quaternion targetRotation = currRotation;
+        if (worldDirection.sqrMagnitude > 0.01f)
+        {
+            targetRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up);
+        }
+        currRotation = Quaternion.Slerp(currRotation, targetRotation, glidingYawSpeed * Time.fixedDeltaTime);
+
+        float verticalVelocity = mainRb.linearVelocity.y;
+        float velocityRatio = Mathf.InverseLerp(glidingVelocityRange.x, glidingVelocityRange.y, verticalVelocity);
+
+        float targetPitch = Mathf.Lerp(glidingPitchAngleRange.x, glidingPitchAngleRange.y, velocityRatio);
+        float newPitch = Mathf.LerpAngle(mainJoint.targetRotation.eulerAngles.x, targetPitch, glidingPitchSpeed * Time.fixedDeltaTime);
+
+        //currRotation *= Quaternion.Euler(newPitch, 0, 0);
+        mainJoint.SetTargetRotationLocal(currRotation, Quaternion.identity);
     }
 
     private void AntiGravity(float targetAntiGravity)
