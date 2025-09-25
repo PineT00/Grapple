@@ -242,6 +242,7 @@ public class RagdollCharacterController : MonoBehaviour
         ApplyGlidingForce(newForward);
         RotateForGliding(newForward);
         AntiGravity(targetGlideGravity);
+        //AntiGravity(targetGlideGravity + CurrentGlideBoost);
     }
 
     public void HandleDivingMovement()
@@ -316,7 +317,7 @@ public class RagdollCharacterController : MonoBehaviour
 
     public void RotateForGliding(Vector3 worldDirection)
     {
-        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up) * Quaternion.Euler(60, 0, 0);
+        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up) * Quaternion.Euler(55, 0, 0);
         mainJoint.SetTargetRotationLocal(targetWorldRotation, Quaternion.identity);
     }
 

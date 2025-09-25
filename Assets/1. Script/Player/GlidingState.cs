@@ -70,7 +70,7 @@ public class GlidingState : PlayerBaseState
 
                 // 다이빙으로 얻은 수직 속도를 수평 부스트로 전환
                 float diveBonus = -_controller.mainRb.linearVelocity.y * _controller.diveToGlideSpeedConversion;
-                _controller.CurrentGlideBoost += Mathf.Clamp(diveBonus, 0, _controller.maxDiveSpeedBoost);
+                _controller.CurrentGlideBoost = Mathf.Clamp(diveBonus, 0, _controller.maxDiveSpeedBoost);
             }
         }
         else // 방향 입력이 없으면
