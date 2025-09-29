@@ -157,9 +157,13 @@ public class RagdollCharacterController : MonoBehaviour
 
         if (worldDirection.sqrMagnitude > 0.01f)
         {
-            targetVelocity *= maxGroundSpeed;
-            velocityChange = targetVelocity - horizontalVelocity;
-            RotateDirection(worldDirection);
+            //targetVelocity *= maxGroundSpeed;
+            //velocityChange = targetVelocity - horizontalVelocity;
+            //RotateDirection(worldDirection);
+
+            Vector3 desiredVelocity = worldDirection.normalized * maxGroundSpeed;
+            velocityChange = desiredVelocity - horizontalVelocity;
+            RotateDirectionSmooth(worldDirection, turnSpeed);
         }
         velocityChange.y = 0f;
         mainRb.AddForce(velocityChange * groundSpeed, ForceMode.Acceleration);
@@ -317,7 +321,7 @@ public class RagdollCharacterController : MonoBehaviour
 
     public void RotateForGliding(Vector3 worldDirection)
     {
-        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up) * Quaternion.Euler(55, 0, 0);
+        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up) * Quaternion.Euler(65, 0, 0);
         mainJoint.SetTargetRotationLocal(targetWorldRotation, Quaternion.identity);
     }
 
@@ -334,14 +338,6 @@ public class RagdollCharacterController : MonoBehaviour
             targetRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up);
         }
         currRotation = Quaternion.Slerp(currRotation, targetRotation, glidingYawSpeed * Time.fixedDeltaTime);
-
-        float verticalVelocity = mainRb.linearVelocity.y;
-        float velocityRatio = Mathf.InverseLerp(glidingVelocityRange.x, glidingVelocityRange.y, verticalVelocity);
-
-        float targetPitch = Mathf.Lerp(glidingPitchAngleRange.x, glidingPitchAngleRange.y, velocityRatio);
-        float newPitch = Mathf.LerpAngle(mainJoint.targetRotation.eulerAngles.x, targetPitch, glidingPitchSpeed * Time.fixedDeltaTime);
-
-        //currRotation *= Quaternion.Euler(newPitch, 0, 0);
         mainJoint.SetTargetRotationLocal(currRotation, Quaternion.identity);
     }
 
