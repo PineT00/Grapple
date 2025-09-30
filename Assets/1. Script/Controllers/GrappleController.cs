@@ -7,6 +7,7 @@ public struct BendPoint
 {
     public Vector3 position;
     public Vector3 normal;
+    public Collider attachedCollider;
 }
 
 public class GrappleController : MonoBehaviour
@@ -54,12 +55,8 @@ public class GrappleController : MonoBehaviour
     public bool GrappleReady { get; private set; }
     private Vector3 potentialGrapplePoint;
     private Vector3 potentialGrappleNormal;
-    private Transform potentialGrappleTransform;
+    private Collider potentialGrappleCollider;
     private SpringJoint joint;
-
-    // 움직이는 오브젝트 추적을 위한 변수
-    private Transform grappledObjectTransform; // 실제 부착된 오브젝트의 Transform
-    private Vector3 grappleOffset; // 오브젝트의 중심으로부터의 로컬 좌표 오프셋
 
     private List<BendPoint> bendPoints = new List<BendPoint>();
     private float currentRopeLength;
@@ -96,20 +93,6 @@ public class GrappleController : MonoBehaviour
         }
     }
 
-    private void CheckRopeVisualDistance()
-    {
-        float distance = Vector3.Distance(firePoint.position, bendPoints.Last().position);
-        if (distance < joint.maxDistance)
-        {
-            activeRopeRender.SetContinuousWobble(true);
-        }
-        else
-        {
-            activeRopeRender.SetContinuousWobble(false);
-        }
-
-    }
-
     private void CheckForGrapplePoint()
     {
         Ray ray = cam.ScreenPointToRay(new Vector2(Screen.width / 2f, Screen.height / 2f));
@@ -118,7 +101,7 @@ public class GrappleController : MonoBehaviour
             GrappleReady = true;
             potentialGrapplePoint = hit.point;
             potentialGrappleNormal = hit.normal;
-            potentialGrappleTransform = hit.transform; // 부착될 오브젝트의 Transform 저장
+            potentialGrappleCollider = hit.collider;
         }
         else
         {
@@ -134,15 +117,8 @@ public class GrappleController : MonoBehaviour
         launchTargetPoint = potentialGrapplePoint;
         launchProgress = 0f;
 
-        // 움직이는 오브젝트 추적 로직
-        grappledObjectTransform = potentialGrappleTransform;
-        if (grappledObjectTransform != null)
-        {
-            grappleOffset = grappledObjectTransform.InverseTransformPoint(launchTargetPoint);
-        }
-
         bendPoints.Clear();
-        bendPoints.Add(new BendPoint { position = firePoint.position }); // 시작점은 플레이어 위치
+        bendPoints.Add(new BendPoint { position = potentialGrapplePoint, normal = potentialGrappleNormal, attachedCollider = potentialGrappleCollider});
         activeRopeRender.ActivateRope(true);
     }
 
@@ -151,7 +127,7 @@ public class GrappleController : MonoBehaviour
         if (currentState == GrappleState.None) return;
 
         currentState = GrappleState.None;
-        grappledObjectTransform = null; // 추적중인 오브젝트 정보 초기화
+        bendPoints.Clear();
         SetJoint(false);
         activeRopeRender.ActivateRope(false);
     }
@@ -160,7 +136,7 @@ public class GrappleController : MonoBehaviour
     {
         // Reeling 시 Spring, Damper 값 조절 (선택)
         joint.spring = 100f;
-        joint.damper = 30f;
+        joint.damper = 20f;
 
     }
 
@@ -185,34 +161,51 @@ public class GrappleController : MonoBehaviour
 
     public void HandleRopePhysics()
     {
-        // 부착된 오브젝트의 움직임을 실시간으로 반영
-        if (grappledObjectTransform != null && bendPoints.Count > 0)
+        if (bendPoints.Count <= 0) return;
+
+        // 1. 움직이는 발사 지점 업데이트
+        //UpdateGrappledObjectPosition();
+
+        // 2. 로프 풀기
+        HandleRopeUnwrapping();
+
+        // 4. 새로운 로프 꺾임점 추가
+        HandleRopeBending();
+
+        // 5. 조인트 업데이트
+        UpdateJoint();
+    }
+
+    private void UpdateGrappledObjectPosition()
+    {
+        //if (grappledObjectTransform != null)
+        //{
+        //    var firstBend = bendPoints[0];
+        //    firstBend.position = grappledObjectTransform.TransformPoint(grappleOffset);
+        //    bendPoints[0] = firstBend;
+        //}
+    }
+    private void HandleRopeUnwrapping()
+    {
+        if (bendPoints.Count <= 1) return;
+
+        Vector3 lastPoint = bendPoints.Last().position;
+        Vector3 prevPoint = bendPoints[bendPoints.Count - 2].position;
+        Vector3 dirToPlayer = (firePoint.position - lastPoint).normalized;
+        Vector3 dirToPrev = (prevPoint - lastPoint).normalized;
+
+        if (Vector3.Dot(dirToPlayer, dirToPrev) > ropeUnwrapAngleThreshold)
         {
-            var firstBend = bendPoints[0];
-            firstBend.position = grappledObjectTransform.TransformPoint(grappleOffset);
-            bendPoints[0] = firstBend;
-        }
-
-        // 로프 풀기
-        if (bendPoints.Count > 1)
-        {
-            Vector3 lastPoint = bendPoints.Last().position;
-            Vector3 prevPoint = bendPoints[bendPoints.Count - 2].position;
-
-            Vector3 dirToPlayer = (firePoint.position - lastPoint).normalized;
-            Vector3 dirToPrev = (prevPoint - lastPoint).normalized;
-
-            if (Vector3.Dot(dirToPlayer, dirToPrev) > ropeUnwrapAngleThreshold)
+            float distToPrev = Vector3.Distance(firePoint.position, prevPoint);
+            if (!Physics.Raycast(firePoint.position, (prevPoint - firePoint.position).normalized, distToPrev - raycastOffset, grappleLayerMask))
             {
-                float distToPrev = Vector3.Distance(firePoint.position, prevPoint);
-                if (!Physics.Raycast(firePoint.position, (prevPoint - firePoint.position).normalized, distToPrev - raycastOffset, grappleLayerMask))
-                {
-                    bendPoints.RemoveAt(bendPoints.Count - 1);
-                }
+                bendPoints.RemoveAt(bendPoints.Count - 1);
             }
         }
+    }
 
-        // 로프 꺾기
+    private void HandleRopeBending()
+    {
         Vector3 lastBendPosition = bendPoints.Last().position;
         Vector3 playerToLastPointDir = (lastBendPosition - firePoint.position).normalized;
         float distToLastPoint = Vector3.Distance(firePoint.position, lastBendPosition);
@@ -223,13 +216,15 @@ public class GrappleController : MonoBehaviour
         {
             if (Vector3.Distance(hit.point, lastBendPosition) > minNewBendDistance)
             {
-                Vector3 cornerNormal = Vector3.Lerp(bendPoints.Last().normal, hit.normal, 0.5f);
-                Vector3 newBendPos = hit.point + cornerNormal * bendPointOffset;
-                bendPoints.Add(new BendPoint { position = newBendPos, normal = hit.normal });
+                // *** 변경점 4: 새 꺾임 지점을 추가할 때, 부딪힌 콜라이더 정보도 함께 저장
+                bendPoints.Add(new BendPoint
+                {
+                    position = hit.point + hit.normal * bendPointOffset,
+                    normal = hit.normal,
+                    attachedCollider = hit.collider
+                });
             }
         }
-
-        UpdateJoint();
     }
 
     private void UpdateJoint()
@@ -274,12 +269,6 @@ public class GrappleController : MonoBehaviour
     }
     private void HandleRopeLaunchVisuals()
     {
-        // 부착된 오브젝트가 움직이면 발사 목표 지점을 실시간으로 업데이트
-        if (grappledObjectTransform != null)
-        {
-            launchTargetPoint = grappledObjectTransform.TransformPoint(grappleOffset);
-        }
-
         Vector3 startPoint = firePoint.position;
         float totalDistance = Vector3.Distance(startPoint, launchTargetPoint);
 

@@ -35,7 +35,7 @@ public class SwingingState : PlayerBaseState
     public override void ExitState()
     {
         _controller.grappleController.OnRelease();
-        _controller.MultiflyHorizontalforce();
+        //_controller.MultiflyHorizontalforce();
     }
 
     public override void OnGrapple(InputAction.CallbackContext context)
