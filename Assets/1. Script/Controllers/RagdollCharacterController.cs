@@ -157,10 +157,6 @@ public class RagdollCharacterController : MonoBehaviour
 
         if (worldDirection.sqrMagnitude > 0.01f)
         {
-            //targetVelocity *= maxGroundSpeed;
-            //velocityChange = targetVelocity - horizontalVelocity;
-            //RotateDirection(worldDirection);
-
             Vector3 desiredVelocity = worldDirection.normalized * maxGroundSpeed;
             velocityChange = desiredVelocity - horizontalVelocity;
             RotateDirectionSmooth(worldDirection, turnSpeed);
@@ -173,43 +169,19 @@ public class RagdollCharacterController : MonoBehaviour
     {
         UpdateMoveInfo();
 
-        Vector3 velocityChange;
+        Vector3 velocityChange = Vector3.zero;
 
         if (worldDirection.sqrMagnitude > 0.01f)
         {
-            targetVelocity *= maxAirSpeed;
-            velocityChange = targetVelocity - horizontalVelocity;
-            velocityChange *= airSpeed;
+            Vector3 desiredVelocity = worldDirection.normalized * maxAirSpeed;
+            velocityChange = desiredVelocity - horizontalVelocity;
             RotateDirectionSmooth(worldDirection, airTurnSpeed);
         }
         else
         {
             velocityChange = -horizontalVelocity * airBrakeForce;
         }
-        mainRb.AddForce(velocityChange, ForceMode.Acceleration);
-    }
-
-    public void HandleAirMove2()
-    {
-        UpdateMoveInfo();
-
-        Vector3 velocityChange;
-
-        if (worldDirection.sqrMagnitude > 0.01f)
-        {
-            targetVelocity *= maxAirSpeed;
-            velocityChange = targetVelocity - horizontalVelocity;
-            velocityChange *= airSpeed;
-            //RotateDirectionSmooth(worldDirection, airTurnSpeed);
-            //ApplyGlidingForce(worldDirection);
-            //RotateForGliding(worldDirection);
-
-        }
-        else
-        {
-            velocityChange = -horizontalVelocity * airBrakeForce;
-        }
-        HandleGlidingRotation(worldDirection);
+        velocityChange.y = 0f;
         mainRb.AddForce(velocityChange, ForceMode.Acceleration);
     }
 

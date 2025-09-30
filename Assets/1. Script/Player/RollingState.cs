@@ -18,7 +18,7 @@ public class RollingState : PlayerBaseState
             return;
         }
 
-        _controller.HandleAirMove2();
+        _controller.HandleAirMove();
         _controller.MultiflyGravity();
     }
 

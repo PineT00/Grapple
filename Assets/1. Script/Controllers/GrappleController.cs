@@ -223,7 +223,8 @@ public class GrappleController : MonoBehaviour
         {
             if (Vector3.Distance(hit.point, lastBendPosition) > minNewBendDistance)
             {
-                Vector3 newBendPos = hit.point + hit.normal * bendPointOffset;
+                Vector3 cornerNormal = Vector3.Lerp(bendPoints.Last().normal, hit.normal, 0.5f);
+                Vector3 newBendPos = hit.point + cornerNormal * bendPointOffset;
                 bendPoints.Add(new BendPoint { position = newBendPos, normal = hit.normal });
             }
         }
