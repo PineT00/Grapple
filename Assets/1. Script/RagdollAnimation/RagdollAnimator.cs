@@ -45,8 +45,18 @@ public class RagdollAnimator : MonoBehaviour
     public float normalLegDrive = 30f;
     public float swingArmDrive = 999f;
     public float glideDrive = 999f;
-    public float normalDamper = 20f;
+
+    [Header("Damper 설정")]
+    public float standBodyDamper = 200f;
+    public float fallDamper = 10f;
+    public float normalArmDamper = 5f;
+    public float normalLegDamper = 5f;
+    public float swingArmDamper = 50f;
     public float glideDamper = 100f;
+
+    [Header("MaxForce 설정")]
+    public float bodyMaxForce = 50000f;
+    public float limbMaxForce = 10000f;
 
 
     [Header("스윙 액션 설정")]
@@ -120,33 +130,61 @@ public class RagdollAnimator : MonoBehaviour
     }
 
 
-    float stepTimer = 0f;
-    public float stepTime = 1f;
-    public float stepDistance = 1f;
-    public float stepHeight = 1f;
-    Vector3 initialLeftFootPos;
-    Vector3 initialRightFootPos;
+    [Header("걷기 애니메이션 설정")]
     public Transform leftFootTarget;
     public Transform rightFootTarget;
+    [Tooltip("걸음 주기 (초, 작을수록 빠름)")]
+    public float stepCycleDuration = 0.5f;
+    [Tooltip("발을 앞으로 내딛는 거리 (로컬 Z)")]
+    public float stepForwardDistance = 0.3f;
+    [Tooltip("발을 올리는 높이 (로컬 Y)")]
+    public float stepHeight = 0.2f;
+    [Tooltip("양발 겹침 허용 비율 (0.5 = 50%)")]
+    public float overlapRatio = 0.5f;
+
+    private Vector3 initialLeftFootPos;
+    private Vector3 initialRightFootPos;
+    private float leftLegPhase = 0f;  // 왼발의 애니메이션 진행도 (0~1)
+    private float rightLegPhase = 0.5f; // 오른발의 애니메이션 진행도 (0~1, 0.5만큼 위상차)
 
     private void Walking()
     {
-        stepTimer += Time.deltaTime;
-        float progress = Mathf.PingPong(stepTimer, stepTime) / stepTime;
-        float zOffset = Mathf.Cos(progress * 2 * Mathf.PI) * stepDistance;
+        // 양발 위상 진행 (시간 기반)
+        float phaseIncrement = Time.deltaTime / stepCycleDuration;
+        leftLegPhase += phaseIncrement;
+        rightLegPhase += phaseIncrement;
 
-        Vector3 newLeftPos = initialLeftFootPos + Vector3.forward * zOffset;
-        Vector3 newRightPos = initialRightFootPos - Vector3.forward * zOffset;
+        // 위상 래핑 (0~1 범위 유지)
+        if (leftLegPhase >= 1f) leftLegPhase -= 1f;
+        if (rightLegPhase >= 1f) rightLegPhase -= 1f;
 
-        float leftHeight = Mathf.Sin(progress * 2 * Mathf.PI + Mathf.PI) * 0.5f + 0.5f;
-        float rightHeight = Mathf.Sin(progress * 2 * Mathf.PI) * 0.5f + 0.5f;
+        // 각 발의 위치 계산
+        UpdateFootPosition(leftFootTarget, leftLegPhase, initialLeftFootPos);
+        UpdateFootPosition(rightFootTarget, rightLegPhase, initialRightFootPos);
+    }
 
-        newLeftPos.y += leftHeight * stepHeight;
-        newRightPos.y += rightHeight * stepHeight;
+    /// <summary>
+    /// 발의 위치를 위상에 따라 업데이트 (전방 + 수직 아치)
+    /// </summary>
+    private void UpdateFootPosition(Transform footTarget, float phase, Vector3 initialPos)
+    {
+        if (footTarget == null) return;
 
-        // 계산된 최종 위치를 각 타겟의 localPosition에 적용
-        if (leftFootTarget) leftFootTarget.localPosition = newLeftPos;
-        if (rightFootTarget) rightFootTarget.localPosition = newRightPos;
+        // Smoothstep으로 부드러운 가속/감속
+        float smoothPhase = phase * phase * (3f - 2f * phase);
+
+        // 전후 이동 (cos 곡선으로 -1 ~ 1)
+        float forwardOffset = Mathf.Cos(phase * 2f * Mathf.PI) * stepForwardDistance;
+
+        // 수직 이동 (sin 곡선으로 0 ~ 1, 발이 공중에 있을 때만 올라감)
+        float verticalOffset = Mathf.Sin(phase * Mathf.PI) * stepHeight;
+
+        // 최종 위치 (로컬 좌표)
+        Vector3 newPos = initialPos;
+        newPos.z += forwardOffset; // 전방
+        newPos.y += verticalOffset; // 높이
+
+        footTarget.localPosition = newPos;
     }
 
     public void SetAnimation(PlayerAnimState state)
@@ -161,29 +199,29 @@ public class RagdollAnimator : MonoBehaviour
         {
             case PlayerAnimState.Standing:
             case PlayerAnimState.Walking:
-                SetTorsoDrives(standBodyDrive);
-                SetLimbDrives(normalArmDrive, normalLegDrive); // 팔, 다리
+                SetTorsoDrives(standBodyDrive, standBodyDamper, bodyMaxForce);
+                SetLimbDrives(normalArmDrive, normalLegDrive, normalArmDamper, normalLegDamper, limbMaxForce);
                 break;
             case PlayerAnimState.OnAir:
-                SetTorsoDrives(standBodyDrive);
-                SetLimbDrives(normalArmDrive, normalLegDrive); // 팔, 다리
+                SetTorsoDrives(standBodyDrive, standBodyDamper, bodyMaxForce);
+                SetLimbDrives(normalArmDrive, normalLegDrive, normalArmDamper, normalLegDamper, limbMaxForce);
                 break;
             case PlayerAnimState.Rolling:
-                SetTorsoDrives(standBodyDrive); // 척추 포함
-                SetLimbDrives(glideDrive, glideDrive); // 팔, 다리
+                SetTorsoDrives(standBodyDrive, standBodyDamper, bodyMaxForce);
+                SetLimbDrives(glideDrive, glideDrive, glideDamper, glideDamper, limbMaxForce);
                 currentSpinAngle = animHipTrans.localEulerAngles.x;
                 break;
             case PlayerAnimState.Gliding:
-                SetTorsoDrives(standBodyDrive); // 척추 포함
-                SetLimbDrives(glideDrive, glideDrive); // 팔, 다리
+                SetTorsoDrives(standBodyDrive, standBodyDamper, bodyMaxForce);
+                SetLimbDrives(glideDrive, glideDrive, glideDamper, glideDamper, limbMaxForce);
                 break;
             case PlayerAnimState.Swinging:
-                SetTorsoDrives(fallDrive);
-                SetLimbDrives(swingArmDrive, normalArmDrive);
+                SetTorsoDrives(fallDrive, fallDamper, bodyMaxForce);
+                SetLimbDrives(swingArmDrive, normalArmDrive, swingArmDamper, normalLegDamper, limbMaxForce);
                 break;
             case PlayerAnimState.Reeling:
-                SetTorsoDrives(fallDrive);
-                SetLimbDrives(swingArmDrive, normalArmDrive);
+                SetTorsoDrives(fallDrive, fallDamper, bodyMaxForce);
+                SetLimbDrives(swingArmDrive, normalArmDrive, swingArmDamper, normalLegDamper, limbMaxForce);
                 break;
         }
     }
@@ -208,61 +246,40 @@ public class RagdollAnimator : MonoBehaviour
     }
 
     // 물리 설정 헬퍼들
-    private void SetTorsoDrives(float hipSpring, bool includeSpine = false)
+    private void SetTorsoDrives(float hipSpring, float hipDamper, float maxForce, bool includeSpine = false)
     {
-        SetJointDrive(mainHipJoint, hipSpring);
+        SetJointDrive(mainHipJoint, hipSpring, hipDamper, maxForce);
         if (includeSpine)
         {
-            SetJointDrive(spineJoint, hipSpring);
+            SetJointDrive(spineJoint, hipSpring, hipDamper, maxForce);
         }
     }
 
-    private void SetLimbDrives(float armSpring, float legSpring)
+    private void SetLimbDrives(float armSpring, float legSpring, float armDamper, float legDamper, float maxForce)
     {
         // 팔
-        SetJointDrive(leftArmJoint, armSpring);
-        SetJointDrive(leftForeArmJoint, armSpring);
-        SetJointDrive(rightArmJoint, armSpring);
-        SetJointDrive(rightForeArmJoint, armSpring);
+        SetJointDrive(leftArmJoint, armSpring, armDamper, maxForce);
+        SetJointDrive(leftForeArmJoint, armSpring, armDamper, maxForce);
+        SetJointDrive(rightArmJoint, armSpring, armDamper, maxForce);
+        SetJointDrive(rightForeArmJoint, armSpring, armDamper, maxForce);
 
         // 다리
-        SetJointDrive(leftLegJoint, legSpring);
-        SetJointDrive(rightLegJoint, legSpring);
-        SetJointDrive(leftCarfJoint, legSpring);
-        SetJointDrive(rightCarfJoint, legSpring);
+        SetJointDrive(leftLegJoint, legSpring, legDamper, maxForce);
+        SetJointDrive(rightLegJoint, legSpring, legDamper, maxForce);
+        SetJointDrive(leftCarfJoint, legSpring, legDamper, maxForce);
+        SetJointDrive(rightCarfJoint, legSpring, legDamper, maxForce);
     }
 
-    private void SetJointDrive(ConfigurableJoint joint, float springValue)
+    private void SetJointDrive(ConfigurableJoint joint, float springValue, float damperValue, float maxForceValue)
     {
-        if (joint == null || springValue <= 0) return; // 유효성 검사
+        if (joint == null) return;
 
         JointDrive drive = joint.slerpDrive;
         drive.positionSpring = springValue;
+        drive.positionDamper = damperValue;
+        drive.maximumForce = maxForceValue;
         joint.slerpDrive = drive;
     }
 
-    private void SetLimbDamper(float armDamper, float legDamper)
-    {
-        // 팔
-        SetJointDamper(leftArmJoint, armDamper);
-        SetJointDamper(leftForeArmJoint, armDamper);
-        SetJointDamper(rightArmJoint, armDamper);
-        SetJointDamper(rightForeArmJoint, armDamper);
-
-        // 다리
-        SetJointDamper(leftLegJoint, legDamper);
-        SetJointDamper(rightLegJoint, legDamper);
-        SetJointDamper(leftCarfJoint, legDamper);
-        SetJointDamper(rightCarfJoint, legDamper);
-    }
-
-    private void SetJointDamper(ConfigurableJoint joint, float DamperValue)
-    {
-        if (joint == null || DamperValue <= 0) return; // 유효성 검사
-
-        JointDrive drive = joint.slerpDrive;
-        drive.positionDamper = DamperValue;
-        joint.slerpDrive = drive;
-    }
 
 }

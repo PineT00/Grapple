@@ -58,13 +58,18 @@ public class ActiveRagdoll : MonoBehaviour
     {
         foreach (var data in jointDataList)
         {
-            if (data.joint != hipJoint)
+            // Hip 관절도 동기화하되, 과도한 회전 방지
+            if (data.joint == hipJoint)
             {
-                ConfigurableJointExtensions.SetTargetRotationLocal(data.joint, data.animationBone.localRotation, data.startLocalRotation);
+                // Hip은 물리에 더 많이 맡기되, 애니메이션 방향도 일부 반영
+                //Quaternion targetRotation = Quaternion.Slerp(data.joint.transform.localRotation, data.animationBone.localRotation, 0.3f);
+                //ConfigurableJointExtensions.SetTargetRotationLocal(data.joint, targetRotation, data.startLocalRotation);
+                data.animationBone.localRotation = data.joint.transform.localRotation;
             }
             else
             {
-                //data.animationBone.rotation = data.joint.transform.rotation;
+                // 다른 관절은 애니메이션을 정확히 추적
+                ConfigurableJointExtensions.SetTargetRotationLocal(data.joint, data.animationBone.localRotation, data.startLocalRotation);
             }
         }
     }
