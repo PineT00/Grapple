@@ -25,6 +25,7 @@ public class WalkingState : PlayerBaseState
         }
 
         _controller.HandleGroundMovement();
+        _controller.ApplyHovering();
     }
 
     public override void OnJump(InputAction.CallbackContext context)

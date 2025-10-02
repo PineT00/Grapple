@@ -34,6 +34,7 @@ public class GlidingState : PlayerBaseState
             initialDashDir.y = 0f;
             _controller.DashDir = initialDashDir.normalized;
         }
+        _controller.airTrailFeedback.PlayFeedbacks();
     }
 
     public override void FixedUpdateState()
@@ -119,6 +120,7 @@ public class GlidingState : PlayerBaseState
     {
         _controller.CurrentGlideBoost = 0f;
         _controller.currGlideStateUI.text = "";
+        _controller.airTrailFeedback.StopFeedbacks();
     }
 
     public override void OnGlide(InputAction.CallbackContext context)

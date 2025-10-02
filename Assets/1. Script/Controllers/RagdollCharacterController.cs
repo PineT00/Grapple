@@ -38,13 +38,17 @@ public class RagdollCharacterController : MonoBehaviour
 
     [Header("Input")]
     [HideInInspector] public Vector2 moveInput;
+    [Header("Effects")]
+    public MMF_Player jumpFeedback;
+    public MMF_Player airTrailFeedback;
+    public MMF_Player speedLineFeedback;
 
     [Header("Ground Settings")]
     public float groundSpeed = 30f;
     public float maxGroundSpeed = 5f;
     public float turnSpeed = 5f;
+    public float groundBrakeForce = 1.3f;
     public float groundCheckDistance = 0.7f;
-    public MMF_Player jumpFeedback;
 
     [Header("Air Settings")]
     public float jumpForce = 7f;
@@ -78,11 +82,16 @@ public class RagdollCharacterController : MonoBehaviour
     public float glideTransitionDuration = 0.6f;
     public float maxDiveSpeedBoost = 25f;
     public float glideBoostDecayRate = 2f;
-    private Rigidbody[] allRigidbodies;
-
     public float CurrentGlideBoost { get; set; }
     public Vector3 DashDir { get; set; }
 
+    [Header("Hovering Settings")]
+    public float hoverHeight = 2f;
+    public float hoverForce = 50f;
+    public float hoverDamping = 10f;
+    public float hoverRaycastDistance = 10f;
+
+    private Rigidbody[] allRigidbodies;
     Vector3 inputDirection;
     Vector3 horizontalVelocity;
     Vector3 targetVelocity;
@@ -158,11 +167,15 @@ public class RagdollCharacterController : MonoBehaviour
         if (worldDirection.sqrMagnitude > 0.01f)
         {
             Vector3 desiredVelocity = worldDirection.normalized * maxGroundSpeed;
-            velocityChange = desiredVelocity - horizontalVelocity;
+            velocityChange = (desiredVelocity - horizontalVelocity) * groundSpeed;
             RotateDirectionSmooth(worldDirection, turnSpeed);
         }
+        else
+        {
+            velocityChange = -horizontalVelocity * groundBrakeForce;
+        }
         velocityChange.y = 0f;
-        mainRb.AddForce(velocityChange * groundSpeed, ForceMode.Acceleration);
+        mainRb.AddForce(velocityChange, ForceMode.Acceleration);
     }
 
     public void HandleAirMove()
@@ -174,7 +187,7 @@ public class RagdollCharacterController : MonoBehaviour
         if (worldDirection.sqrMagnitude > 0.01f)
         {
             Vector3 desiredVelocity = worldDirection.normalized * maxAirSpeed;
-            velocityChange = desiredVelocity - horizontalVelocity;
+            velocityChange = (desiredVelocity - horizontalVelocity) * airSpeed;
             RotateDirectionSmooth(worldDirection, airTurnSpeed);
         }
         else
@@ -297,22 +310,6 @@ public class RagdollCharacterController : MonoBehaviour
         mainJoint.SetTargetRotationLocal(targetWorldRotation, Quaternion.identity);
     }
 
-    public float glidingYawSpeed = 5f;
-    public float glidingPitchSpeed = 5f;
-    public Vector2 glidingVelocityRange = new Vector2(-20f, 10f);
-    public Vector2 glidingPitchAngleRange = new Vector2(-45f, 30f);
-    public void HandleGlidingRotation(Vector3 worldDirection)
-    {
-        Quaternion currRotation = Quaternion.LookRotation(moveFrame.forward);
-        Quaternion targetRotation = currRotation;
-        if (worldDirection.sqrMagnitude > 0.01f)
-        {
-            targetRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up);
-        }
-        currRotation = Quaternion.Slerp(currRotation, targetRotation, glidingYawSpeed * Time.fixedDeltaTime);
-        mainJoint.SetTargetRotationLocal(currRotation, Quaternion.identity);
-    }
-
     private void AntiGravity(float targetAntiGravity)
     {
         // 반중력 값 보정(안정적)
@@ -353,6 +350,22 @@ public class RagdollCharacterController : MonoBehaviour
     {
         Vector3 origin = moveFrame.position + Vector3.up * 0.1f;
         return Physics.Raycast(origin, Vector3.down, groundCheckDistance + 0.1f, groundLayer);
+    }
+
+    public void ApplyHovering()
+    {
+        Vector3 rayOrigin = moveFrame.position + Vector3.up * 0.1f;
+        RaycastHit hit;
+
+        if (Physics.Raycast(rayOrigin, Vector3.down, out hit, hoverRaycastDistance, groundLayer))
+        {
+            float currentHeight = hit.distance;
+            float heightError = hoverHeight - currentHeight;
+            float verticalVelocity = mainRb.linearVelocity.y;
+
+            float force = (heightError * hoverForce) - (verticalVelocity * hoverDamping);
+            mainRb.AddForce(Vector3.up * force, ForceMode.Acceleration);
+        }
     }
 
 }

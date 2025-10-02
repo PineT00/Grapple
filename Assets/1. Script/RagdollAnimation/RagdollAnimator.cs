@@ -34,10 +34,6 @@ public class RagdollAnimator : MonoBehaviour
     public Rig swingRig;
     public Rig rollingRig;
 
-    [Header("스텝 설정")]
-    public float stepAngle = 30f; // 다리를 내미는 각도
-    public float stepSpeed = 2f;
-
     [Header("Drive 설정")]
     public float standBodyDrive = 3000f;
     public float fallDrive = 100f;
@@ -147,6 +143,12 @@ public class RagdollAnimator : MonoBehaviour
     private float leftLegPhase = 0f;  // 왼발의 애니메이션 진행도 (0~1)
     private float rightLegPhase = 0.5f; // 오른발의 애니메이션 진행도 (0~1, 0.5만큼 위상차)
 
+    public void ResetToStanding()
+    {
+        leftFootTarget.localPosition = initialLeftFootPos;
+        rightFootTarget.localPosition = initialRightFootPos;
+    }
+
     private void Walking()
     {
         // 양발 위상 진행 (시간 기반)
@@ -170,11 +172,18 @@ public class RagdollAnimator : MonoBehaviour
     {
         if (footTarget == null) return;
 
-        // Smoothstep으로 부드러운 가속/감속
-        float smoothPhase = phase * phase * (3f - 2f * phase);
-
-        // 전후 이동 (cos 곡선으로 -1 ~ 1)
-        float forwardOffset = Mathf.Cos(phase * 2f * Mathf.PI) * stepForwardDistance;
+        // 전후 이동: 0~0.5 구간에서 앞으로, 0.5~1 구간에서 뒤로
+        float forwardOffset;
+        if (phase < 0.5f)
+        {
+            // 0~0.5: 뒤에서(-stepForwardDistance) 앞으로(+stepForwardDistance) 이동
+            forwardOffset = Mathf.Lerp(-stepForwardDistance, stepForwardDistance, phase * 2f);
+        }
+        else
+        {
+            // 0.5~1: 앞에서 뒤로 밀려남 (착지 후 몸이 앞으로 이동하면서)
+            forwardOffset = Mathf.Lerp(stepForwardDistance, -stepForwardDistance, (phase - 0.5f) * 2f);
+        }
 
         // 수직 이동 (sin 곡선으로 0 ~ 1, 발이 공중에 있을 때만 올라감)
         float verticalOffset = Mathf.Sin(phase * Mathf.PI) * stepHeight;
@@ -198,6 +207,10 @@ public class RagdollAnimator : MonoBehaviour
         switch (state)
         {
             case PlayerAnimState.Standing:
+                SetTorsoDrives(standBodyDrive, standBodyDamper, bodyMaxForce);
+                SetLimbDrives(normalArmDrive, normalLegDrive, normalArmDamper, normalLegDamper, limbMaxForce);
+                ResetToStanding();
+                break;
             case PlayerAnimState.Walking:
                 SetTorsoDrives(standBodyDrive, standBodyDamper, bodyMaxForce);
                 SetLimbDrives(normalArmDrive, normalLegDrive, normalArmDamper, normalLegDamper, limbMaxForce);
