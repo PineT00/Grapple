@@ -34,26 +34,36 @@ public class RagdollAnimator : MonoBehaviour
     public Rig swingRig;
     public Rig rollingRig;
 
-    [Header("Drive 설정")]
-    public float standBodyDrive = 3000f;
-    public float fallDrive = 100f;
-    public float normalArmDrive = 30f;
-    public float normalLegDrive = 30f;
-    public float swingArmDrive = 999f;
-    public float glideDrive = 999f;
-
-    [Header("Damper 설정")]
+    [Header("Stand")]
+    public float standHipDrive = 3000f;
+    public float standSpineDrive = 600f;
+    public float standArmDrive = 30f;
+    public float standLegDrive = 30f;
     public float standBodyDamper = 200f;
-    public float fallDamper = 10f;
     public float normalArmDamper = 5f;
     public float normalLegDamper = 5f;
+
+    [Header("Swing")]
+    public float swingHipDrive = 3000f;
+    public float swingSpineDrive = 999f;
+    public float swingArmDrive = 999f;
+    public float swingLegDrive = 999f;
+    public float swingBodyDamper = 200f;
     public float swingArmDamper = 50f;
-    public float glideDamper = 100f;
+    public float swingLegDamper = 50f;
+
+    [Header("glide")]
+    public float glideHipDrive = 999f;
+    public float glideSpineDrive = 800f;
+    public float glideArmDrive = 800f;
+    public float glideLegDrive = 800f;
+    public float glideBodyDamper = 100f;
+    public float glideArmDamper = 50f;
+    public float glideLegDamper = 50f;
 
     [Header("MaxForce 설정")]
     public float bodyMaxForce = 50000f;
     public float limbMaxForce = 10000f;
-
 
     [Header("스윙 액션 설정")]
     public Transform swingTarget;
@@ -165,9 +175,6 @@ public class RagdollAnimator : MonoBehaviour
         UpdateFootPosition(rightFootTarget, rightLegPhase, initialRightFootPos);
     }
 
-    /// <summary>
-    /// 발의 위치를 위상에 따라 업데이트 (전방 + 수직 아치)
-    /// </summary>
     private void UpdateFootPosition(Transform footTarget, float phase, Vector3 initialPos)
     {
         if (footTarget == null) return;
@@ -207,34 +214,34 @@ public class RagdollAnimator : MonoBehaviour
         switch (state)
         {
             case PlayerAnimState.Standing:
-                SetTorsoDrives(standBodyDrive, standBodyDamper, bodyMaxForce);
-                SetLimbDrives(normalArmDrive, normalLegDrive, normalArmDamper, normalLegDamper, limbMaxForce);
+                SetTorsoDrives(standHipDrive, standSpineDrive, standBodyDamper,  standBodyDamper, bodyMaxForce);
+                SetLimbDrives(standArmDrive, standLegDrive, normalArmDamper, normalLegDamper, limbMaxForce);
                 ResetToStanding();
                 break;
             case PlayerAnimState.Walking:
-                SetTorsoDrives(standBodyDrive, standBodyDamper, bodyMaxForce);
-                SetLimbDrives(normalArmDrive, normalLegDrive, normalArmDamper, normalLegDamper, limbMaxForce);
+                SetTorsoDrives(standHipDrive, standSpineDrive, standBodyDamper, standBodyDamper, bodyMaxForce);
+                SetLimbDrives(standArmDrive, standLegDrive, normalArmDamper, normalLegDamper, limbMaxForce);
                 break;
             case PlayerAnimState.OnAir:
-                SetTorsoDrives(standBodyDrive, standBodyDamper, bodyMaxForce);
-                SetLimbDrives(normalArmDrive, normalLegDrive, normalArmDamper, normalLegDamper, limbMaxForce);
+                SetTorsoDrives(standHipDrive, standSpineDrive, standBodyDamper, standBodyDamper, bodyMaxForce);
+                SetLimbDrives(standArmDrive, standLegDrive, normalArmDamper, normalLegDamper, limbMaxForce);
                 break;
             case PlayerAnimState.Rolling:
-                SetTorsoDrives(standBodyDrive, standBodyDamper, bodyMaxForce);
-                SetLimbDrives(glideDrive, glideDrive, glideDamper, glideDamper, limbMaxForce);
+                SetTorsoDrives(swingHipDrive, swingSpineDrive, swingBodyDamper, swingBodyDamper, bodyMaxForce);
+                SetLimbDrives(swingArmDrive, swingLegDrive, swingArmDamper, swingLegDamper, limbMaxForce);
                 currentSpinAngle = animHipTrans.localEulerAngles.x;
                 break;
             case PlayerAnimState.Gliding:
-                SetTorsoDrives(standBodyDrive, standBodyDamper, bodyMaxForce);
-                SetLimbDrives(glideDrive, glideDrive, glideDamper, glideDamper, limbMaxForce);
+                SetTorsoDrives(glideHipDrive, glideSpineDrive, glideBodyDamper,  glideBodyDamper, bodyMaxForce);
+                SetLimbDrives(glideArmDrive, glideLegDrive, glideArmDamper, glideLegDamper, limbMaxForce);
                 break;
             case PlayerAnimState.Swinging:
-                SetTorsoDrives(fallDrive, fallDamper, bodyMaxForce);
-                SetLimbDrives(swingArmDrive, normalArmDrive, swingArmDamper, normalLegDamper, limbMaxForce);
+                SetTorsoDrives(swingHipDrive, swingSpineDrive, swingBodyDamper, swingBodyDamper, bodyMaxForce);
+                SetLimbDrives(swingArmDrive, swingLegDrive, swingArmDamper, swingLegDamper, limbMaxForce);
                 break;
             case PlayerAnimState.Reeling:
-                SetTorsoDrives(fallDrive, fallDamper, bodyMaxForce);
-                SetLimbDrives(swingArmDrive, normalArmDrive, swingArmDamper, normalLegDamper, limbMaxForce);
+                SetTorsoDrives(swingHipDrive, swingSpineDrive, swingBodyDamper, swingBodyDamper, bodyMaxForce);
+                SetLimbDrives(swingArmDrive, glideLegDrive, swingArmDamper, swingLegDamper, limbMaxForce);
                 break;
         }
     }
@@ -259,13 +266,10 @@ public class RagdollAnimator : MonoBehaviour
     }
 
     // 물리 설정 헬퍼들
-    private void SetTorsoDrives(float hipSpring, float hipDamper, float maxForce, bool includeSpine = false)
+    private void SetTorsoDrives(float hipSpring, float spineSpring, float hipDamper, float spineDamper, float maxForce)
     {
         SetJointDrive(mainHipJoint, hipSpring, hipDamper, maxForce);
-        if (includeSpine)
-        {
-            SetJointDrive(spineJoint, hipSpring, hipDamper, maxForce);
-        }
+        SetJointDrive(spineJoint, spineSpring, spineDamper, maxForce);
     }
 
     private void SetLimbDrives(float armSpring, float legSpring, float armDamper, float legDamper, float maxForce)
