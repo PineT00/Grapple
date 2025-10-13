@@ -46,17 +46,23 @@ public class RagdollCharacterController : MonoBehaviour
     [Header("Ground Settings")]
     public float groundSpeed = 30f;
     public float maxGroundSpeed = 5f;
-    public float turnSpeed = 5f;
-    public float groundBrakeForce = 1.3f;
+    public float groundTurnSpeed = 5f;
+    public float groundBrake = 1.3f;
     public float groundCheckDistance = 0.7f;
 
-    [Header("Air Settings")]
+    [Header("Jump Settings")]
     public float jumpForce = 7f;
-    public float airSpeed = 10f;
-    public float maxAirSpeed = 15f;
-    public float airTurnSpeed = 3f;
-    public float airBrakeForce = 1.3f;
+    public float jumpControl = 10f;
+    public float maxJumpControl = 15f;
+    public float jumpTurnSpeed = 3f;
+    public float jumpBrake = 1.3f;
     public float additionalGravity = 10f;
+
+    [Header("Air Settings")]
+    public float airControl = 10f;
+    public float maxAirControl = 15f;
+    public float airTurnSpeed = 3f;
+    public float airBrake = 1.3f;
     public float spinSpeed = 200f;
 
     [Header("Swing Settings")]
@@ -158,44 +164,56 @@ public class RagdollCharacterController : MonoBehaviour
         targetVelocity = moveFrame.forward;
     }
 
-    public void HandleGroundMovement()
+    public void MovementControl()
     {
         UpdateMoveInfo();
 
+        switch (CurrentState)
+        {
+            case StandingState:
+            case WalkingState:
+                HandleMovement(groundSpeed, maxGroundSpeed, groundTurnSpeed, groundBrake);
+                break;
+            case OnAirState:
+                HandleMovement(jumpControl, maxJumpControl, jumpTurnSpeed, jumpBrake);
+                break;
+            case RollingState:
+                HandleMovement(airControl, maxAirControl, airTurnSpeed, airBrake);
+                break;
+        }
+    }
+
+    public void HandleMovement(float force, float maxForce, float turnSpeed, float breakForce)
+    {
         Vector3 velocityChange = Vector3.zero;
 
         if (worldDirection.sqrMagnitude > 0.01f)
         {
-            Vector3 desiredVelocity = worldDirection.normalized * maxGroundSpeed;
-            velocityChange = (desiredVelocity - horizontalVelocity) * groundSpeed;
+            Vector3 desiredVelocity = worldDirection.normalized * maxForce;
+            velocityChange = (desiredVelocity - horizontalVelocity) * force;
             RotateDirectionSmooth(worldDirection, turnSpeed);
         }
         else
         {
-            velocityChange = -horizontalVelocity * groundBrakeForce;
+            velocityChange = -horizontalVelocity * breakForce;
         }
         velocityChange.y = 0f;
         mainRb.AddForce(velocityChange, ForceMode.Acceleration);
     }
 
-    public void HandleAirMove()
+    float steeringForce = 30f;
+    private void HandleHighSpeedMovement(float currentSpeed)
     {
-        UpdateMoveInfo();
+        // 현재 속도 방향 유지하면서 입력 방향으로 서서히 조정
+        Vector3 currentDir = horizontalVelocity.normalized;
+        Vector3 inputDir = worldDirection.normalized;
 
-        Vector3 velocityChange = Vector3.zero;
+        // 입력 방향으로 보조 힘 추가 (속도를 크게 바꾸지 않고 방향만 조정)
+        Vector3 steeringVelocity = Vector3.Lerp(currentDir, inputDir, 0.3f) * currentSpeed;
+        Vector3 steeringForceVec = (steeringVelocity - horizontalVelocity) * steeringForce;
+        steeringForceVec.y = 0f;
 
-        if (worldDirection.sqrMagnitude > 0.01f)
-        {
-            Vector3 desiredVelocity = worldDirection.normalized * maxAirSpeed;
-            velocityChange = (desiredVelocity - horizontalVelocity) * airSpeed;
-            RotateDirectionSmooth(worldDirection, airTurnSpeed);
-        }
-        else
-        {
-            velocityChange = -horizontalVelocity * airBrakeForce;
-        }
-        velocityChange.y = 0f;
-        mainRb.AddForce(velocityChange, ForceMode.Acceleration);
+        mainRb.AddForce(steeringForceVec, ForceMode.Acceleration);
     }
 
     public void HandleSwingMovement()

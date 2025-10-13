@@ -18,7 +18,7 @@ public class OnAirState : PlayerBaseState
             return;
         }
 
-        _controller.HandleAirMove();
+        _controller.MovementControl();
         _controller.MultiflyGravity();
     }
 

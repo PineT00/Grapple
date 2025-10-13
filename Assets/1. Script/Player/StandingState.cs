@@ -28,7 +28,7 @@ public class StandingState : PlayerBaseState
             return;
         }
 
-        _controller.HandleGroundMovement();
+        _controller.MovementControl();
         _controller.ApplyHovering();
     }
 
