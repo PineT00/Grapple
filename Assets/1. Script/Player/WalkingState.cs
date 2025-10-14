@@ -7,6 +7,7 @@ public class WalkingState : PlayerBaseState
 
     public override void EnterState()
     {
+        _controller.CalculateMomentumBonus();
         _ragdollAnimator.SetAnimation(PlayerAnimState.Walking);
     }
 

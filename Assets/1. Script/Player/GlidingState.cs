@@ -18,11 +18,13 @@ public class GlidingState : PlayerBaseState
         _ragdollAnimator.SetAnimation(PlayerAnimState.Gliding);
 
         _controller.UpdateMoveInfo();
+        _controller.CalculateMomentumBonus();
 
         _currentSubState = GlideSubState.Dashing;
         _glideDashTimer = _controller.glideDashTime;
 
-        _controller.CurrentGlideBoost = _controller.dashSpeed;
+        //_controller.CurrentGlideBoost = _controller.dashSpeed;
+        _controller.CurrentGlideBoost = _controller.momentumBonus;
 
         if (_controller.worldDirection.sqrMagnitude > 0.1f)
         {

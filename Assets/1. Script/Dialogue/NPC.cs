@@ -9,12 +9,12 @@ public class NPC : MonoBehaviour
     [Tooltip("이 NPC와 상호작용 시 시작할 Yarn 노드의 이름")]
     public string startNode = "Start";
 
-    // 에디터에서 상호작용을 쉽게 테스트하기 위한 예시 함수입니다.
-    // 실제 게임에서는 플레이어의 입력 시스템이나 상호작용 매니저를 통해 호출하는 것이 좋습니다.
-    private void OnMouseDown()
+    private void OnTriggerEnter(Collider collider)
     {
-        Debug.Log($"{gameObject.name} 클릭됨. {startNode} 대화 시작 시도.");
-        // 다이얼로그 매니저를 통해 대화를 시작합니다.
-        DialogueManager.Instance.StartDialogue(startNode);
+        if (collider.CompareTag("Player"))
+        {
+            Debug.Log($"{gameObject.name} 접촉. {startNode} 대화 시작 시도.");
+            DialogueManager.Instance.StartDialogue(startNode);
+        }
     }
 }

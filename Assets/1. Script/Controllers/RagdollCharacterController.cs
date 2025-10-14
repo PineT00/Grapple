@@ -96,6 +96,13 @@ public class RagdollCharacterController : MonoBehaviour
     public float CurrentGlideBoost { get; set; }
     public Vector3 DashDir { get; set; }
 
+    [Header("Momentum System")]
+    public float momentumBonus = 0f;
+    public float momentumDecayRate = 2f;
+    public float momentumConversionRatio = 0.3f;
+    public float maxMomentumBonus = 20f;
+    public float minSpeedForMomentum = 5f;
+
     [Header("Hovering Settings")]
     public float hoverHeight = 2f;
     public float hoverForce = 50f;
@@ -126,6 +133,7 @@ public class RagdollCharacterController : MonoBehaviour
     void FixedUpdate()
     {
         CurrentState?.FixedUpdateState();
+        UpdateMomentumDecay();
     }
 
     // 상태를 전환하는 유일한 통로
@@ -196,10 +204,11 @@ public class RagdollCharacterController : MonoBehaviour
     public void HandleMovement(float force, float maxForce, float turnSpeed, float breakForce)
     {
         Vector3 velocityChange = Vector3.zero;
+        float effectiveMaxSpeed = maxForce + momentumBonus;
 
         if (worldDirection.sqrMagnitude > 0.01f)
         {
-            Vector3 desiredVelocity = worldDirection.normalized * maxForce;
+            Vector3 desiredVelocity = worldDirection.normalized * effectiveMaxSpeed;
             velocityChange = (desiredVelocity - horizontalVelocity) * force;
             RotateDirectionSmooth(worldDirection, turnSpeed);
         }
@@ -289,7 +298,7 @@ public class RagdollCharacterController : MonoBehaviour
 
     private void ApplyGlidingForce(Vector3 direction)
     {
-        float currentMaxSpeed = maxGlideSpeed + CurrentGlideBoost;
+        float currentMaxSpeed = maxGlideSpeed + CurrentGlideBoost + momentumBonus;
         Vector3 targetVelocity = direction * currentMaxSpeed;
         Vector3 velocityChange = targetVelocity - mainRb.linearVelocity;
         velocityChange.y = 0;
@@ -334,7 +343,7 @@ public class RagdollCharacterController : MonoBehaviour
 
     public void RotateForGliding(Vector3 worldDirection)
     {
-        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up) * Quaternion.Euler(65, 0, 0);
+        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up) * Quaternion.Euler(60, 0, 0);
         mainJoint.SetTargetRotationLocal(targetWorldRotation, Quaternion.identity);
     }
 
@@ -402,6 +411,47 @@ public class RagdollCharacterController : MonoBehaviour
 
             float force = (heightError * hoverForce) - (verticalVelocity * hoverDamping);
             mainRb.AddForce(Vector3.up * force, ForceMode.Acceleration);
+        }
+    }
+
+    /// <summary>
+    /// Momentum System
+    /// </summary>
+    public void CalculateMomentumBonus()
+    {
+        Vector3 horizontalVel = mainRb.linearVelocity;
+        horizontalVel.y = 0f;
+        float currentSpeed = horizontalVel.magnitude;
+
+        if (currentSpeed > minSpeedForMomentum)
+        {
+            float bonus = currentSpeed * momentumConversionRatio;
+            momentumBonus = Mathf.Clamp(bonus, 0f, maxMomentumBonus);
+        }
+        else
+        {
+            momentumBonus = 0f;
+        }
+    }
+
+    private void UpdateMomentumDecay()
+    {
+        if (momentumBonus > 0f)
+        {
+            float decayRate = momentumDecayRate;
+            switch (CurrentState)
+            {
+                case StandingState:
+                case WalkingState:
+                    decayRate *= 1.5f;
+                    break;
+            }
+
+            momentumBonus -= decayRate * Time.fixedDeltaTime;
+            if (momentumBonus < 0f)
+            {
+                momentumBonus = 0f;
+            }
         }
     }
 

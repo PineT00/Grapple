@@ -7,6 +7,8 @@ public class StandingState : PlayerBaseState
 
     public override void EnterState()
     {
+        _controller.CalculateMomentumBonus();
+
         Quaternion standRot = _ragdollAnimator.animHipTrans.localRotation;
         standRot.x = 0f;
         standRot.z = 0f;

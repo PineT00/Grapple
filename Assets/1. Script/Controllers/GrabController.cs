@@ -38,6 +38,7 @@ public class GrabController : MonoBehaviour
         joint = playerRb.gameObject.AddComponent<SpringJoint>();
         joint.autoConfigureConnectedAnchor = false;
         joint.anchor = joint.transform.InverseTransformPoint(firePoint.position);
+        joint.minDistance = 0.5f;
 
         activeRopeRender = Instantiate(ropePrefab).GetComponent<RopeMeshGenerator>();
 

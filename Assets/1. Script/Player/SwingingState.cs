@@ -9,6 +9,7 @@ public class SwingingState : PlayerBaseState
 
     public override void EnterState()
     {
+        _controller.CalculateMomentumBonus();
         _controller.grappleController.OnGrapple();
         _ragdollAnimator.SetAnimation(PlayerAnimState.Swinging);
     }

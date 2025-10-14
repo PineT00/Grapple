@@ -7,6 +7,7 @@ public class RollingState : PlayerBaseState
 
     public override void EnterState()
     {
+        _controller.CalculateMomentumBonus();
         _ragdollAnimator.SetAnimation(PlayerAnimState.Rolling);
     }
 
