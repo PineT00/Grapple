@@ -80,7 +80,9 @@ public class ControlManager : MonoBehaviour
     {
         if (context.ReadValue<float>() > 0)
         {
+            if (IsPointerOverUI(Mouse.current.position.ReadValue())) return;
         }
+        characterController.OnRighClick(context);
     }
 
     public bool IsPointerOverUI(Vector2 screenPosition)

@@ -38,4 +38,9 @@ public class RollingState : PlayerBaseState
             _controller.SwitchState(new SwingingState(_controller));
         }
     }
+
+    public override void OnGrab(InputAction.CallbackContext context)
+    {
+        _controller.grabController.OnGrab(context);
+    }
 }

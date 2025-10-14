@@ -34,6 +34,7 @@ public class RagdollCharacterController : MonoBehaviour
     [HideInInspector] public Rigidbody mainRb;
     [HideInInspector] public ConfigurableJoint mainJoint;
     [HideInInspector] public GrappleController grappleController;
+    [HideInInspector] public GrabController grabController;
     [HideInInspector] public RagdollAnimator ragdollAnimator;
 
     [Header("Input")]
@@ -69,6 +70,10 @@ public class RagdollCharacterController : MonoBehaviour
     public float swingMoveForce = 10f;
     public float swingTurnSpeed = 300f;
     public float swingEndDashSpeed = 15f;
+    public float minSpeedForMultiply = 5f;
+    public float maxSpeedForMultiply = 20f;
+    public float minDashMultiplier = 0.5f;
+    public float maxDashMultiplier = 1.5f;
 
     [Header("Glide Settings")]
     public float glideAccel = 15f;
@@ -108,6 +113,7 @@ public class RagdollCharacterController : MonoBehaviour
         mainRb = charCenterPart.GetComponent<Rigidbody>();
         mainJoint = charCenterPart.GetComponent<ConfigurableJoint>();
         grappleController = GetComponent<GrappleController>();
+        grabController = GetComponent<GrabController>();
         ragdollAnimator = GetComponent<RagdollAnimator>();
         allRigidbodies = GetComponentsInChildren<Rigidbody>();
 
@@ -152,6 +158,10 @@ public class RagdollCharacterController : MonoBehaviour
             return;
 
         CurrentState?.OnGrapple(context);
+    }
+    public void OnRighClick(InputAction.CallbackContext context)
+    {
+        CurrentState?.OnGrab(context);
     }
 
     public void UpdateMoveInfo()
@@ -347,9 +357,18 @@ public class RagdollCharacterController : MonoBehaviour
 
     public void MultiflyHorizontalforce()
     {
-        Vector3 horizontalDir = mainRb.linearVelocity.normalized;
-        horizontalDir.y = 0f;
-        mainRb.AddForce(horizontalDir * swingEndDashSpeed, ForceMode.VelocityChange);
+        Vector3 horizontalVel = mainRb.linearVelocity;
+        horizontalVel.y = 0f;
+        float currentSpeed = horizontalVel.magnitude;
+
+        // 현재 속도에 따라 배율 계산 (느리면 적게, 빠르면 많이)
+        float speedRatio = Mathf.InverseLerp(minSpeedForMultiply, maxSpeedForMultiply, currentSpeed);
+        float speedMultiplier = Mathf.Lerp(minDashMultiplier, maxDashMultiplier, speedRatio);
+
+        Vector3 horizontalDir = horizontalVel.normalized;
+        float finalDashSpeed = swingEndDashSpeed * speedMultiplier;
+
+        mainRb.AddForce(horizontalDir * finalDashSpeed, ForceMode.VelocityChange);
     }
 
     public void ReduceMomentum(float amount) //예측불가능하게 움직일 수 있으니 꼭 필요한 상황외엔 사용X

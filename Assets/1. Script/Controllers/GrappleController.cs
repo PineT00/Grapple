@@ -118,7 +118,7 @@ public class GrappleController : MonoBehaviour
         launchProgress = 0f;
 
         bendPoints.Clear();
-        bendPoints.Add(new BendPoint { position = potentialGrapplePoint, normal = potentialGrappleNormal, attachedCollider = potentialGrappleCollider});
+        bendPoints.Add(new BendPoint { position = potentialGrapplePoint, normal = potentialGrappleNormal, attachedCollider = potentialGrappleCollider });
         activeRopeRender.ActivateRope(true);
     }
 
@@ -216,7 +216,6 @@ public class GrappleController : MonoBehaviour
         {
             if (Vector3.Distance(hit.point, lastBendPosition) > minNewBendDistance)
             {
-                // *** 변경점 4: 새 꺾임 지점을 추가할 때, 부딪힌 콜라이더 정보도 함께 저장
                 bendPoints.Add(new BendPoint
                 {
                     position = hit.point + hit.normal * bendPointOffset,

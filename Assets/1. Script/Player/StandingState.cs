@@ -29,7 +29,7 @@ public class StandingState : PlayerBaseState
         }
 
         _controller.MovementControl();
-        _controller.ApplyHovering();
+        //_controller.ApplyHovering();
     }
 
     public override void OnJump(InputAction.CallbackContext context)
@@ -48,5 +48,10 @@ public class StandingState : PlayerBaseState
         {
             _controller.SwitchState(new SwingingState(_controller));
         }
+    }
+
+    public override void OnGrab(InputAction.CallbackContext context)
+    {
+        _controller.grabController.OnGrab(context);
     }
 }

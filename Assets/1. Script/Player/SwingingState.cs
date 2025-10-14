@@ -35,7 +35,7 @@ public class SwingingState : PlayerBaseState
     public override void ExitState()
     {
         _controller.grappleController.OnRelease();
-        //_controller.MultiflyHorizontalforce();
+        _controller.MultiflyHorizontalforce();
     }
 
     public override void OnGrapple(InputAction.CallbackContext context)
@@ -60,5 +60,10 @@ public class SwingingState : PlayerBaseState
             _controller.grappleController.StopReeling();
             _controller.ragdollAnimator.SetAnimation(PlayerAnimState.Swinging);
         }
+    }
+
+    public override void OnGrab(InputAction.CallbackContext context)
+    {
+        _controller.grabController.OnGrab(context);
     }
 }

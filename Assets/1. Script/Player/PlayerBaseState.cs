@@ -20,4 +20,5 @@ public class PlayerBaseState
     public virtual void OnJump(InputAction.CallbackContext context) { }
     public virtual void OnGlide(InputAction.CallbackContext context) { }
     public virtual void OnGrapple(InputAction.CallbackContext context) { }
+    public virtual void OnGrab(InputAction.CallbackContext context) { }
 }
