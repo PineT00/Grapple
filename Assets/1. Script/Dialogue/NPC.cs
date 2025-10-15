@@ -1,8 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// NPC 오브젝트에 부착하여 다이얼로그를 트리거하는 간단한 스크립트입니다.
-/// </summary>
 public class NPC : MonoBehaviour
 {
     [Header("Dialogue Settings")]

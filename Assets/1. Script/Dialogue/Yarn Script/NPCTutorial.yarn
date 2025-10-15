@@ -6,6 +6,7 @@ NPC: 도움이 필요하면 <fade>언제든</fade> 말해줘.
 
 -> 응, 도움이 필요해.
     NPC: 좋아! 여기 <wiggle>포션</wiggle>을 하나 줄게.
+    <<give_item potion 1>>
 -> 아니, 괜찮아.
     NPC: 알았어. 행운을 빌게!
 ===
