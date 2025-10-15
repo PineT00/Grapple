@@ -1,24 +1,11 @@
 title: Start
 ---
-// 이 파일은 NPC와의 첫 만남 대화를 정의합니다.
-// TextAnimator 태그를 자유롭게 사용할 수 있습니다.
 
 NPC: 안녕! <shake>이 세계</shake>에 온 걸 환영해.
 NPC: 도움이 필요하면 <fade>언제든</fade> 말해줘.
 
 -> 응, 도움이 필요해.
     NPC: 좋아! 여기 <wiggle>포션</wiggle>을 하나 줄게.
-    <<give_item potion 1>>
-    <<jump QuestStart>>
-
 -> 아니, 괜찮아.
     NPC: 알았어. 행운을 빌게!
-    
----
-title: QuestStart
----
-NPC: 그럼 첫 번째 임무를 시작해볼까?
-NPC: 주변에 있는 <color=red>몬스터</color>를 3마리 잡아줘!
-<<start_quest monster_hunt 3>>
-
 ===
