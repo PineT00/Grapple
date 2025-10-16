@@ -52,7 +52,14 @@ public class GrappleController : MonoBehaviour
     public float raycastOffset = 0.1f;
     [Tooltip("새 꺾임 지점을 벽에서 살짝 띄우는 거리")]
     public float bendPointOffset = 0.1f;
+
+    [Header("코요테 타임 (Grapple Buffer)")]
+    [Tooltip("타겟을 잃은 후에도 그래플 가능한 프레임 수")]
+    [Range(0, 30)]
+    public int grappleCoyoteFrames = 5;
+
     public bool GrappleReady { get; private set; }
+    private int coyoteFrameCounter = 0;
     private Vector3 potentialGrapplePoint;
     private Vector3 potentialGrappleNormal;
     private Collider potentialGrappleCollider;
@@ -74,7 +81,7 @@ public class GrappleController : MonoBehaviour
         SetJoint(false);
     }
 
-    void FixedUpdate()
+    void Update()
     {
         CheckForGrapplePoint();
     }
@@ -98,24 +105,37 @@ public class GrappleController : MonoBehaviour
         Ray ray = cam.ScreenPointToRay(new Vector2(Screen.width / 2f, Screen.height / 2f));
         if (Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, grappleLayerMask))
         {
+            // 타겟 감지 성공
             GrappleReady = true;
+            coyoteFrameCounter = grappleCoyoteFrames;
             potentialGrapplePoint = hit.point;
             potentialGrappleNormal = hit.normal;
             potentialGrappleCollider = hit.collider;
         }
         else
         {
-            GrappleReady = false;
+            // 타겟 감지 실패: 코요테 타임 카운터 감소
+            if (coyoteFrameCounter > 0)
+            {
+                coyoteFrameCounter--;
+                GrappleReady = true;
+            }
+            else
+            {
+                GrappleReady = false;
+            }
         }
     }
 
     public void OnGrapple()
     {
-        if (!GrappleReady || currentState != GrappleState.None) return;
-
+        // 그래플 발사 시작
         currentState = GrappleState.Launching;
         launchTargetPoint = potentialGrapplePoint;
         launchProgress = 0f;
+
+        // 코요테 카운터 초기화 (발사 후에는 다시 타겟 감지 필요)
+        coyoteFrameCounter = 0;
 
         bendPoints.Clear();
         bendPoints.Add(new BendPoint { position = potentialGrapplePoint, normal = potentialGrappleNormal, attachedCollider = potentialGrappleCollider });
@@ -243,10 +263,18 @@ public class GrappleController : MonoBehaviour
         joint.minDistance = (currentRopeLength - wrappedLength) * minRope;
     }
 
+    [SerializeField] private float referenceLength = 10f; // 기준 길이
+    [SerializeField] private float springScalingPower = 1f;
+
     private void SetJoint(bool active)
     {
         if (active)
         {
+            float lengthRatio = referenceLength / Mathf.Max(currentRopeLength, 0.1f);
+            float springScale = Mathf.Pow(lengthRatio, springScalingPower);
+
+            joint.spring = spring * springScale;
+            joint.damper = damper * springScale;
             joint.spring = spring;
             joint.damper = damper;
             joint.massScale = massScale;
