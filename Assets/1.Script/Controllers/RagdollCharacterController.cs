@@ -12,6 +12,7 @@ public enum PlayerAnimState
     Swinging,
     Reeling,
     Gliding,
+    WallRunning,
 }
 
 public class RagdollCharacterController : MonoBehaviour
@@ -108,6 +109,15 @@ public class RagdollCharacterController : MonoBehaviour
     public float hoverForce = 50f;
     public float hoverDamping = 10f;
     public float hoverRaycastDistance = 10f;
+
+    [Header("Wall Run Settings")]
+    public float maxWallRunTime = 3f;
+    public float wallRunGravity = 3f;
+    public float wallRunSpeedDecay = 2f;
+    public float minWallRunSpeed = 3f;
+    public float wallStickForce = 5f;
+    public float wallDetectionDistance = 1.5f;
+    public float minSpeedForWallRun = 8f;
 
     private Rigidbody[] allRigidbodies;
     Vector3 inputDirection;
