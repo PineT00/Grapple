@@ -26,6 +26,8 @@ public class RagdollAnimator : MonoBehaviour
     [SerializeField] private ConfigurableJoint rightArmJoint;
     [SerializeField] private ConfigurableJoint leftForeArmJoint;
     [SerializeField] private ConfigurableJoint rightForeArmJoint;
+    [SerializeField] private ConfigurableJoint leftHandJoint;
+    [SerializeField] private ConfigurableJoint rightHandJoint;
 
     [Header("Rigs")]
     public float rigTransitionSpeed = 0.5f;
@@ -68,6 +70,14 @@ public class RagdollAnimator : MonoBehaviour
     [Header("스윙 액션 설정")]
     public Transform swingTarget;
     private PlayerAnimState currState;
+
+    [Header("그래플 손/팔 보정")]
+    [Tooltip("손에 가할 보정 힘 비율")]
+    public float handForceRatio = 0.15f;
+    [Tooltip("팔꿈치에 가할 보정 힘 비율")]
+    public float forearmForceRatio = 0.08f;
+    [Tooltip("어깨에 가할 보정 힘 비율")]
+    public float armForceRatio = 0.05f;
 
     private Dictionary<Rig, float> targetRigWeights = new Dictionary<Rig, float>();
     private List<Rig> allRigs;
@@ -214,7 +224,7 @@ public class RagdollAnimator : MonoBehaviour
         switch (state)
         {
             case PlayerAnimState.Standing:
-                SetTorsoDrives(standHipDrive, standSpineDrive, standBodyDamper,  standBodyDamper, bodyMaxForce);
+                SetTorsoDrives(standHipDrive, standSpineDrive, standBodyDamper, standBodyDamper, bodyMaxForce);
                 SetLimbDrives(standArmDrive, standLegDrive, normalArmDamper, normalLegDamper, limbMaxForce);
                 ResetToStanding();
                 break;
@@ -232,7 +242,7 @@ public class RagdollAnimator : MonoBehaviour
                 currentSpinAngle = animHipTrans.localEulerAngles.x;
                 break;
             case PlayerAnimState.Gliding:
-                SetTorsoDrives(glideHipDrive, glideSpineDrive, glideBodyDamper,  glideBodyDamper, bodyMaxForce);
+                SetTorsoDrives(glideHipDrive, glideSpineDrive, glideBodyDamper, glideBodyDamper, bodyMaxForce);
                 SetLimbDrives(glideArmDrive, glideLegDrive, glideArmDamper, glideLegDamper, limbMaxForce);
                 break;
             case PlayerAnimState.Swinging:
@@ -296,6 +306,38 @@ public class RagdollAnimator : MonoBehaviour
         drive.positionDamper = damperValue;
         drive.maximumForce = maxForceValue;
         joint.slerpDrive = drive;
+    }
+
+    /// <summary>
+    /// 그래플 포인트로 손과 팔에 체인식 보정 힘을 가합니다.
+    /// </summary>
+    /// 
+    public void ApplyGrappleArmCorrection(bool isRight, Vector3 grapplePoint, float baseForce)
+    {
+        ConfigurableJoint handJoint = isRight ? rightHandJoint : leftHandJoint;
+        ConfigurableJoint forearmJoint = isRight ? rightForeArmJoint : leftForeArmJoint;
+        ConfigurableJoint armJoint = isRight ? rightArmJoint : leftArmJoint;
+
+        // 손 (팔꿈치 조인트의 연결된 body = 손)
+        if (handJoint != null)
+        {
+            Vector3 direction = (grapplePoint - handJoint.transform.position).normalized;
+            handJoint.GetComponent<Rigidbody>().AddForce(direction * baseForce * handForceRatio, ForceMode.Force);
+        }
+
+        // 팔꿈치
+        if (forearmJoint != null)
+        {
+            Vector3 direction = (grapplePoint - forearmJoint.transform.position).normalized;
+            forearmJoint.GetComponent<Rigidbody>().AddForce(direction * baseForce * forearmForceRatio, ForceMode.Force);
+        }
+
+        // 어깨
+        if (armJoint != null)
+        {
+            Vector3 direction = (grapplePoint - armJoint.transform.position).normalized;
+            armJoint.GetComponent<Rigidbody>().AddForce(direction * baseForce * armForceRatio, ForceMode.Force);
+        }
     }
 
 

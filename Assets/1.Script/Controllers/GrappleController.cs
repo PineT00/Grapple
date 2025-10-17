@@ -53,7 +53,7 @@ public class GrappleController : MonoBehaviour
     [Tooltip("새 꺾임 지점을 벽에서 살짝 띄우는 거리")]
     public float bendPointOffset = 0.1f;
 
-    [Header("코요테 타임 (Grapple Buffer)")]
+    [Header("조준 코요테 타임")]
     [Tooltip("타겟을 잃은 후에도 그래플 가능한 프레임 수")]
     [Range(0, 30)]
     public int grappleCoyoteFrames = 5;

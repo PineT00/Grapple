@@ -18,6 +18,9 @@ public class SwingingState : PlayerBaseState
     {
         if (!_controller.grappleController.IsAttached)
         {
+            _ragdollAnimator.ApplyGrappleArmCorrection(true, _grappleController.GetGrapplePoint(), 200f);
+            Debug.Log("손뻗기");
+            Debug.Log(_grappleController.GetGrapplePoint());
             return;
         }
 
@@ -31,6 +34,7 @@ public class SwingingState : PlayerBaseState
         }
         _controller.grappleController.HandleRopePhysics();
         _controller.MultiflyGravity();
+        _ragdollAnimator.ApplyGrappleArmCorrection(true, _grappleController.GetGrapplePoint(), 200f);
     }
 
     public override void ExitState()
