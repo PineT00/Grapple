@@ -7492,7 +7492,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.9754403, y: 2.4760923, z: -19.689999}
+  m_LocalPosition: {x: 1.9761145, y: 2.4760923, z: -19.689999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -19152,7 +19152,7 @@ Transform:
   m_GameObject: {fileID: 939819600}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.9754403, y: 2.4760923, z: -19.689999}
+  m_LocalPosition: {x: 1.9761145, y: 2.4760923, z: -19.689999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -43160,6 +43160,10 @@ MonoBehaviour:
   glideTransitionDuration: 0.4
   maxDiveSpeedBoost: 25
   glideBoostDecayRate: 4
+  ascendAngle: 22
+  ascendInitialForce: 4
+  ascendTargetForce: 23
+  ascendDuration: 1.5
   momentumBonus: 0
   momentumDecayRate: 2
   momentumConversionRatio: 0.2
@@ -43172,10 +43176,10 @@ MonoBehaviour:
   maxWallRunTime: 5
   wallRunGravity: 30
   wallRunSpeedDecay: 2
-  minWallRunSpeed: 4
+  minWallRunSpeed: 100
   wallStickForce: 60
-  wallDetectionDistance: 1.5
-  minSpeedForWallRun: 8
+  wallDetectionDistance: 0
+  minSpeedForWallRun: 100
   worldDirection: {x: 0, y: 0, z: 0}
 --- !u!114 &3231055207306408562
 MonoBehaviour:

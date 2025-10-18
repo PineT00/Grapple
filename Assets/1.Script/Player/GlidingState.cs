@@ -11,6 +11,11 @@ public class GlidingState : PlayerBaseState
     private Vector3 _diveDirection;
     private Vector3 _targetGlideDirection;
 
+    // Ascending 상태 변수
+    private float _ascendProgress;
+    private float _currentAscendForce;
+    private Vector3 _ascendDirection;
+
     public GlidingState(RagdollCharacterController controller) : base(controller) { }
 
     public override void EnterState()
@@ -111,7 +116,12 @@ public class GlidingState : PlayerBaseState
                 }
                 break;
             case GlideSubState.Ascending:
+                // 상승력 점진적 증가하여 급상승
+                _ascendProgress += Time.fixedDeltaTime / _controller.ascendDuration;
+                _currentAscendForce = Mathf.Lerp(_controller.ascendInitialForce, _controller.ascendTargetForce, _ascendProgress);
 
+                // 곡선을 그리며 점점 위로 상승 (progress로 회전도 연동)
+                _controller.HandleAscendingMovement(_ascendDirection, _currentAscendForce, _ascendProgress);
                 break;
         }
 
@@ -150,6 +160,37 @@ public class GlidingState : PlayerBaseState
 
     public override void OnJump(InputAction.CallbackContext context)
     {
-        //구현예정
+        if (context.started)
+        {
+            // Ascending 상태로 전환
+            _currentSubState = GlideSubState.Ascending;
+            _ascendProgress = 0f;
+            _currentAscendForce = _controller.ascendInitialForce;
+
+            // 현재 진행 방향 기반으로 상승 방향 계산
+            Vector3 currentHorizontal = _controller.mainRb.linearVelocity;
+            currentHorizontal.y = 0f;
+            if (currentHorizontal.sqrMagnitude > 0.1f)
+            {
+                _ascendDirection = currentHorizontal.normalized;
+            }
+            else
+            {
+                _ascendDirection = _controller.moveFrame.forward;
+                _ascendDirection.y = 0f;
+                _ascendDirection.Normalize();
+            }
+
+            // 상승 목표 각도로 방향 설정
+            _ascendDirection = Quaternion.AngleAxis(-_controller.ascendAngle, Vector3.Cross(_ascendDirection, Vector3.up)) * _ascendDirection;
+        }
+        else if (context.canceled && _currentSubState == GlideSubState.Ascending)
+        {
+            // 점프 취소 시 글라이딩으로 전환
+            _currentSubState = GlideSubState.Gliding;
+            _controller.worldDirection = _ascendDirection;
+            _controller.worldDirection.y = 0f;
+            _controller.worldDirection.Normalize();
+        }
     }
 }

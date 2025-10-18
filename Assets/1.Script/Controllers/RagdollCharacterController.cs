@@ -77,6 +77,7 @@ public class RagdollCharacterController : MonoBehaviour
     public float maxDashMultiplier = 1.5f;
 
     [Header("Glide Settings")]
+    public float glideAngle = 60f;
     public float glideAccel = 15f;
     public float maxGlideSpeed = 50f;
     public float glideTurnSpeed = 300f;
@@ -96,6 +97,12 @@ public class RagdollCharacterController : MonoBehaviour
     public float glideBoostDecayRate = 2f;
     public float CurrentGlideBoost { get; set; }
     public Vector3 DashDir { get; set; }
+
+    [Header("Ascend Settings")]
+    public float ascendAngle = 30f;
+    public float ascendInitialForce = 2f;
+    public float ascendTargetForce = 15f;
+    public float ascendDuration = 1.5f;
 
     [Header("Momentum System")]
     public float momentumBonus = 0f;
@@ -303,6 +310,27 @@ public class RagdollCharacterController : MonoBehaviour
         AntiGravity(targetGlideGravity);
     }
 
+    public void HandleAscendingMovement(Vector3 ascendDirection, float currentAscendForce, float progress)
+    {
+        // 대각선 위쪽 방향으로 일정 속도 유지
+        Vector3 targetVelocity = ascendDirection.normalized * (maxGlideSpeed + CurrentGlideBoost + momentumBonus);
+        Vector3 velocityChange = targetVelocity - mainRb.linearVelocity;
+
+        // 수평 성분 가속
+        Vector3 horizontalChange = velocityChange;
+        horizontalChange.y = 0f;
+        mainRb.AddForce(horizontalChange * glideAccel, ForceMode.Acceleration);
+
+        // AntiGravity를 이용한 안정적 상승
+        AntiGravity(currentAscendForce);
+
+        // progress에 따라 수평→상승 방향으로 회전
+        Vector3 horizontalDirection = ascendDirection;
+        horizontalDirection.y = 0f;
+        horizontalDirection.Normalize();
+        RotateForAscending(horizontalDirection, progress);
+    }
+
     private void ApplyGlidingForce(Vector3 direction)
     {
         float currentMaxSpeed = maxGlideSpeed + CurrentGlideBoost + momentumBonus;
@@ -350,7 +378,15 @@ public class RagdollCharacterController : MonoBehaviour
 
     public void RotateForGliding(Vector3 worldDirection)
     {
-        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up) * Quaternion.Euler(60, 0, 0);
+        Quaternion targetWorldRotation = Quaternion.LookRotation(worldDirection.normalized, Vector3.up) * Quaternion.Euler(glideAngle, 0, 0);
+        mainJoint.SetTargetRotationLocal(targetWorldRotation, Quaternion.identity);
+    }
+
+    public void RotateForAscending(Vector3 baseDirection, float progress)
+    {
+        // 수평(0도)에서 목표 각도(60도)까지 progress에 따라 보간
+        float currentPitch = Mathf.Lerp(glideAngle, ascendAngle, progress);
+        Quaternion targetWorldRotation = Quaternion.LookRotation(baseDirection.normalized, Vector3.up) * Quaternion.Euler(currentPitch, 0, 0);
         mainJoint.SetTargetRotationLocal(targetWorldRotation, Quaternion.identity);
     }
 
