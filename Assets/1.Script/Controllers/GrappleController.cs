@@ -81,11 +81,6 @@ public class GrappleController : MonoBehaviour
         SetJoint(false);
     }
 
-    void Update()
-    {
-        CheckForGrapplePoint();
-    }
-
     private void LateUpdate()
     {
         UpdateGrappleIndicator();
@@ -100,11 +95,15 @@ public class GrappleController : MonoBehaviour
         }
     }
 
-    private void CheckForGrapplePoint()
+    public void CheckForGrapplePoint()
     {
         Ray ray = cam.ScreenPointToRay(new Vector2(Screen.width / 2f, Screen.height / 2f));
+
+        Debug.DrawRay(ray.origin, ray.direction * maxRayDistance, GrappleReady ? Color.green : Color.red, 0.1f);
+
         if (Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, grappleLayerMask))
         {
+            //Debug.DrawLine(ray.origin, hit.point, Color.yellow, 0.1f);
             // 타겟 감지 성공
             GrappleReady = true;
             coyoteFrameCounter = grappleCoyoteFrames;

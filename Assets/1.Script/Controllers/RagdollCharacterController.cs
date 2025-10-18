@@ -172,9 +172,6 @@ public class RagdollCharacterController : MonoBehaviour
     }
     public void OnGrapple(InputAction.CallbackContext context)
     {
-        if (context.ReadValue<float>() > 0 && !grappleController.GrappleReady)
-            return;
-
         CurrentState?.OnGrapple(context);
     }
     public void OnRighClick(InputAction.CallbackContext context)

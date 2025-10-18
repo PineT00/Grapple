@@ -90,12 +90,10 @@ public class GrabController : MonoBehaviour
             if (!GrabReady || currentState != GrabState.None) return;
 
             StartGrab();
-            Debug.Log("잡기!");
         }
         else
         {
             ReleaseGrab();
-            Debug.Log("놓기!");
         }
     }
 

@@ -30,6 +30,7 @@ public class StandingState : PlayerBaseState
             return;
         }
 
+        _grappleController.CheckForGrapplePoint();
         _controller.MovementControl();
         _controller.ApplyHovering();
     }
@@ -46,7 +47,7 @@ public class StandingState : PlayerBaseState
 
     public override void OnGrapple(InputAction.CallbackContext context)
     {
-        if (context.ReadValue<float>() > 0)
+        if (context.ReadValue<float>() > 0 && _grappleController.GrappleReady)
         {
             _controller.SwitchState(new SwingingState(_controller));
         }

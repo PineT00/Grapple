@@ -31,6 +31,7 @@ public class OnAirState : PlayerBaseState
             }
         }
 
+        _grappleController.CheckForGrapplePoint();
         _controller.MovementControl();
         _controller.MultiflyGravity();
     }
@@ -69,7 +70,7 @@ public class OnAirState : PlayerBaseState
 
     public override void OnGrapple(InputAction.CallbackContext context)
     {
-        if (context.ReadValue<float>() > 0)
+        if (context.ReadValue<float>() > 0 && _grappleController.GrappleReady)
         {
             _controller.SwitchState(new SwingingState(_controller));
         }

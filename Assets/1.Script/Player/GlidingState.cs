@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 
 public class GlidingState : PlayerBaseState
 {
-    public enum GlideSubState { Dashing, Gliding, Diving, Transitioning }
+    public enum GlideSubState { Dashing, Gliding, Diving, Transitioning, Ascending }
     private GlideSubState _currentSubState;
 
     private float _glideDashTimer;
@@ -110,6 +110,9 @@ public class GlidingState : PlayerBaseState
                     _currentSubState = GlideSubState.Gliding;
                 }
                 break;
+            case GlideSubState.Ascending:
+
+                break;
         }
 
         if (_controller.IsGrounded())
@@ -143,5 +146,10 @@ public class GlidingState : PlayerBaseState
     public override void OnGrab(InputAction.CallbackContext context)
     {
         _controller.grabController.OnGrab(context);
+    }
+
+    public override void OnJump(InputAction.CallbackContext context)
+    {
+        //구현예정
     }
 }

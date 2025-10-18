@@ -25,6 +25,7 @@ public class WalkingState : PlayerBaseState
             return;
         }
 
+        _grappleController.CheckForGrapplePoint();
         _controller.MovementControl();
         _controller.ApplyHovering();
     }
@@ -42,11 +43,12 @@ public class WalkingState : PlayerBaseState
 
     public override void OnGrapple(InputAction.CallbackContext context)
     {
-        if (context.ReadValue<float>() > 0)
+        if (context.ReadValue<float>() > 0 && _grappleController.GrappleReady)
         {
             _controller.SwitchState(new SwingingState(_controller));
         }
     }
+
     public override void OnGrab(InputAction.CallbackContext context)
     {
         _controller.grabController.OnGrab(context);
