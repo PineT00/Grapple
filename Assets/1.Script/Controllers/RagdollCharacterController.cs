@@ -312,8 +312,14 @@ public class RagdollCharacterController : MonoBehaviour
 
     public void HandleAscendingMovement(Vector3 ascendDirection, float currentAscendForce, float progress)
     {
-        // 대각선 위쪽 방향으로 일정 속도 유지
-        Vector3 targetVelocity = ascendDirection.normalized * (maxGlideSpeed + CurrentGlideBoost + momentumBonus);
+        // currentAscendForce에 반비례하여 속도 감소 계산
+        float forceRatio = Mathf.Clamp01(currentAscendForce / ascendTargetForce); // 0~1 범위로 정규화
+        float velocityMultiplier = 1.1f - forceRatio; // 반비례: force 증가 시 속도 감소
+
+        // 수평속도 계산
+        Vector3 targetVelocity = ascendDirection.normalized *
+            (maxGlideSpeed + CurrentGlideBoost + momentumBonus) * velocityMultiplier;
+
         Vector3 velocityChange = targetVelocity - mainRb.linearVelocity;
 
         // 수평 성분 가속

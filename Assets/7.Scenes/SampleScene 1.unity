@@ -9915,8 +9915,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 419887318}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.5089275, y: 0.4907661, z: 0.5090477, w: -0.4909297}
-  m_LocalPosition: {x: 0.9072931, y: 0.87374485, z: -0.22782326}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.95, y: 0.9, z: -0.2}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -11145,8 +11145,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 495815487}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.50892764, y: -0.49080837, z: -0.5078355, w: -0.49214113}
-  m_LocalPosition: {x: -0.921, y: 0.876, z: -0.23}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.95, y: 0.9, z: -0.2}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -25632,7 +25632,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1210934251
 Transform:
   m_ObjectHideFlags: 0
@@ -27672,7 +27672,7 @@ Transform:
   m_GameObject: {fileID: 1326600135}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.4, y: -0.402, z: -0.448}
+  m_LocalPosition: {x: -0.3, y: -0.45, z: -0.3}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -31923,7 +31923,7 @@ Transform:
   m_GameObject: {fileID: 1665292190}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.4, y: -0.40300006, z: -0.44800016}
+  m_LocalPosition: {x: 0.3, y: -0.45, z: -0.3}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -33523,7 +33523,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1747140567
 Transform:
   m_ObjectHideFlags: 0
@@ -34659,7 +34659,7 @@ Transform:
   m_GameObject: {fileID: 1758138660}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.555, z: 0.459}
+  m_LocalPosition: {x: 0, y: 1.555, z: 0.609}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -43037,10 +43037,10 @@ MonoBehaviour:
   swingLegDamper: 50
   glideHipDrive: 999
   glideSpineDrive: 750
-  glideArmDrive: 700
+  glideArmDrive: 900
   glideLegDrive: 700
   glideBodyDamper: 150
-  glideArmDamper: 50
+  glideArmDamper: 60
   glideLegDamper: 50
   bodyMaxForce: 50000
   limbMaxForce: 30000
@@ -43090,7 +43090,7 @@ MonoBehaviour:
   ropeUnwrapAngleThreshold: -0.9
   raycastOffset: 0.1
   bendPointOffset: 0
-  grappleCoyoteFrames: 6
+  grappleCoyoteFrames: 5
   referenceLength: 10
   springScalingPower: 1
 --- !u!114 &3231055207306408561
@@ -43116,7 +43116,7 @@ MonoBehaviour:
   mainRb: {fileID: 8414980809210353755}
   mainJoint: {fileID: 8414980809210353757}
   grappleController: {fileID: 3231055207306408560}
-  grabController: {fileID: 0}
+  grabController: {fileID: 3231055207306408562}
   ragdollAnimator: {fileID: 3231055207306408559}
   moveInput: {x: 0, y: 0}
   jumpFeedback: {fileID: 2112768730}
@@ -43145,12 +43145,13 @@ MonoBehaviour:
   maxSpeedForMultiply: 20
   minDashMultiplier: 0.5
   maxDashMultiplier: 1.5
+  glideAngle: 65
   glideAccel: 14
   maxGlideSpeed: 18
   glideTurnSpeed: 20
   glideDashTime: 0.5
   dashSpeed: 0.1
-  targetGlideGravity: -1
+  targetGlideGravity: -1.5
   verticalCorrectionForce: 20
   maxDiveSpeed: 25
   diveForce: 1
@@ -43160,10 +43161,10 @@ MonoBehaviour:
   glideTransitionDuration: 0.4
   maxDiveSpeedBoost: 25
   glideBoostDecayRate: 4
-  ascendAngle: 22
-  ascendInitialForce: 4
-  ascendTargetForce: 23
-  ascendDuration: 1.5
+  ascendAngle: 20
+  ascendInitialForce: 3
+  ascendTargetForce: 18
+  ascendDuration: 1.6
   momentumBonus: 0
   momentumDecayRate: 2
   momentumConversionRatio: 0.2
@@ -44663,7 +44664,7 @@ ConfigurableJoint:
     useAcceleration: 0
   m_TargetRotation: {x: 0, y: 0, z: 0, w: 1}
   m_TargetAngularVelocity: {x: 0, y: 0, z: 0}
-  m_RotationDriveMode: 0
+  m_RotationDriveMode: 1
   m_AngularXDrive:
     serializedVersion: 4
     positionSpring: 0
@@ -44701,9 +44702,9 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4162598609012862049}
   serializedVersion: 4
-  m_Mass: 0.3
+  m_Mass: 0.1
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -45276,7 +45277,7 @@ ConfigurableJoint:
     useAcceleration: 0
   m_TargetRotation: {x: 0, y: 0, z: 0, w: 1}
   m_TargetAngularVelocity: {x: 0, y: 0, z: 0}
-  m_RotationDriveMode: 0
+  m_RotationDriveMode: 1
   m_AngularXDrive:
     serializedVersion: 4
     positionSpring: 0
@@ -45314,9 +45315,9 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 965365720001768438}
   serializedVersion: 4
-  m_Mass: 0.3
+  m_Mass: 0.1
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
