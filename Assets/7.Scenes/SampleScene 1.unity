@@ -7492,7 +7492,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.9761145, y: 2.4760923, z: -19.689999}
+  m_LocalPosition: {x: 1.9754403, y: 2.4760923, z: -19.689999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -19152,7 +19152,7 @@ Transform:
   m_GameObject: {fileID: 939819600}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.9761145, y: 2.4760923, z: -19.689999}
+  m_LocalPosition: {x: 1.9754403, y: 2.4760923, z: -19.689999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -43138,13 +43138,15 @@ MonoBehaviour:
   airTurnSpeed: 100
   airBrake: 0.8
   spinSpeed: 200
-  swingMoveForce: 30
+  swingForce: 5
+  maxSwingForce: 20
   swingTurnSpeed: 300
   swingEndDashSpeed: 10
   minSpeedForMultiply: 5
   maxSpeedForMultiply: 20
   minDashMultiplier: 0.5
   maxDashMultiplier: 1.5
+  swingSteeringAssistance: 0.5
   glideAngle: 65
   glideAccel: 14
   maxGlideSpeed: 18
@@ -43167,8 +43169,8 @@ MonoBehaviour:
   ascendDuration: 1.6
   momentumBonus: 0
   momentumDecayRate: 2
-  momentumConversionRatio: 0.2
-  maxMomentumBonus: 20
+  momentumConversionRatio: 0.15
+  maxMomentumBonus: 18
   minSpeedForMomentum: 5
   hoverHeight: 1.3
   hoverForce: 50

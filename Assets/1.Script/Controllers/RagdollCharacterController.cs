@@ -68,13 +68,16 @@ public class RagdollCharacterController : MonoBehaviour
     public float spinSpeed = 200f;
 
     [Header("Swing Settings")]
-    public float swingMoveForce = 10f;
+    public float swingForce = 10f;
+    public float maxSwingForce = 15f;
     public float swingTurnSpeed = 300f;
     public float swingEndDashSpeed = 15f;
     public float minSpeedForMultiply = 5f;
     public float maxSpeedForMultiply = 20f;
     public float minDashMultiplier = 0.5f;
     public float maxDashMultiplier = 1.5f;
+    [Range(0f, 1f)]
+    public float swingSteeringAssistance = 0.5f;
 
     [Header("Glide Settings")]
     public float glideAngle = 60f;
@@ -212,6 +215,9 @@ public class RagdollCharacterController : MonoBehaviour
             case RollingState:
                 HandleMovement(airControl, maxAirControl, airTurnSpeed, airBrake);
                 break;
+            case SwingingState:
+                HandleSwingMovement();
+                break;
         }
     }
 
@@ -251,10 +257,47 @@ public class RagdollCharacterController : MonoBehaviour
 
     public void HandleSwingMovement()
     {
-        UpdateMoveInfo();
+        Vector3 toGrapplePoint = grappleController.GetGrapplePoint() - mainRb.position;
+        Vector3 ropeDirection = toGrapplePoint.normalized;
 
-        mainRb.AddForce(worldDirection.normalized * swingMoveForce, ForceMode.Acceleration);
-        RotateDirection(mainRb.linearVelocity);
+        // 현재 속도의 접선 방향 계산 (로프에 수직인 방향)
+        Vector3 currentVelocity = mainRb.linearVelocity;
+        Vector3 radialVelocity = Vector3.Project(currentVelocity, ropeDirection);
+        Vector3 tangentVelocity = currentVelocity - radialVelocity;
+        float currentSpeed = tangentVelocity.magnitude;
+
+        if (worldDirection.sqrMagnitude > 0.01f)
+        {
+            // 1. 순수 접선 방향 (로프 중심 회전)
+            Vector3 tangentDirection = tangentVelocity.normalized;
+
+            // 2. 입력 방향 (접선 평면에 투영)
+            Vector3 inputTangent = Vector3.ProjectOnPlane(worldDirection, ropeDirection).normalized;
+
+            // 3. Steering Assistance 비율로 섞기
+            Vector3 finalDirection = Vector3.Lerp(
+                tangentDirection,           // 물리적 진자 방향
+                inputTangent,               // 플레이어 입력 방향
+                swingSteeringAssistance
+            );
+
+            // 4. 속도 크기는 유지하되 방향만 finalDirection으로
+            Vector3 desiredVelocity = finalDirection * Mathf.Max(currentSpeed, maxSwingForce);
+            Vector3 velocityChange = desiredVelocity - tangentVelocity;
+
+            mainRb.AddForce(velocityChange * swingForce, ForceMode.Acceleration);
+
+            // 회전은 최종 방향으로
+            RotateDirection(finalDirection);
+        }
+        else
+        {
+            // 입력 없을 때는 접선 속도 방향으로 회전
+            if (tangentVelocity.sqrMagnitude > 0.1f)
+            {
+                RotateDirection(tangentVelocity);
+            }
+        }
     }
 
 

@@ -31,7 +31,6 @@ public class RollingState : PlayerBaseState
             }
         }
 
-        _grappleController.CheckForGrapplePoint();
         _controller.MovementControl();
         _controller.MultiflyGravity();
     }

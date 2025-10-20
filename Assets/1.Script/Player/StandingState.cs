@@ -30,7 +30,6 @@ public class StandingState : PlayerBaseState
             return;
         }
 
-        _grappleController.CheckForGrapplePoint();
         _controller.MovementControl();
         _controller.ApplyHovering();
     }

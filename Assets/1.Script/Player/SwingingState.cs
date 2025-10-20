@@ -19,8 +19,6 @@ public class SwingingState : PlayerBaseState
         if (!_controller.grappleController.IsAttached)
         {
             _ragdollAnimator.ApplyGrappleArmCorrection(true, _grappleController.GetGrapplePoint(), 200f);
-            Debug.Log("손뻗기");
-            Debug.Log(_grappleController.GetGrapplePoint());
             return;
         }
 
@@ -38,14 +36,14 @@ public class SwingingState : PlayerBaseState
 
         if (!isReeling)
         {
-            _controller.HandleSwingMovement();
+            _controller.MovementControl();
         }
         else
         {
             _controller.grappleController.ShortenRope();
         }
-        _controller.grappleController.HandleRopePhysics();
         _controller.MultiflyGravity();
+        _controller.grappleController.HandleRopePhysics();
         _ragdollAnimator.ApplyGrappleArmCorrection(true, _grappleController.GetGrapplePoint(), 200f);
     }
 

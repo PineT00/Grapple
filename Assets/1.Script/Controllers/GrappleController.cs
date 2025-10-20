@@ -81,6 +81,11 @@ public class GrappleController : MonoBehaviour
         SetJoint(false);
     }
 
+    private void FixedUpdate()
+    {
+        CheckForGrapplePoint();
+    }
+
     private void LateUpdate()
     {
         UpdateGrappleIndicator();

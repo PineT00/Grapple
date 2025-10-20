@@ -25,7 +25,6 @@ public class WalkingState : PlayerBaseState
             return;
         }
 
-        _grappleController.CheckForGrapplePoint();
         _controller.MovementControl();
         _controller.ApplyHovering();
     }
