@@ -69,16 +69,10 @@ public class RollingState : PlayerBaseState
 
     public override void OnClick(InputAction.CallbackContext context)
     {
-        if (_controller.GetGrabReady(false))
-        {
-            _controller.grabController_Left.OnGrab(context);
-        }
+        _controller.grabController_Left.OnGrab(context);
     }
     public override void OnRightClick(InputAction.CallbackContext context)
     {
-        if (_controller.GetGrabReady(true))
-        {
-            _controller.grabController_Right.OnGrab(context);
-        }
+        _controller.grabController_Right.OnGrab(context);
     }
 }

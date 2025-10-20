@@ -46,16 +46,21 @@ public class GrabController : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (CurrentState == GrabState.Attached)
+            return;
+
         CheckForGrabbableObject();
     }
 
     void LateUpdate()
     {
-        UpdateGrabIndicator();
-
-        if (CurrentState == GrabState.Attached && currentGrabRb != null)
+        if (CurrentState == GrabState.Attached)
         {
             UpdateRopeVisuals();
+        }
+        else
+        {
+            UpdateGrabIndicator();
         }
     }
 
@@ -86,6 +91,9 @@ public class GrabController : MonoBehaviour
     {
         if (context.ReadValue<float>() > 0)
         {
+            if (CurrentState != GrabState.Ready)
+                return;
+
             StartGrab();
         }
         else
@@ -104,12 +112,11 @@ public class GrabController : MonoBehaviour
 
         SetJoint(true);
         activeRopeRender.ActivateRope(true);
+        UpdateGrabIndicator();
     }
 
     private void ReleaseGrab()
     {
-        if (CurrentState == GrabState.None) return;
-
         CurrentState = GrabState.None;
         currentGrabRb = null;
 
