@@ -146,16 +146,19 @@ public class GlidingState : PlayerBaseState
         }
     }
 
-    public override void OnGrapple(InputAction.CallbackContext context)
+    public override void OnClick(InputAction.CallbackContext context)
     {
-        if (context.ReadValue<float>() > 0)
+        if (_controller.GetGrabReady(false))
         {
-            _controller.SwitchState(new SwingingState(_controller));
+            _controller.grabController_Left.OnGrab(context);
         }
     }
-    public override void OnGrab(InputAction.CallbackContext context)
+    public override void OnRightClick(InputAction.CallbackContext context)
     {
-        _controller.grabController.OnGrab(context);
+        if (_controller.GetGrabReady(true))
+        {
+            _controller.grabController_Right.OnGrab(context);
+        }
     }
 
     public override void OnJump(InputAction.CallbackContext context)

@@ -2,11 +2,11 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
+public enum GrabState { None, Ready, Attached }
+
 public class GrabController : MonoBehaviour
 {
-    private enum GrabState { None, Attached }
-    private GrabState currentState = GrabState.None;
-    public bool IsGrabbing => currentState == GrabState.Attached;
+    public GrabState CurrentState { get; private set; } = GrabState.None;
 
     [Header("필수")]
     public Rigidbody playerRb;
@@ -27,7 +27,6 @@ public class GrabController : MonoBehaviour
     public float damper = 7f;
     public float massScale = 4.5f;
 
-    public bool GrabReady { get; private set; }
     private Vector3 potentialGrabPoint;
     private Rigidbody potentialGrabRb;
     private Rigidbody currentGrabRb;
@@ -54,7 +53,7 @@ public class GrabController : MonoBehaviour
     {
         UpdateGrabIndicator();
 
-        if (currentState == GrabState.Attached && currentGrabRb != null)
+        if (CurrentState == GrabState.Attached && currentGrabRb != null)
         {
             UpdateRopeVisuals();
         }
@@ -68,18 +67,18 @@ public class GrabController : MonoBehaviour
             potentialGrabRb = hit.rigidbody;
             if (potentialGrabRb != null)
             {
-                GrabReady = true;
+                CurrentState = GrabState.Ready;
                 potentialGrabPoint = hit.point;
             }
             else
             {
-                GrabReady = false;
+                CurrentState = GrabState.None;
                 Debug.LogWarning("Grabbable object must have a Rigidbody!");
             }
         }
         else
         {
-            GrabReady = false;
+            CurrentState = GrabState.None;
         }
     }
 
@@ -87,8 +86,6 @@ public class GrabController : MonoBehaviour
     {
         if (context.ReadValue<float>() > 0)
         {
-            if (!GrabReady || currentState != GrabState.None) return;
-
             StartGrab();
         }
         else
@@ -100,7 +97,7 @@ public class GrabController : MonoBehaviour
     private void StartGrab()
     {
         currentGrabRb = potentialGrabRb;
-        currentState = GrabState.Attached;
+        CurrentState = GrabState.Attached;
 
         joint.connectedBody = currentGrabRb;
         joint.connectedAnchor = currentGrabRb.transform.InverseTransformPoint(potentialGrabPoint);
@@ -111,9 +108,9 @@ public class GrabController : MonoBehaviour
 
     private void ReleaseGrab()
     {
-        if (currentState == GrabState.None) return;
+        if (CurrentState == GrabState.None) return;
 
-        currentState = GrabState.None;
+        CurrentState = GrabState.None;
         currentGrabRb = null;
 
         SetJoint(false);
@@ -141,8 +138,8 @@ public class GrabController : MonoBehaviour
     {
         if (grabIndicatorUI == null) return;
         //grabIndicatorUI.color = GrabReady ? grabbableColor : nonGrabbableColor;
-        grabIndicatorUI.gameObject.SetActive(GrabReady);
 
+        grabIndicatorUI.gameObject.SetActive(CurrentState == GrabState.Ready);
     }
 
     private void UpdateRopeVisuals()

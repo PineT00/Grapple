@@ -71,16 +71,12 @@ public class ControlManager : MonoBehaviour
     {
         //if (IsPointerOverUI(Mouse.current.position.ReadValue())) return;
 
-        characterController.OnGrapple(context);
+        characterController.OnClick(context);
     }
 
     public void OnRightClick(InputAction.CallbackContext context)
     {
-        if (context.ReadValue<float>() > 0)
-        {
-            if (IsPointerOverUI(Mouse.current.position.ReadValue())) return;
-        }
-        characterController.OnRighClick(context);
+        characterController.OnRightClick(context);
     }
 
     public bool IsPointerOverUI(Vector2 screenPosition)

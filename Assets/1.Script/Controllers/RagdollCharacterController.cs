@@ -34,8 +34,9 @@ public class RagdollCharacterController : MonoBehaviour
     // 상태 클래스에서 접근할 수 있도록
     [HideInInspector] public Rigidbody mainRb;
     [HideInInspector] public ConfigurableJoint mainJoint;
-    [HideInInspector] public GrappleController grappleController;
-    [HideInInspector] public GrabController grabController;
+    public GrappleController grappleController;
+    public GrabController grabController_Left;
+    public GrabController grabController_Right;
     [HideInInspector] public RagdollAnimator ragdollAnimator;
 
     [Header("Input")]
@@ -140,7 +141,6 @@ public class RagdollCharacterController : MonoBehaviour
         mainRb = charCenterPart.GetComponent<Rigidbody>();
         mainJoint = charCenterPart.GetComponent<ConfigurableJoint>();
         grappleController = GetComponent<GrappleController>();
-        grabController = GetComponent<GrabController>();
         ragdollAnimator = GetComponent<RagdollAnimator>();
         allRigidbodies = GetComponentsInChildren<Rigidbody>();
 
@@ -180,13 +180,13 @@ public class RagdollCharacterController : MonoBehaviour
     {
         CurrentState?.OnGlide(context);
     }
-    public void OnGrapple(InputAction.CallbackContext context)
+    public void OnClick(InputAction.CallbackContext context)
     {
-        CurrentState?.OnGrapple(context);
+        CurrentState?.OnClick(context);
     }
-    public void OnRighClick(InputAction.CallbackContext context)
+    public void OnRightClick(InputAction.CallbackContext context)
     {
-        CurrentState?.OnGrab(context);
+        CurrentState?.OnRightClick(context);
     }
 
     public void UpdateMoveInfo()
@@ -357,7 +357,7 @@ public class RagdollCharacterController : MonoBehaviour
     {
         // currentAscendForce에 반비례하여 속도 감소 계산
         float forceRatio = Mathf.Clamp01(currentAscendForce / ascendTargetForce); // 0~1 범위로 정규화
-        float velocityMultiplier = 1.1f - forceRatio; // 반비례: force 증가 시 속도 감소
+        float velocityMultiplier = 1.15f - forceRatio; // 반비례: force 증가 시 속도 감소
 
         // 수평속도 계산
         Vector3 targetVelocity = ascendDirection.normalized *
@@ -547,4 +547,19 @@ public class RagdollCharacterController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Check Ready
+    /// </summary>
+    /// 
+    public bool GetGrabReady(bool isRightHand)
+    {
+        if (isRightHand)
+        {
+            return grabController_Right.CurrentState == GrabState.Ready;
+        }
+        else
+        {
+            return grabController_Left.CurrentState == GrabState.Ready;
+        }
+    }
 }

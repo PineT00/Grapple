@@ -7492,7 +7492,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.9754403, y: 2.4760923, z: -19.689999}
+  m_LocalPosition: {x: 1.4754401, y: 2.4760923, z: -19.689999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -19152,7 +19152,7 @@ Transform:
   m_GameObject: {fileID: 939819600}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.9754403, y: 2.4760923, z: -19.689999}
+  m_LocalPosition: {x: 1.4754401, y: 2.4760923, z: -19.689999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -19195,7 +19195,7 @@ MonoBehaviour:
       Size: {x: 0.8, y: 0.8}
       Offset: {x: 0, y: 0}
   CenterOnActivate: 1
-  TargetOffset: {x: 0.5, y: 0.5, z: 0}
+  TargetOffset: {x: 0, y: 0.5, z: 0}
   Damping: {x: 0.1, y: 0, z: 0.1}
   Lookahead:
     Enabled: 0
@@ -42929,6 +42929,7 @@ GameObject:
   - component: {fileID: 3231055207306408559}
   - component: {fileID: 3231055207306408560}
   - component: {fileID: 3231055207306408562}
+  - component: {fileID: 3231055207306408563}
   m_Layer: 0
   m_Name: NewRagdoll
   m_TagString: Player
@@ -43084,7 +43085,7 @@ MonoBehaviour:
   damper: 20
   massScale: 3
   reelSpeed: 15
-  maxRope: 0.65
+  maxRope: 0.6
   minRope: 0.2
   minNewBendDistance: 0.3
   ropeUnwrapAngleThreshold: -0.9
@@ -43116,7 +43117,8 @@ MonoBehaviour:
   mainRb: {fileID: 8414980809210353755}
   mainJoint: {fileID: 8414980809210353757}
   grappleController: {fileID: 3231055207306408560}
-  grabController: {fileID: 3231055207306408562}
+  grabController_Left: {fileID: 3231055207306408562}
+  grabController_Right: {fileID: 3231055207306408563}
   ragdollAnimator: {fileID: 3231055207306408559}
   moveInput: {x: 0, y: 0}
   jumpFeedback: {fileID: 2112768730}
@@ -43138,14 +43140,14 @@ MonoBehaviour:
   airTurnSpeed: 100
   airBrake: 0.8
   spinSpeed: 200
-  swingForce: 5
+  swingForce: 8
   maxSwingForce: 20
   swingTurnSpeed: 300
   swingEndDashSpeed: 10
   minSpeedForMultiply: 5
   maxSpeedForMultiply: 20
   minDashMultiplier: 0.5
-  maxDashMultiplier: 1.5
+  maxDashMultiplier: 1.2
   swingSteeringAssistance: 0.5
   glideAngle: 65
   glideAccel: 14
@@ -43204,6 +43206,32 @@ MonoBehaviour:
     m_Bits: 512
   ropePrefab: {fileID: 5785456351690974822, guid: a21bb32b7c476754aaa1b5bec26570c2, type: 3}
   visualAnchor: {fileID: 35937116}
+  grabIndicatorUI: {fileID: 1410262092}
+  maxRayDistance: 30
+  pullForce: 50
+  spring: 50
+  damper: 10
+  massScale: 1.5
+--- !u!114 &3231055207306408563
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2854388514263197908}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7475ac92d7fd5c64cb789049f86cfe71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerRb: {fileID: 8414980809210353755}
+  cam: {fileID: 330585545}
+  firePoint: {fileID: 1446407484}
+  grabbableLayerMask:
+    serializedVersion: 2
+    m_Bits: 512
+  ropePrefab: {fileID: 5785456351690974822, guid: a21bb32b7c476754aaa1b5bec26570c2, type: 3}
+  visualAnchor: {fileID: 2133706574}
   grabIndicatorUI: {fileID: 1410262092}
   maxRayDistance: 30
   pullForce: 50
