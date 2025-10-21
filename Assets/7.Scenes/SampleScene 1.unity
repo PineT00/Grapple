@@ -7492,7 +7492,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.4761144, y: 2.4760923, z: -19.689999}
+  m_LocalPosition: {x: 1.4754401, y: 2.4760923, z: -19.689999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -19152,7 +19152,7 @@ Transform:
   m_GameObject: {fileID: 939819600}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.4761144, y: 2.4760923, z: -19.689999}
+  m_LocalPosition: {x: 1.4754401, y: 2.4760923, z: -19.689999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -35926,7 +35926,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerTransform: {fileID: 3231055207306408558}
   thirdPersonCameraController: {fileID: 1025325332}
-  currentControlType: 0
 --- !u!43 &1870933883
 Mesh:
   m_ObjectHideFlags: 0
@@ -42928,6 +42927,7 @@ GameObject:
   - component: {fileID: 3231055207306408561}
   - component: {fileID: 3231055207306408559}
   - component: {fileID: 3231055207306408560}
+  - component: {fileID: 3231055207306408564}
   - component: {fileID: 3231055207306408562}
   - component: {fileID: 3231055207306408563}
   m_Layer: 0
@@ -43116,7 +43116,8 @@ MonoBehaviour:
   moveFrame: {fileID: 1049137032}
   mainRb: {fileID: 8414980809210353755}
   mainJoint: {fileID: 8414980809210353757}
-  grappleController: {fileID: 3231055207306408560}
+  grappleController_Left: {fileID: 3231055207306408560}
+  grappleController_Right: {fileID: 0}
   grabController_Left: {fileID: 3231055207306408562}
   grabController_Right: {fileID: 3231055207306408563}
   ragdollAnimator: {fileID: 3231055207306408559}
@@ -43238,6 +43239,44 @@ MonoBehaviour:
   spring: 50
   damper: 10
   massScale: 1.5
+--- !u!114 &3231055207306408564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2854388514263197908}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1596354461be2e4491b5507b84dfd4e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  anchorRb: {fileID: 0}
+  cam: {fileID: 0}
+  firePoint: {fileID: 0}
+  grappleLayerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  ropePrefab: {fileID: 0}
+  visualAnchor: {fileID: 0}
+  grappleIndicatorUI: {fileID: 0}
+  grappleableColor: {r: 0, g: 1, b: 0, a: 1}
+  nonGrappleableColor: {r: 1, g: 1, b: 1, a: 1}
+  maxRayDistance: 30
+  ropeLaunchSpeed: 80
+  spring: 70
+  damper: 7
+  massScale: 4.5
+  reelSpeed: 25
+  maxRope: 0.7
+  minRope: 0.4
+  minNewBendDistance: 0.5
+  ropeUnwrapAngleThreshold: 0.1
+  raycastOffset: 0.1
+  bendPointOffset: 0.1
+  grappleCoyoteFrames: 5
+  referenceLength: 10
+  springScalingPower: 1
 --- !u!1 &3366858753352617102
 GameObject:
   m_ObjectHideFlags: 0

@@ -5,20 +5,11 @@ using UnityEngine.InputSystem;
 
 public class ControlManager : MonoBehaviour
 {
-    public enum ControlType
-    {
-        Player,
-        Boat,
-        None
-    }
-    public static ControlManager Instance;
 
+    public static ControlManager Instance;
     public Transform playerTransform;
     public ThirdPersonCameraController thirdPersonCameraController;
     private RagdollCharacterController characterController;
-    private GrappleController grappleController;
-
-    public ControlType currentControlType = ControlType.None;
 
     private void Awake()
     {
@@ -28,7 +19,6 @@ public class ControlManager : MonoBehaviour
     private void Start()
     {
         characterController = playerTransform.GetComponent<RagdollCharacterController>();
-        grappleController = playerTransform.GetComponent<GrappleController>();
     }
 
     public void OnMove(InputAction.CallbackContext context)

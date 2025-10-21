@@ -45,10 +45,26 @@ public class StandingState : PlayerBaseState
     }
     public override void OnClick(InputAction.CallbackContext context)
     {
-        _controller.grabController_Left.OnGrab(context);
+        if (_controller.GetGrabReady(false))
+        {
+            _controller.grabController_Left.OnGrab(context);
+        }
+        else if (_controller.GetGrappleReady(false))
+        {
+            _controller.grappleController_Left.OnGrapple();
+            _controller.SwitchState(new SwingingState(_controller));
+        }
     }
     public override void OnRightClick(InputAction.CallbackContext context)
     {
-        _controller.grabController_Right.OnGrab(context);
+        if (_controller.GetGrabReady(true))
+        {
+            _controller.grabController_Right.OnGrab(context);
+        }
+        else if (_controller.GetGrappleReady(true))
+        {
+            _controller.grappleController_Right.OnGrapple();
+            _controller.SwitchState(new SwingingState(_controller));
+        }
     }
 }

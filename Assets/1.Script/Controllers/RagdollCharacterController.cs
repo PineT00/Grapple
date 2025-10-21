@@ -34,7 +34,8 @@ public class RagdollCharacterController : MonoBehaviour
     // 상태 클래스에서 접근할 수 있도록
     [HideInInspector] public Rigidbody mainRb;
     [HideInInspector] public ConfigurableJoint mainJoint;
-    public GrappleController grappleController;
+    public GrappleController grappleController_Left;
+    public GrappleController grappleController_Right;
     public GrabController grabController_Left;
     public GrabController grabController_Right;
     [HideInInspector] public RagdollAnimator ragdollAnimator;
@@ -140,7 +141,6 @@ public class RagdollCharacterController : MonoBehaviour
     {
         mainRb = charCenterPart.GetComponent<Rigidbody>();
         mainJoint = charCenterPart.GetComponent<ConfigurableJoint>();
-        grappleController = GetComponent<GrappleController>();
         ragdollAnimator = GetComponent<RagdollAnimator>();
         allRigidbodies = GetComponentsInChildren<Rigidbody>();
 
@@ -216,7 +216,7 @@ public class RagdollCharacterController : MonoBehaviour
                 HandleMovement(airControl, maxAirControl, airTurnSpeed, airBrake);
                 break;
             case SwingingState:
-                HandleSwingMovement();
+                //HandleSwingMovement();
                 break;
         }
     }
@@ -255,9 +255,17 @@ public class RagdollCharacterController : MonoBehaviour
         mainRb.AddForce(steeringForceVec, ForceMode.Acceleration);
     }
 
-    public void HandleSwingMovement()
+    public void HandleSwingMovement(bool isLeft)
     {
-        Vector3 toGrapplePoint = grappleController.GetGrapplePoint() - mainRb.position;
+        Vector3 toGrapplePoint;
+        if (isLeft)
+        {
+            toGrapplePoint = grappleController_Left.GetGrapplePoint() - mainRb.position;
+        }
+        else
+        {
+            toGrapplePoint = grappleController_Right.GetGrapplePoint() - mainRb.position;
+        }
         Vector3 ropeDirection = toGrapplePoint.normalized;
 
         // 현재 속도의 접선 방향 계산 (로프에 수직인 방향)
@@ -560,6 +568,18 @@ public class RagdollCharacterController : MonoBehaviour
         else
         {
             return grabController_Left.CurrentState == GrabState.Ready;
+        }
+    }
+
+    public bool GetGrappleReady(bool isRightHand)
+    {
+        if (isRightHand)
+        {
+            return grappleController_Right.GrappleReady;
+        }
+        else
+        {
+            return grappleController_Left.GrappleReady;
         }
     }
 }

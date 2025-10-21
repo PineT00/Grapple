@@ -9,12 +9,11 @@ public struct BendPoint
     public Vector3 normal;
     public Collider attachedCollider;
 }
+public enum GrappleState { None, Launching, Attached, Reeling }
 
 public class GrappleController : MonoBehaviour
 {
-    private enum GrappleState { None, Launching, Attached }
-    private GrappleState currentState = GrappleState.None;
-    public bool IsAttached => currentState == GrappleState.Attached;
+    public GrappleState CurrentState { get; private set; } = GrappleState.None;
 
     [Header("필수")]
     public Rigidbody anchorRb;
@@ -90,11 +89,11 @@ public class GrappleController : MonoBehaviour
     {
         UpdateGrappleIndicator();
 
-        if (currentState == GrappleState.Launching)
+        if (CurrentState == GrappleState.Launching)
         {
             HandleRopeLaunchVisuals();
         }
-        else if (currentState == GrappleState.Attached)
+        else if (CurrentState == GrappleState.Attached)
         {
             activeRopeRender.UpdateRopeVisuals(visualAnchor.position, bendPoints, cam.transform);
         }
@@ -134,7 +133,7 @@ public class GrappleController : MonoBehaviour
     public void OnGrapple()
     {
         // 그래플 발사 시작
-        currentState = GrappleState.Launching;
+        CurrentState = GrappleState.Launching;
         launchTargetPoint = potentialGrapplePoint;
         launchProgress = 0f;
 
@@ -148,9 +147,9 @@ public class GrappleController : MonoBehaviour
 
     public void OnRelease()
     {
-        if (currentState == GrappleState.None) return;
+        if (CurrentState == GrappleState.None) return;
 
-        currentState = GrappleState.None;
+        SwitchGrappleState(GrappleState.None);
         bendPoints.Clear();
         SetJoint(false);
         activeRopeRender.ActivateRope(false);
@@ -158,14 +157,14 @@ public class GrappleController : MonoBehaviour
 
     public void StartReeling()
     {
-        // Reeling 시 Spring, Damper 값 조절 (선택)
+        SwitchGrappleState(GrappleState.Reeling);
         joint.spring = 100f;
         joint.damper = 20f;
-
     }
 
     public void StopReeling()
     {
+        SwitchGrappleState(GrappleState.Attached);
         SetJoint(true); // 원래 Spring, Damper 값으로 복원
     }
 
@@ -298,7 +297,7 @@ public class GrappleController : MonoBehaviour
         if (grappleIndicatorUI == null) return;
         grappleIndicatorUI.color = GrappleReady ? grappleableColor : nonGrappleableColor;
     }
-    private void HandleRopeLaunchVisuals()
+    public void HandleRopeLaunchVisuals()
     {
         Vector3 startPoint = firePoint.position;
         float totalDistance = Vector3.Distance(startPoint, launchTargetPoint);
@@ -317,11 +316,16 @@ public class GrappleController : MonoBehaviour
 
         if (launchProgress >= 1f)
         {
-            currentState = GrappleState.Attached;
+            SwitchGrappleState(GrappleState.Attached);
             currentRopeLength = Vector3.Distance(firePoint.position, launchTargetPoint);
             bendPoints[0] = new BendPoint { position = launchTargetPoint, normal = potentialGrappleNormal };
             SetJoint(true); // 물리 조인트
         }
+    }
+
+    private void SwitchGrappleState(GrappleState state)
+    {
+        CurrentState = state;
     }
 
 }

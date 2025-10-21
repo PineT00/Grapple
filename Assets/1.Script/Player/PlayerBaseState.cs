@@ -5,13 +5,11 @@ public class PlayerBaseState
 {
     protected RagdollCharacterController _controller;
     protected RagdollAnimator _ragdollAnimator;
-    protected GrappleController _grappleController;
 
     // 생성자: 상태가 생성될 때 컨트롤러의 참조를 받아옵니다.
     public PlayerBaseState(RagdollCharacterController controller)
     {
         _controller = controller;
-        _grappleController = controller.grappleController;
         _ragdollAnimator = controller.ragdollAnimator;
     }
 
