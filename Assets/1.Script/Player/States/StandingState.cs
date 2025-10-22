@@ -45,26 +45,53 @@ public class StandingState : PlayerBaseState
     }
     public override void OnClick(InputAction.CallbackContext context)
     {
+        HandleInput(context, _controller.grappleController_Left, _controller.grabController_Left, _controller.grappleController_Right);
+    }
+
+    public override void OnRightClick(InputAction.CallbackContext context)
+    {
+        HandleInput(context, _controller.grappleController_Right, _controller.grabController_Right, _controller.grappleController_Left);
+    }
+
+    private void HandleInput(InputAction.CallbackContext context, GrappleController currentGrapple,
+    GrabController currentGrab, GrappleController oppositeGrapple)
+    {
+        bool isPressed = context.ReadValue<float>() > 0;
+        if (isPressed)
+        {
+            HandlePress(currentGrapple, currentGrab);
+        }
+        else
+        {
+            HandleRelease(currentGrapple, currentGrab, oppositeGrapple);
+        }
+    }
+
+    private void HandlePress(GrappleController grapple, GrabController grab)
+    {
+        if (grapple.CurrentState != GrappleState.None) return;
+        if (grab.CurrentState == GrabState.Attached) return;
+
         if (_controller.GetGrabReady(false))
         {
-            _controller.grabController_Left.OnGrab(context);
+            grab.SetGrab(true);
         }
-        else if (_controller.GetGrappleReady(false))
+        else if (_controller.GetGrappleCheck())
         {
-            _controller.grappleController_Left.OnGrapple();
+            _controller.StartGrapple(grapple);
             _controller.SwitchState(new SwingingState(_controller));
         }
     }
-    public override void OnRightClick(InputAction.CallbackContext context)
+
+    private void HandleRelease(GrappleController currentGrapple, GrabController grab, GrappleController oppositeGrapple)
     {
-        if (_controller.GetGrabReady(true))
+        if (grab.CurrentState == GrabState.Attached)
         {
-            _controller.grabController_Right.OnGrab(context);
+            grab.SetGrab(false);
         }
-        else if (_controller.GetGrappleReady(true))
+        else if (currentGrapple.CurrentState != GrappleState.None)
         {
-            _controller.grappleController_Right.OnGrapple();
-            _controller.SwitchState(new SwingingState(_controller));
+            currentGrapple.ReleaseGrapple();
         }
     }
 }

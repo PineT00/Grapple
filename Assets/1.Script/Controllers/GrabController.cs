@@ -87,13 +87,10 @@ public class GrabController : MonoBehaviour
         }
     }
 
-    public void OnGrab(InputAction.CallbackContext context)
+    public void SetGrab(bool isActive)
     {
-        if (context.ReadValue<float>() > 0)
+        if (isActive)
         {
-            if (CurrentState != GrabState.Ready)
-                return;
-
             StartGrab();
         }
         else
@@ -102,7 +99,7 @@ public class GrabController : MonoBehaviour
         }
     }
 
-    private void StartGrab()
+    public void StartGrab()
     {
         currentGrabRb = potentialGrabRb;
         CurrentState = GrabState.Attached;
@@ -115,7 +112,7 @@ public class GrabController : MonoBehaviour
         UpdateGrabIndicator();
     }
 
-    private void ReleaseGrab()
+    public void ReleaseGrab()
     {
         CurrentState = GrabState.None;
         currentGrabRb = null;

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 
 public struct BendPoint
 {
@@ -9,6 +8,7 @@ public struct BendPoint
     public Vector3 normal;
     public Collider attachedCollider;
 }
+
 public enum GrappleState { None, Launching, Attached, Reeling }
 
 public class GrappleController : MonoBehaviour
@@ -19,18 +19,12 @@ public class GrappleController : MonoBehaviour
     public Rigidbody anchorRb;
     public Camera cam;
     public Transform firePoint;
-    public LayerMask grappleLayerMask;
     public GameObject ropePrefab;
     public Transform visualAnchor;
     private RopeMeshGenerator activeRopeRender;
 
-    [Header("UI")]
-    public Image grappleIndicatorUI; // 화면 중앙의 점 이미지
-    public Color grappleableColor = Color.green; // 그래플 가능할 때
-    public Color nonGrappleableColor = Color.white; // 그래플 불가능할 때
-
     [Header("파라미터")]
-    public float maxRayDistance = 30f;
+    public LayerMask grappleLayerMask;
     public float ropeLaunchSpeed = 80f; // 로프 발사 속도
     public float spring = 70f;
     public float damper = 7f;
@@ -51,23 +45,12 @@ public class GrappleController : MonoBehaviour
     public float raycastOffset = 0.1f;
     [Tooltip("새 꺾임 지점을 벽에서 살짝 띄우는 거리")]
     public float bendPointOffset = 0.1f;
-
-    [Header("조준 코요테 타임")]
-    [Tooltip("타겟을 잃은 후에도 그래플 가능한 프레임 수")]
-    [Range(0, 30)]
-    public int grappleCoyoteFrames = 5;
-
-    public bool GrappleReady { get; private set; }
-    private int coyoteFrameCounter = 0;
-    private Vector3 potentialGrapplePoint;
-    private Vector3 potentialGrappleNormal;
-    private Collider potentialGrappleCollider;
     private SpringJoint joint;
 
     private List<BendPoint> bendPoints = new List<BendPoint>();
     private float currentRopeLength;
-    private Vector3 launchTargetPoint;
     private float launchProgress;
+    private Vector3 launchPoint;
 
     void Start()
     {
@@ -80,72 +63,31 @@ public class GrappleController : MonoBehaviour
         SetJoint(false);
     }
 
-    private void FixedUpdate()
-    {
-        CheckForGrapplePoint();
-    }
-
     private void LateUpdate()
     {
-        UpdateGrappleIndicator();
-
         if (CurrentState == GrappleState.Launching)
         {
             HandleRopeLaunchVisuals();
         }
-        else if (CurrentState == GrappleState.Attached)
+        else if (CurrentState == GrappleState.Attached || CurrentState == GrappleState.Reeling)
         {
             activeRopeRender.UpdateRopeVisuals(visualAnchor.position, bendPoints, cam.transform);
         }
     }
 
-    public void CheckForGrapplePoint()
-    {
-        Ray ray = cam.ScreenPointToRay(new Vector2(Screen.width / 2f, Screen.height / 2f));
-
-        Debug.DrawRay(ray.origin, ray.direction * maxRayDistance, GrappleReady ? Color.green : Color.red, 0.1f);
-
-        if (Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, grappleLayerMask))
-        {
-            //Debug.DrawLine(ray.origin, hit.point, Color.yellow, 0.1f);
-            // 타겟 감지 성공
-            GrappleReady = true;
-            coyoteFrameCounter = grappleCoyoteFrames;
-            potentialGrapplePoint = hit.point;
-            potentialGrappleNormal = hit.normal;
-            potentialGrappleCollider = hit.collider;
-        }
-        else
-        {
-            // 타겟 감지 실패: 코요테 타임 카운터 감소
-            if (coyoteFrameCounter > 0)
-            {
-                coyoteFrameCounter--;
-                GrappleReady = true;
-            }
-            else
-            {
-                GrappleReady = false;
-            }
-        }
-    }
-
-    public void OnGrapple()
+    public void StartGrapple(BendPoint bendPoint)
     {
         // 그래플 발사 시작
         CurrentState = GrappleState.Launching;
-        launchTargetPoint = potentialGrapplePoint;
         launchProgress = 0f;
 
-        // 코요테 카운터 초기화 (발사 후에는 다시 타겟 감지 필요)
-        coyoteFrameCounter = 0;
-
         bendPoints.Clear();
-        bendPoints.Add(new BendPoint { position = potentialGrapplePoint, normal = potentialGrappleNormal, attachedCollider = potentialGrappleCollider });
+        bendPoints.Add(bendPoint);
         activeRopeRender.ActivateRope(true);
+        launchPoint = bendPoint.position;
     }
 
-    public void OnRelease()
+    public void ReleaseGrapple()
     {
         if (CurrentState == GrappleState.None) return;
 
@@ -189,13 +131,8 @@ public class GrappleController : MonoBehaviour
         // 1. 움직이는 발사 지점 업데이트
         //UpdateGrappledObjectPosition();
 
-        // 2. 로프 풀기
         HandleRopeUnwrapping();
-
-        // 4. 새로운 로프 꺾임점 추가
         HandleRopeBending();
-
-        // 5. 조인트 업데이트
         UpdateJoint();
     }
 
@@ -292,15 +229,10 @@ public class GrappleController : MonoBehaviour
         }
     }
 
-    private void UpdateGrappleIndicator()
-    {
-        if (grappleIndicatorUI == null) return;
-        grappleIndicatorUI.color = GrappleReady ? grappleableColor : nonGrappleableColor;
-    }
     public void HandleRopeLaunchVisuals()
     {
         Vector3 startPoint = firePoint.position;
-        float totalDistance = Vector3.Distance(startPoint, launchTargetPoint);
+        float totalDistance = Vector3.Distance(startPoint, launchPoint);
 
         if (totalDistance > 0)
         {
@@ -308,7 +240,7 @@ public class GrappleController : MonoBehaviour
         }
         launchProgress = Mathf.Clamp01(launchProgress);
 
-        Vector3 currentTipPosition = Vector3.Lerp(startPoint, launchTargetPoint, launchProgress);
+        Vector3 currentTipPosition = Vector3.Lerp(startPoint, launchPoint, launchProgress);
 
         bendPoints[0] = new BendPoint { position = currentTipPosition };
 
@@ -317,8 +249,8 @@ public class GrappleController : MonoBehaviour
         if (launchProgress >= 1f)
         {
             SwitchGrappleState(GrappleState.Attached);
-            currentRopeLength = Vector3.Distance(firePoint.position, launchTargetPoint);
-            bendPoints[0] = new BendPoint { position = launchTargetPoint, normal = potentialGrappleNormal };
+            currentRopeLength = Vector3.Distance(firePoint.position, launchPoint);
+            bendPoints[0] = new BendPoint { position = launchPoint };
             SetJoint(true); // 물리 조인트
         }
     }

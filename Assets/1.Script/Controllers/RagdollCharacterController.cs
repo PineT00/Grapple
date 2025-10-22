@@ -7,12 +7,10 @@ public enum PlayerAnimState
 {
     Standing,
     Walking,
-    Rolling,
     OnAir,
     Swinging,
     Reeling,
     Gliding,
-    WallRunning,
 }
 
 public class RagdollCharacterController : MonoBehaviour
@@ -32,13 +30,14 @@ public class RagdollCharacterController : MonoBehaviour
     public Transform moveFrame;
 
     // 상태 클래스에서 접근할 수 있도록
+    [HideInInspector] public RagdollAnimator ragdollAnimator;
     [HideInInspector] public Rigidbody mainRb;
     [HideInInspector] public ConfigurableJoint mainJoint;
+    public GrappleChecker grappleChecker;
     public GrappleController grappleController_Left;
     public GrappleController grappleController_Right;
     public GrabController grabController_Left;
     public GrabController grabController_Right;
-    [HideInInspector] public RagdollAnimator ragdollAnimator;
 
     [Header("Input")]
     [HideInInspector] public Vector2 moveInput;
@@ -54,19 +53,13 @@ public class RagdollCharacterController : MonoBehaviour
     public float groundBrake = 1.3f;
     public float groundCheckDistance = 0.7f;
 
-    [Header("Jump Settings")]
-    public float jumpForce = 7f;
-    public float jumpControl = 10f;
-    public float maxJumpControl = 15f;
-    public float jumpTurnSpeed = 3f;
-    public float jumpBrake = 1.3f;
-    public float additionalGravity = 10f;
-
     [Header("Air Settings")]
+    public float jumpForce = 7f;
     public float airControl = 10f;
     public float maxAirControl = 15f;
     public float airTurnSpeed = 3f;
     public float airBrake = 1.3f;
+    public float additionalGravity = 10f;
     public float spinSpeed = 200f;
 
     [Header("Swing Settings")]
@@ -121,15 +114,6 @@ public class RagdollCharacterController : MonoBehaviour
     public float hoverForce = 50f;
     public float hoverDamping = 10f;
     public float hoverRaycastDistance = 10f;
-
-    [Header("Wall Run Settings")]
-    public float maxWallRunTime = 3f;
-    public float wallRunGravity = 3f;
-    public float wallRunSpeedDecay = 2f;
-    public float minWallRunSpeed = 3f;
-    public float wallStickForce = 5f;
-    public float wallDetectionDistance = 1.5f;
-    public float minSpeedForWallRun = 8f;
 
     private Rigidbody[] allRigidbodies;
     Vector3 inputDirection;
@@ -210,9 +194,6 @@ public class RagdollCharacterController : MonoBehaviour
                 HandleMovement(groundSpeed, maxGroundSpeed, groundTurnSpeed, groundBrake);
                 break;
             case OnAirState:
-                HandleMovement(jumpControl, maxJumpControl, jumpTurnSpeed, jumpBrake);
-                break;
-            case RollingState:
                 HandleMovement(airControl, maxAirControl, airTurnSpeed, airBrake);
                 break;
             case SwingingState:
@@ -238,21 +219,6 @@ public class RagdollCharacterController : MonoBehaviour
         }
         velocityChange.y = 0f;
         mainRb.AddForce(velocityChange, ForceMode.Acceleration);
-    }
-
-    float steeringForce = 30f;
-    private void HandleHighSpeedMovement(float currentSpeed)
-    {
-        // 현재 속도 방향 유지하면서 입력 방향으로 서서히 조정
-        Vector3 currentDir = horizontalVelocity.normalized;
-        Vector3 inputDir = worldDirection.normalized;
-
-        // 입력 방향으로 보조 힘 추가 (속도를 크게 바꾸지 않고 방향만 조정)
-        Vector3 steeringVelocity = Vector3.Lerp(currentDir, inputDir, 0.3f) * currentSpeed;
-        Vector3 steeringForceVec = (steeringVelocity - horizontalVelocity) * steeringForce;
-        steeringForceVec.y = 0f;
-
-        mainRb.AddForce(steeringForceVec, ForceMode.Acceleration);
     }
 
     public void HandleSwingMovement(bool isLeft)
@@ -571,15 +537,12 @@ public class RagdollCharacterController : MonoBehaviour
         }
     }
 
-    public bool GetGrappleReady(bool isRightHand)
+    public bool GetGrappleCheck()
     {
-        if (isRightHand)
-        {
-            return grappleController_Right.GrappleReady;
-        }
-        else
-        {
-            return grappleController_Left.GrappleReady;
-        }
+        return grappleChecker.GetGrappleCheck();
+    }
+    public void StartGrapple(GrappleController currentGrappleController)
+    {
+        currentGrappleController.StartGrapple(grappleChecker.GetBendPoint());
     }
 }
