@@ -24,7 +24,7 @@ public class SwingingState : PlayerBaseState
                 break;
             case GrappleState.Attached:
                 _ragdollAnimator.ApplyGrappleArmCorrection(false, _controller.grappleController_Left.GetGrapplePoint(), 200f);
-                _controller.MovementControl();
+                _controller.HandleSwingMovement(_controller.grappleController_Left);
                 _controller.grappleController_Left.HandleRopePhysics();
                 break;
             case GrappleState.Reeling:
@@ -43,7 +43,7 @@ public class SwingingState : PlayerBaseState
                 break;
             case GrappleState.Attached:
                 _ragdollAnimator.ApplyGrappleArmCorrection(true, _controller.grappleController_Right.GetGrapplePoint(), 200f);
-                _controller.MovementControl();
+                _controller.HandleSwingMovement(_controller.grappleController_Right);
                 _controller.grappleController_Right.HandleRopePhysics();
                 break;
             case GrappleState.Reeling:
@@ -60,7 +60,7 @@ public class SwingingState : PlayerBaseState
     {
         _controller.grappleController_Left.ReleaseGrapple();
         _controller.grappleController_Right.ReleaseGrapple();
-        _controller.MultiflyHorizontalforce();
+        //_controller.MultiflyHorizontalforce();
     }
 
     public override void OnClick(InputAction.CallbackContext context)

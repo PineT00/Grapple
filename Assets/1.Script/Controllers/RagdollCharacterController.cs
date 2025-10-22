@@ -138,6 +138,7 @@ public class RagdollCharacterController : MonoBehaviour
     {
         CurrentState?.FixedUpdateState();
         UpdateMomentumDecay();
+        GrabArmAdjustment();
     }
 
     // 상태를 전환하는 유일한 통로
@@ -196,9 +197,6 @@ public class RagdollCharacterController : MonoBehaviour
             case OnAirState:
                 HandleMovement(airControl, maxAirControl, airTurnSpeed, airBrake);
                 break;
-            case SwingingState:
-                //HandleSwingMovement();
-                break;
         }
     }
 
@@ -221,17 +219,11 @@ public class RagdollCharacterController : MonoBehaviour
         mainRb.AddForce(velocityChange, ForceMode.Acceleration);
     }
 
-    public void HandleSwingMovement(bool isLeft)
+    public void HandleSwingMovement(GrappleController currentGrapple)
     {
-        Vector3 toGrapplePoint;
-        if (isLeft)
-        {
-            toGrapplePoint = grappleController_Left.GetGrapplePoint() - mainRb.position;
-        }
-        else
-        {
-            toGrapplePoint = grappleController_Right.GetGrapplePoint() - mainRb.position;
-        }
+        UpdateMoveInfo();
+
+        Vector3 toGrapplePoint = currentGrapple.GetGrapplePoint() - mainRb.position;
         Vector3 ropeDirection = toGrapplePoint.normalized;
 
         // 현재 속도의 접선 방향 계산 (로프에 수직인 방향)
@@ -544,5 +536,14 @@ public class RagdollCharacterController : MonoBehaviour
     public void StartGrapple(GrappleController currentGrappleController)
     {
         currentGrappleController.StartGrapple(grappleChecker.GetBendPoint());
+    }
+
+    public void GrabArmAdjustment()
+    {
+        if (grabController_Left.CurrentState == GrabState.Attached)
+            ragdollAnimator.ApplyGrappleArmCorrection(false, grabController_Left.GetGrabPoint(), 200f);
+
+        if (grabController_Right.CurrentState == GrabState.Attached)
+            ragdollAnimator.ApplyGrappleArmCorrection(true, grabController_Right.GetGrabPoint(), 200f);
     }
 }

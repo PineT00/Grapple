@@ -306,7 +306,7 @@ public class RagdollAnimator : MonoBehaviour
     /// 그래플 포인트로 손과 팔에 체인식 보정 힘을 가합니다.
     /// </summary>
     /// 
-    public void ApplyGrappleArmCorrection(bool isRight, Vector3 grapplePoint, float baseForce)
+    public void ApplyGrappleArmCorrection(bool isRight, Vector3 point, float baseForce)
     {
         ConfigurableJoint handJoint = isRight ? rightHandJoint : leftHandJoint;
         ConfigurableJoint forearmJoint = isRight ? rightForeArmJoint : leftForeArmJoint;
@@ -315,21 +315,21 @@ public class RagdollAnimator : MonoBehaviour
         // 손 (팔꿈치 조인트의 연결된 body = 손)
         if (handJoint != null)
         {
-            Vector3 direction = (grapplePoint - handJoint.transform.position).normalized;
+            Vector3 direction = (point - handJoint.transform.position).normalized;
             handJoint.GetComponent<Rigidbody>().AddForce(direction * baseForce * handForceRatio, ForceMode.Force);
         }
 
         // 팔꿈치
         if (forearmJoint != null)
         {
-            Vector3 direction = (grapplePoint - forearmJoint.transform.position).normalized;
+            Vector3 direction = (point - forearmJoint.transform.position).normalized;
             forearmJoint.GetComponent<Rigidbody>().AddForce(direction * baseForce * forearmForceRatio, ForceMode.Force);
         }
 
         // 어깨
         if (armJoint != null)
         {
-            Vector3 direction = (grapplePoint - armJoint.transform.position).normalized;
+            Vector3 direction = (point - armJoint.transform.position).normalized;
             armJoint.GetComponent<Rigidbody>().AddForce(direction * baseForce * armForceRatio, ForceMode.Force);
         }
     }

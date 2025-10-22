@@ -121,6 +121,11 @@ public class GrabController : MonoBehaviour
         activeRopeRender.ActivateRope(false);
     }
 
+    public Vector3 GetGrabPoint()
+    {
+        return currentGrabRb.transform.position;
+    }
+
     private void SetJoint(bool active)
     {
         if (active)

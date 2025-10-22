@@ -27,6 +27,7 @@ public class GrappleController : MonoBehaviour
     public LayerMask grappleLayerMask;
     public float ropeLaunchSpeed = 80f; // 로프 발사 속도
     public float spring = 70f;
+    public float shortenMultipiler = 1.5f;
     public float damper = 7f;
     public float massScale = 4.5f;
     public float reelSpeed = 25f;
@@ -100,7 +101,7 @@ public class GrappleController : MonoBehaviour
     public void StartReeling()
     {
         SwitchGrappleState(GrappleState.Reeling);
-        joint.spring = 100f;
+        joint.spring *= shortenMultipiler;
         joint.damper = 20f;
     }
 
