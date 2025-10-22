@@ -236,11 +236,6 @@ public class RagdollAnimator : MonoBehaviour
                 SetTorsoDrives(standHipDrive, standSpineDrive, standBodyDamper, standBodyDamper, bodyMaxForce);
                 SetLimbDrives(standArmDrive, standLegDrive, normalArmDamper, normalLegDamper, limbMaxForce);
                 break;
-            case PlayerAnimState.Rolling:
-                SetTorsoDrives(swingHipDrive, swingSpineDrive, swingBodyDamper, swingBodyDamper, bodyMaxForce);
-                SetLimbDrives(swingArmDrive, swingLegDrive, swingArmDamper, swingLegDamper, limbMaxForce);
-                currentSpinAngle = animHipTrans.localEulerAngles.x;
-                break;
             case PlayerAnimState.Gliding:
                 SetTorsoDrives(glideHipDrive, glideSpineDrive, glideBodyDamper, glideBodyDamper, bodyMaxForce);
                 SetLimbDrives(glideArmDrive, glideLegDrive, glideArmDamper, glideLegDamper, limbMaxForce);
@@ -260,7 +255,6 @@ public class RagdollAnimator : MonoBehaviour
     {
         targetRigWeights[normalRig] = (state == PlayerAnimState.Standing || state == PlayerAnimState.Walking || state == PlayerAnimState.OnAir) ? 1f : 0f;
         targetRigWeights[swingRig] = (state == PlayerAnimState.Swinging || state == PlayerAnimState.Reeling) ? 1f : 0f;
-        targetRigWeights[rollingRig] = (state == PlayerAnimState.Rolling) ? 1f : 0f;
         targetRigWeights[glideRig] = (state == PlayerAnimState.Gliding) ? 1f : 0f;
     }
 
