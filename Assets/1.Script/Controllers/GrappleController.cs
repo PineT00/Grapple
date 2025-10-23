@@ -27,7 +27,6 @@ public class GrappleController : MonoBehaviour
     public LayerMask grappleLayerMask;
     public float ropeLaunchSpeed = 80f; // 로프 발사 속도
     public float spring = 70f;
-    public float shortenMultipiler = 1.5f;
     public float damper = 7f;
     public float massScale = 4.5f;
     public float reelSpeed = 25f;
@@ -35,6 +34,9 @@ public class GrappleController : MonoBehaviour
     private float maxRope = 0.7f;
     [SerializeField]
     private float minRope = 0.4f;
+
+    [Header("Reeling 파라미터")]
+    public float shortenMultipiler = 1.5f;
 
     [Header("로프 물리")]
     [Tooltip("로프가 새로 꺾이기 위해 필요한 최소 거리")]
@@ -118,6 +120,7 @@ public class GrappleController : MonoBehaviour
 
     public void ShortenRope()
     {
+        Debug.Log("줄어든다~");
         currentRopeLength -= reelSpeed * Time.fixedDeltaTime;
         if (currentRopeLength <= 0)
         {
@@ -199,9 +202,9 @@ public class GrappleController : MonoBehaviour
                 wrappedLength += Vector3.Distance(bendPoints[i].position, bendPoints[i + 1].position);
             }
         }
-
         joint.maxDistance = (currentRopeLength - wrappedLength) * maxRope;
         joint.minDistance = (currentRopeLength - wrappedLength) * minRope;
+        //joint.minDistance *= CurrentState == GrappleState.Reeling ? maxRope : minRope;
     }
 
     [SerializeField] private float referenceLength = 10f; // 기준 길이

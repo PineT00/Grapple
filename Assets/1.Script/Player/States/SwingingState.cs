@@ -141,12 +141,12 @@ public class SwingingState : PlayerBaseState
         }
         else if (context.canceled)
         {
-            if (_controller.grappleController_Left.CurrentState == GrappleState.Attached)
+            if (_controller.grappleController_Left.CurrentState == GrappleState.Reeling)
             {
                 _controller.grappleController_Left.StopReeling();
                 _controller.ragdollAnimator.SetAnimation(PlayerAnimState.Swinging);
             }
-            if (_controller.grappleController_Right.CurrentState == GrappleState.Attached)
+            if (_controller.grappleController_Right.CurrentState == GrappleState.Reeling)
             {
                 _controller.grappleController_Right.StopReeling();
                 _controller.ragdollAnimator.SetAnimation(PlayerAnimState.Swinging);
