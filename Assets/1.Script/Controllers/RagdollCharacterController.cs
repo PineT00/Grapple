@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MoreMountains.Feedbacks;
 using TMPro;
 using UnityEngine;
@@ -219,11 +220,20 @@ public class RagdollCharacterController : MonoBehaviour
         mainRb.AddForce(velocityChange, ForceMode.Acceleration);
     }
 
-    public void HandleSwingMovement(GrappleController currentGrapple)
+    public void HandleSwingMovement(List<GrappleController> activeGrapples)
     {
+        if (activeGrapples.Count == 0)
+            return;
+
         UpdateMoveInfo();
 
-        Vector3 toGrapplePoint = currentGrapple.GetGrapplePoint() - mainRb.position;
+        Vector3 averageGrapplePoint = Vector3.zero;
+        foreach (var grapple in activeGrapples)
+        {
+            averageGrapplePoint += grapple.GetGrapplePoint();
+        }
+        averageGrapplePoint /= activeGrapples.Count;
+        Vector3 toGrapplePoint = averageGrapplePoint - mainRb.position;
         Vector3 ropeDirection = toGrapplePoint.normalized;
 
         // 현재 속도의 접선 방향 계산 (로프에 수직인 방향)
@@ -422,20 +432,23 @@ public class RagdollCharacterController : MonoBehaviour
         }
     }
 
-    public void MultiflyHorizontalforce()
+    public void MultiflyForce(GrappleController currentGrapple)
     {
-        Vector3 horizontalVel = mainRb.linearVelocity;
-        horizontalVel.y = 0f;
-        float currentSpeed = horizontalVel.magnitude;
+        Vector3 ropeDirection = currentGrapple.GetGrapplePoint().normalized;
+
+        // 현재 속도의 접선 방향 계산 (로프에 수직인 방향)
+        Vector3 currentVelocity = mainRb.linearVelocity;
+        Vector3 radialVelocity = Vector3.Project(currentVelocity, ropeDirection);
+        float currentSpeed = currentVelocity.magnitude;
 
         // 현재 속도에 따라 배율 계산 (느리면 적게, 빠르면 많이)
         float speedRatio = Mathf.InverseLerp(minSpeedForMultiply, maxSpeedForMultiply, currentSpeed);
         float speedMultiplier = Mathf.Lerp(minDashMultiplier, maxDashMultiplier, speedRatio);
 
-        Vector3 horizontalDir = horizontalVel.normalized;
+        Vector3 targetDir = radialVelocity.normalized;
         float finalDashSpeed = swingEndDashSpeed * speedMultiplier;
 
-        mainRb.AddForce(horizontalDir * finalDashSpeed, ForceMode.VelocityChange);
+        mainRb.AddForce(targetDir * finalDashSpeed, ForceMode.VelocityChange);
     }
 
     public void ReduceMomentum(float amount) //예측불가능하게 움직일 수 있으니 꼭 필요한 상황외엔 사용X

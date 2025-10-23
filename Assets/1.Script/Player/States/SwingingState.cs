@@ -1,11 +1,10 @@
-using System.Diagnostics;
-using UnityEngine;
+using System.Collections.Generic;
 using UnityEngine.InputSystem;
 
 public class SwingingState : PlayerBaseState
 {
     public SwingingState(RagdollCharacterController controller) : base(controller) { }
-
+    private readonly List<GrappleController> activeGrappleList = new(2);
     public override void EnterState()
     {
         _controller.CalculateMomentumBonus();
@@ -14,6 +13,8 @@ public class SwingingState : PlayerBaseState
 
     public override void FixedUpdateState()
     {
+        activeGrappleList.Clear();
+
         //모든 과정을 좌우 따로 검사해 돌아가게 하면 됌.
         switch (_controller.grappleController_Left.CurrentState)
         {
@@ -24,7 +25,7 @@ public class SwingingState : PlayerBaseState
                 break;
             case GrappleState.Attached:
                 _ragdollAnimator.ApplyGrappleArmCorrection(false, _controller.grappleController_Left.GetGrapplePoint(), 200f);
-                _controller.HandleSwingMovement(_controller.grappleController_Left);
+                activeGrappleList.Add(_controller.grappleController_Left);
                 _controller.grappleController_Left.HandleRopePhysics();
                 break;
             case GrappleState.Reeling:
@@ -43,7 +44,7 @@ public class SwingingState : PlayerBaseState
                 break;
             case GrappleState.Attached:
                 _ragdollAnimator.ApplyGrappleArmCorrection(true, _controller.grappleController_Right.GetGrapplePoint(), 200f);
-                _controller.HandleSwingMovement(_controller.grappleController_Right);
+                activeGrappleList.Add(_controller.grappleController_Right);
                 _controller.grappleController_Right.HandleRopePhysics();
                 break;
             case GrappleState.Reeling:
@@ -52,7 +53,7 @@ public class SwingingState : PlayerBaseState
                 _controller.grappleController_Right.HandleRopePhysics();
                 break;
         }
-
+        _controller.HandleSwingMovement(activeGrappleList);
         _controller.MultiflyGravity();
     }
 
@@ -110,11 +111,15 @@ public class SwingingState : PlayerBaseState
         }
         else if (currentGrapple.CurrentState != GrappleState.None)
         {
-            currentGrapple.ReleaseGrapple();
-
             if (oppositeGrapple.CurrentState == GrappleState.None)
             {
+                _controller.MultiflyForce(currentGrapple);
+                currentGrapple.ReleaseGrapple();
                 _controller.SwitchState(new OnAirState(_controller));
+            }
+            else
+            {
+                currentGrapple.ReleaseGrapple();
             }
         }
     }
