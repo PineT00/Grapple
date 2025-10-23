@@ -19077,6 +19077,9 @@ MonoBehaviour:
   followRotX: 0
   followRotY: 0
   followRotZ: 0
+  offsetX: 0
+  offsetY: 0
+  offsetZ: 0
 --- !u!1 &1034260649
 GameObject:
   m_ObjectHideFlags: 0
@@ -20380,6 +20383,9 @@ MonoBehaviour:
   followRotX: 0
   followRotY: 1
   followRotZ: 0
+  offsetX: 0
+  offsetY: 0
+  offsetZ: 0
 --- !u!1 &1049546554
 GameObject:
   m_ObjectHideFlags: 0
@@ -40040,7 +40046,7 @@ MonoBehaviour:
   speedLineFeedback: {fileID: 0}
   groundSpeed: 20
   maxGroundSpeed: 7
-  groundTurnSpeed: 20
+  groundTurnSpeed: 50
   groundBrake: 20
   groundCheckDistance: 0.7
   jumpForce: 120

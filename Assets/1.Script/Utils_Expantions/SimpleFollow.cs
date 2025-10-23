@@ -14,6 +14,11 @@ public class SimpleFollow : MonoBehaviour
     public bool followRotY = true;
     public bool followRotZ = false;
 
+    [Header("Offset 옵션")]
+    public float offsetX = 0f;
+    public float offsetY = 0f;
+    public float offsetZ = 0f;
+
     void FixedUpdate()
     {
         if (!target)
@@ -22,7 +27,11 @@ public class SimpleFollow : MonoBehaviour
         // 위치 추적
         if (followPosition)
         {
-            transform.position = target.position;
+            Vector3 newPos = target.position;
+            newPos.x += offsetX;
+            newPos.y += offsetY;
+            newPos.z += offsetZ;
+            transform.position = newPos;
         }
 
         Vector3 currentEulerAngles = transform.eulerAngles;
