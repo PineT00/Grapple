@@ -21,6 +21,8 @@ public class GrappleController : MonoBehaviour
     public Transform firePoint;
     public GameObject ropePrefab;
     public Transform visualAnchor;
+    public Transform visualHook;
+    public Transform realHook;
     private RopeMeshGenerator activeRopeRender;
 
     [Header("파라미터")]
@@ -64,6 +66,8 @@ public class GrappleController : MonoBehaviour
         activeRopeRender = Instantiate(ropePrefab).GetComponent<RopeMeshGenerator>();
 
         SetJoint(false);
+        realHook.gameObject.SetActive(false);
+        visualHook.gameObject.SetActive(true);
     }
 
     private void LateUpdate()
@@ -88,6 +92,13 @@ public class GrappleController : MonoBehaviour
         bendPoints.Add(bendPoint);
         activeRopeRender.ActivateRope(true);
         launchPoint = bendPoint.position;
+
+        realHook.gameObject.SetActive(true);
+        visualHook.gameObject.SetActive(false);
+        realHook.transform.position = visualAnchor.position;
+        Vector3 dir = launchPoint - realHook.transform.position;
+        realHook.rotation = Quaternion.LookRotation(dir);
+
     }
 
     public void ReleaseGrapple()
@@ -98,6 +109,9 @@ public class GrappleController : MonoBehaviour
         bendPoints.Clear();
         SetJoint(false);
         activeRopeRender.ActivateRope(false);
+
+        realHook.gameObject.SetActive(false);
+        visualHook.gameObject.SetActive(true);
     }
 
     public void StartReeling()
@@ -257,6 +271,7 @@ public class GrappleController : MonoBehaviour
             bendPoints[0] = new BendPoint { position = launchPoint };
             SetJoint(true); // 물리 조인트
         }
+        realHook.position = bendPoints[0].position;
     }
 
     private void SwitchGrappleState(GrappleState state)

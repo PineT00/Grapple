@@ -23,7 +23,8 @@ public class GrabController : MonoBehaviour
     [Header("파라미터")]
     public float maxRayDistance = 30f;
     public float pullForce = 50f;
-    public float spring = 70f;
+    public float grabSpring = 70f;
+    public float connectSpring = 10f;
     public float damper = 7f;
     public float massScale = 4.5f;
 
@@ -130,7 +131,7 @@ public class GrabController : MonoBehaviour
     {
         if (active)
         {
-            joint.spring = spring;
+            joint.spring = grabSpring;
             joint.damper = damper;
             joint.massScale = massScale;
         }
