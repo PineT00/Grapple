@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using MoreMountains.Feedbacks;
 using UnityEngine;
 
 public struct BendPoint
@@ -24,6 +25,9 @@ public class GrappleController : MonoBehaviour
     public Transform visualHook;
     public Transform realHook;
     private RopeMeshGenerator activeRopeRender;
+
+    [Header("이펙트")]
+    public MMF_Player launchFeedback;
 
     [Header("파라미터")]
     public LayerMask grappleLayerMask;
@@ -99,6 +103,7 @@ public class GrappleController : MonoBehaviour
         Vector3 dir = launchPoint - realHook.transform.position;
         realHook.rotation = Quaternion.LookRotation(dir);
 
+        launchFeedback.PlayFeedbacks();
     }
 
     public void ReleaseGrapple()
