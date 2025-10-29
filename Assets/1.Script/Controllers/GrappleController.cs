@@ -139,7 +139,6 @@ public class GrappleController : MonoBehaviour
 
     public void ShortenRope()
     {
-        Debug.Log("줄어든다~");
         currentRopeLength -= reelSpeed * Time.fixedDeltaTime;
         if (currentRopeLength <= 0)
         {

@@ -9,8 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c70efdd3fe914358b3a98fd3479269a6, type: 3}
-  m_Name: Sample Plant Species
+  m_Script: {fileID: 11500000, guid: 5c9d67e42e5e268468f3dafa1b3ae72c, type: 3}
+  m_Name: TestSpcies
   m_EditorClassIdentifier: 
-  _rootBranch: {fileID: 6838132298060743433, guid: 9f34da0c83cc74d78805ac635fb51ec5, type: 3}
-  _maxTotalBranches: 100
+  rootBranch: {fileID: 795774231313714324, guid: db314f6abb92ee743acc5e8c2fb08b3f, type: 3}
+  maxTotalBranches: 10
