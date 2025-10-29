@@ -22925,7 +22925,7 @@ Transform:
   m_GameObject: {fileID: 757342768}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 26.722141, y: -5.116741, z: 24.27815}
+  m_LocalPosition: {x: 26.722141, y: -5.116741, z: 20.24}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -33152,6 +33152,55 @@ Transform:
   m_Children: []
   m_Father: {fileID: 130501819}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1279582303
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1279582305}
+  - component: {fileID: 1279582304}
+  m_Layer: 0
+  m_Name: MyPlant
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1279582304
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1279582303}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8338810325fab8044bbb14fc488b9f8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  species: {fileID: 11400000, guid: 8efd51b01c03ccb40976e44d788351ba, type: 2}
+  seed: 0
+  keepColliders: 1
+  keepBranchComponents: 0
+  state: 1
+--- !u!4 &1279582305
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1279582303}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -7.427348, y: 0.529, z: -16.896}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1285791529
 GameObject:
   m_ObjectHideFlags: 0
@@ -39668,7 +39717,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 1256614755}
-  m_VersionIndex: 16824
+  m_VersionIndex: 16926
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -53134,3 +53183,4 @@ SceneRoots:
   - {fileID: 806520455}
   - {fileID: 531458038}
   - {fileID: 130501819}
+  - {fileID: 1279582305}
