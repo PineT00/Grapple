@@ -1,548 +1,484 @@
-using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
-namespace PlantGenerator
+/// <summary>
+/// 담쟁이 식물 생성기 - 표면을 따라 자라는 식물을 생성합니다
+/// </summary>
+public class PlantGenerator : MonoBehaviour
 {
-    /// <summary>
-    /// 랜덤 식물 생성 메인 컨트롤러
-    /// </summary>
-    public class PlantGenerator : MonoBehaviour
+    [Header("프리팹 설정")]
+    [Tooltip("뿌리 프리팹")]
+    public GameObject rootPrefab;
+    
+    [Tooltip("가지 프리팹")]
+    public GameObject branchPrefab;
+
+    [Header("생성 설정")]
+    [Tooltip("감지할 표면 레이어")]
+    public LayerMask surfaceLayer;
+    
+    [Tooltip("생성할 총 가지 수")]
+    [Range(1, 100)]
+    public int totalBranchCount = 20;
+    
+    [Tooltip("한 노드에서 뻗을 최대 가지 수")]
+    [Range(1, 5)]
+    public int maxBranchesPerNode = 2;
+
+    [Header("가지 설정")]
+    [Tooltip("가지 길이")]
+    [Range(0.1f, 5f)]
+    public float branchLength = 1f;
+    
+    [Tooltip("가지 방향 랜덤성 (도)")]
+    [Range(0f, 180f)]
+    public float directionRandomness = 45f;
+    
+    [Tooltip("표면 감지 거리")]
+    [Range(0.1f, 2f)]
+    public float surfaceDetectionDistance = 0.5f;
+
+    [Header("충돌 회피")]
+    [Tooltip("가지 간 최소 거리")]
+    [Range(0.1f, 2f)]
+    public float minDistanceBetweenBranches = 0.3f;
+    
+    [Tooltip("충돌 검사 반경")]
+    [Range(0.1f, 1f)]
+    public float collisionCheckRadius = 0.2f;
+
+    [Header("디버그")]
+    public bool showDebugRays = true;
+
+    // 내부 변수
+    private List<BranchNode> allBranches = new List<BranchNode>();
+    private int currentBranchCount = 0;
+    private Transform plantRoot;
+
+    private void Start()
     {
-        const int MaxFailedGrowAttempts = 5000;
-        const int GrowAttemptsPerFrame = 200;
-        const int BranchesPerFrame = 20;
-        static readonly Collider[] ColliderCache = new Collider[4];
+        GeneratePlant();
+    }
 
-        [Header("설정")]
-        [Tooltip("식물 종 데이터")]
-        [SerializeField] PlantSpecies species;
+    /// <summary>
+    /// 식물 생성 시작
+    /// </summary>
+    public void GeneratePlant()
+    {
+        // 기존 식물 제거
+        ClearPlant();
 
-        [Tooltip("랜덤 시드")]
-        [SerializeField] int seed;
-
-        [Tooltip("성장 완료 후 콜라이더 유지")]
-        [SerializeField] bool keepColliders = false;
-
-        [Tooltip("성장 완료 후 Branch 컴포넌트 유지")]
-        [SerializeField] bool keepBranchComponents = false;
-
-        [Header("상태")]
-        [SerializeField] PlantState state = PlantState.Done;
-
-        Branch rootBranch;
-        List<Branch> branches;
-        Queue<Branch> branchesWithOpenSockets;
-        List<BranchType> branchTypes;
-        int nextSocketIndex;
-        int failedAttemptsSinceBranchAdded;
-
-        public PlantState State => state;
-        public Branch RootBranch => rootBranch;
-
-        void Update()
+        // Root 생성 시도
+        if (TryCreateRoot(out Vector3 rootPosition, out Vector3 rootNormal))
         {
-            if (state == PlantState.Growing)
-            {
-                PrepareForGrowing();
-
-                for (int i = 0; i < BranchesPerFrame; i++)
-                {
-                    Grow();
-                }
-            }
+            CreateRootNode(rootPosition, rootNormal);
+            
+            // 가지 생성 시작
+            StartCoroutine(GrowPlant());
         }
-
-        /// <summary>
-        /// 식물 재생성
-        /// </summary>
-        [ContextMenu("Regrow Plant")]
-        public void Regrow()
+        else
         {
-            if (species == null || species.RootBranch == null)
-            {
-                Debug.LogError("PlantSpecies 또는 RootBranch가 설정되지 않았습니다.", this);
-                state = PlantState.MissingData;
-                return;
-            }
-
-            ResetPlant();
-            state = PlantState.Growing;
+            Debug.LogWarning("표면을 감지하지 못했습니다. Plant Generator의 트리거를 확인하세요.");
         }
+    }
 
-        void ResetPlant()
+    /// <summary>
+    /// Root 생성 위치와 법선 찾기 - 트리거 콜라이더 기반
+    /// </summary>
+    private bool TryCreateRoot(out Vector3 position, out Vector3 normal)
+    {
+        position = Vector3.zero;
+        normal = Vector3.up;
+
+        // 자신의 트리거 콜라이더 가져오기
+        Collider triggerCollider = GetComponent<Collider>();
+        
+        if (triggerCollider == null || !triggerCollider.isTrigger)
         {
-            // 기존 브랜치 제거
-            ClearChildren(transform);
-
-            // 캐시 초기화
-            ClearCache();
-            PreprocessBranchType(species.RootBranch);
-
-            // 루트 브랜치 생성
-            CreateRootBranch();
-
-            branchesWithOpenSockets.Enqueue(branches[0]);
-            nextSocketIndex = 0;
-
-            UpdateGrowableBranchTypes();
-
-            UnityEngine.Random.InitState(seed);
-            failedAttemptsSinceBranchAdded = 0;
-        }
-
-        void ClearChildren(Transform parent)
-        {
-            for (int i = parent.childCount - 1; i >= 0; i--)
-            {
-                DestroyImmediate(parent.GetChild(i).gameObject);
-            }
-        }
-
-        void ClearCache()
-        {
-            rootBranch = null;
-
-            branchTypes = new List<BranchType>();
-            branches = new List<Branch>();
-            branchesWithOpenSockets = new Queue<Branch>();
-        }
-
-        void PrepareForGrowing()
-        {
-            if (species == null || species.RootBranch == null)
-            {
-                state = PlantState.MissingData;
-                return;
-            }
-
-            if (branches == null || branches.Count == 0 || branches[0] == null)
-            {
-                ResetPlant();
-            }
-
-            state = PlantState.Growing;
-        }
-
-        void PreprocessBranchType(BranchTemplate template)
-        {
-            if (branchTypes.Any(bt => bt.Template == template))
-                return;
-
-            if (branchTypes.Count >= 32)
-            {
-                Debug.LogError("32개 이상의 브랜치 타입은 지원하지 않습니다.");
-                return;
-            }
-
-            template.FindSockets();
-            var branchType = new BranchType(template);
-            branchTypes.Add(branchType);
-
-            foreach (var socket in template.Sockets)
-            {
-                foreach (var option in socket.BranchOptions)
-                {
-                    if (option.Template != null)
-                        PreprocessBranchType(option.Template);
-                }
-            }
-        }
-
-        void CreateRootBranch()
-        {
-            if (species?.RootBranch != null)
-            {
-                rootBranch = AddBranch(null, 0, branchTypes[0], Vector3.zero, Quaternion.Euler(-90, 0, 0));
-            }
-        }
-
-        bool Grow()
-        {
-            int attempts = GrowAttemptsPerFrame;
-            while (state == PlantState.Growing && attempts-- > 0)
-            {
-                var branch = FindBranchToGrow();
-                if (branch != null)
-                    return true;
-            }
-
-            if (failedAttemptsSinceBranchAdded > MaxFailedGrowAttempts)
-            {
-                OnGrowComplete();
-            }
-
+            Debug.LogError("PlantGenerator에 Trigger Collider가 필요합니다!");
             return false;
         }
 
-        Branch FindBranchToGrow()
+        // 트리거 범위 내의 모든 콜라이더 찾기
+        Collider[] overlappingColliders = Physics.OverlapBox(
+            triggerCollider.bounds.center,
+            triggerCollider.bounds.extents,
+            transform.rotation,
+            surfaceLayer
+        );
+
+        if (overlappingColliders.Length == 0)
         {
-            if (branches.Count >= species.MaxTotalBranches)
-            {
-                OnGrowComplete();
-                return null;
-            }
-
-            if (branchesWithOpenSockets.Count == 0)
-            {
-                OnGrowComplete();
-                return null;
-            }
-
-            var parent = branchesWithOpenSockets.Peek();
-            BranchSocket openSocket = null;
-
-            while (openSocket == null)
-            {
-                if (nextSocketIndex < parent.Template.Sockets.Count)
-                {
-                    if (parent.Children[nextSocketIndex] == null)
-                    {
-                        openSocket = parent.Template.Sockets[nextSocketIndex];
-                    }
-                    else
-                    {
-                        nextSocketIndex++;
-                    }
-                }
-                else
-                {
-                    nextSocketIndex = 0;
-                    branchesWithOpenSockets.Dequeue();
-                    if (parent != null)
-                        branchesWithOpenSockets.Enqueue(parent);
-
-                    parent = branchesWithOpenSockets.Peek();
-                }
-            }
-
-            if (parent == null)
-            {
-                Debug.LogWarning("Null 브랜치 발견. 재시작합니다.");
-                ResetPlant();
-                state = PlantState.Growing;
-                return null;
-            }
-
-            int depth = parent.Depth + 1;
-            var growableBranchTypes = new List<(BranchType branchType, float weight)>();
-
-            foreach (var bt in branchTypes)
-            {
-                if (bt.Growable &&
-                    bt.Template.DepthMin <= depth &&
-                    bt.Template.DepthMax >= depth &&
-                    openSocket.ContainsBranchOption(bt.Template, out float weight))
-                {
-                    growableBranchTypes.Add((bt, weight));
-                }
-            }
-
-            if (growableBranchTypes.Count == 0)
-            {
-                nextSocketIndex++;
-                OnGrowFailed();
-                return null;
-            }
-
-            // 가중치 기반 랜덤 선택
-            var pair = PickWeighted(growableBranchTypes, tuple => tuple.weight);
-            var branchType = pair.branchType;
-            var template = branchType.Template;
-
-            GetSocketPositionAndRotation(parent, nextSocketIndex, out Vector3 socketLocalPos, out Quaternion socketLocalRot);
-
-            // 랜덤 회전
-            float xRot = UnityEngine.Random.Range(-template.MaxPivotAngle, template.MaxPivotAngle);
-            float yRot = UnityEngine.Random.Range(-template.MaxPivotAngle, template.MaxPivotAngle);
-            float zRot = UnityEngine.Random.Range(-template.MaxRollAngle, template.MaxRollAngle);
-
-            Quaternion pivot = Quaternion.Euler(xRot, yRot, 0);
-            Quaternion globalRot = parent.transform.rotation * socketLocalRot * pivot;
-            Vector3 globalPos = parent.transform.TransformPoint(socketLocalPos);
-
-            // 위쪽/아래쪽 성장 편향
-            if (template.GrowUpwards < 0)
-            {
-                var down = Quaternion.LookRotation(Vector3.down, globalRot * Vector3.forward);
-                globalRot = Quaternion.SlerpUnclamped(globalRot, down, -template.GrowUpwards);
-            }
-            else if (template.GrowUpwards > 0)
-            {
-                var up = Quaternion.LookRotation(Vector3.up, globalRot * Vector3.back);
-                globalRot = Quaternion.SlerpUnclamped(globalRot, up, template.GrowUpwards);
-            }
-
-            if (template.FaceUpwards)
-            {
-                globalRot = Quaternion.LookRotation(globalRot * Vector3.forward, Vector3.up);
-            }
-
-            // Roll 적용
-            Quaternion roll = Quaternion.Euler(0, 0, zRot);
-            globalRot *= roll;
-
-            // 배치 가능 여부 확인
-            if (CheckPlacement(globalPos, globalRot, template, parent.gameObject))
-            {
-                var branch = AddBranch(parent, nextSocketIndex, branchType,
-                    socketLocalPos, Quaternion.Inverse(parent.transform.rotation) * globalRot);
-
-                Physics.SyncTransforms();
-
-                if (branch.HasOpenSockets())
-                {
-                    branchesWithOpenSockets.Enqueue(branch);
-                }
-
-                if (!parent.HasOpenSockets())
-                {
-                    nextSocketIndex = 0;
-                    branchesWithOpenSockets.Dequeue();
-                }
-
-                UpdateGrowableBranchTypes();
-                OnGrowSuccess();
-                return branch;
-            }
-
-            nextSocketIndex++;
-            OnGrowFailed();
-            return null;
+            Debug.LogWarning("트리거 범위 내에 표면이 감지되지 않았습니다. Surface Layer를 확인하세요.");
+            return false;
         }
 
-        bool CheckPlacement(Vector3 globalPos, Quaternion globalRot, BranchTemplate template, GameObject ignoredParent)
+        // 가장 가까운 표면 찾기
+        float closestDistance = float.MaxValue;
+        Vector3 closestPoint = Vector3.zero;
+        Collider closestCollider = null;
+
+        foreach (Collider col in overlappingColliders)
         {
-            if (!CheckIfAreaClear(globalPos, globalRot, template, ignoredParent))
-                return false;
+            // 트리거는 무시
+            if (col.isTrigger) continue;
 
-            if (template.NeedsSurface && !CheckIfTouchesSurface(globalPos, globalRot, template))
-                return false;
+            // 가장 가까운 점 계산
+            Vector3 closest = col.ClosestPoint(transform.position);
+            float distance = Vector3.Distance(transform.position, closest);
 
-            return true;
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closestPoint = closest;
+                closestCollider = col;
+            }
         }
 
-        /// <summary>
-        /// 충돌 영역이 비어있는지 확인
-        /// </summary>
-        static bool CheckIfAreaClear(Vector3 globalPos, Quaternion globalRot, BranchTemplate template, GameObject ignoredParent)
+        if (closestCollider == null)
         {
-            float radius = template.Capsule.radius;
-            float height = template.Capsule.height;
+            Debug.LogWarning("유효한 표면 콜라이더를 찾지 못했습니다.");
+            return false;
+        }
 
-            float startDist = Mathf.Min(height - radius, 3 * radius);
-            float endDist = Mathf.Max(startDist, height - radius);
+        // 정확한 표면 위치와 노멀을 얻기 위해 레이캐스트
+        Vector3 rayOrigin = transform.position;
+        Vector3 rayDirection = (closestPoint - transform.position).normalized;
+        float rayDistance = closestDistance + 1f; // 여유있게
 
-            Vector3 dir = globalRot * Vector3.forward;
-            Vector3 start = globalPos + dir * startDist;
-            Vector3 end = globalPos + dir * endDist;
+        if (Physics.Raycast(rayOrigin, rayDirection, out RaycastHit hit, rayDistance, surfaceLayer))
+        {
+            position = hit.point;
+            normal = hit.normal;
 
-            LayerMask occupied = template.ObstacleLayers;
-
-            if (ignoredParent == null)
+            if (showDebugRays)
             {
-                return !Physics.CheckCapsule(start, end, radius, occupied, QueryTriggerInteraction.Ignore);
-            }
-
-            int count = Physics.OverlapCapsuleNonAlloc(start, end, radius, ColliderCache, occupied, QueryTriggerInteraction.Ignore);
-            for (int i = 0; i < count; i++)
-            {
-                if (ColliderCache[i].gameObject != ignoredParent)
-                    return false;
+                Debug.DrawLine(rayOrigin, hit.point, Color.cyan, 2f);
+                Debug.DrawRay(hit.point, hit.normal * 0.5f, Color.green, 2f);
             }
 
             return true;
         }
-
-        /// <summary>
-        /// 표면에 닿아있는지 확인 (담쟁이 덩굴용)
-        /// </summary>
-        bool CheckIfTouchesSurface(Vector3 globalPos, Quaternion globalRot, BranchTemplate template)
+        else
         {
-            float radius = template.Capsule.radius;
-            float height = template.Capsule.height;
-            Vector3 dir = globalRot * Vector3.forward;
-
-            Vector3 offset = globalRot * Vector3.down * radius;
-            Vector3 start = globalPos + offset + dir * (0.5f * height);
-            Vector3 end = globalPos + offset + dir * (height - radius);
-
-            radius *= template.SurfaceDistance;
-
-            int count = Physics.OverlapCapsuleNonAlloc(start, end, radius, ColliderCache,
-                template.SurfaceLayers, QueryTriggerInteraction.Ignore);
-
-            for (int i = 0; i < count; i++)
+            // 레이캐스트가 실패한 경우, ClosestPoint 결과를 사용하고 노멀을 추정
+            position = closestPoint;
+            
+            // 콜라이더 중심에서 표면으로의 방향으로 노멀 추정
+            normal = (closestPoint - closestCollider.bounds.center).normalized;
+            
+            // 더 정확한 노멀을 위해 주변에서 레이캐스트 시도
+            Vector3[] searchOffsets = new Vector3[]
             {
-                var collider = ColliderCache[i];
+                Vector3.up * 0.1f,
+                Vector3.down * 0.1f,
+                Vector3.left * 0.1f,
+                Vector3.right * 0.1f,
+                Vector3.forward * 0.1f,
+                Vector3.back * 0.1f
+            };
 
-                // 자기 자신의 브랜치는 제외
-                if (collider.TryGetComponent(out Branch branch))
+            foreach (Vector3 offset in searchOffsets)
+            {
+                Vector3 searchOrigin = closestPoint + offset;
+                Vector3 searchDir = -offset.normalized;
+                
+                if (Physics.Raycast(searchOrigin, searchDir, out RaycastHit searchHit, 0.2f, surfaceLayer))
                 {
-                    var owner = branch.GetComponentInParent<PlantGenerator>();
-                    if (owner == this)
-                        continue;
+                    position = searchHit.point;
+                    normal = searchHit.normal;
+                    
+                    if (showDebugRays)
+                    {
+                        Debug.DrawRay(searchHit.point, searchHit.normal * 0.5f, Color.yellow, 2f);
+                    }
+                    
+                    return true;
+                }
+            }
+
+            if (showDebugRays)
+            {
+                Debug.DrawRay(position, normal * 0.5f, Color.red, 2f);
+            }
+
+            Debug.LogWarning("정확한 노멀을 찾지 못했습니다. 추정된 노멀을 사용합니다.");
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Root 노드 생성
+    /// </summary>
+    private void CreateRootNode(Vector3 position, Vector3 normal)
+    {
+        if (rootPrefab == null)
+        {
+            Debug.LogError("Root Prefab이 할당되지 않았습니다!");
+            return;
+        }
+
+        // Root 오브젝트 생성
+        plantRoot = new GameObject("Plant_Root").transform;
+        plantRoot.position = position;
+        
+        // Root 프리팹 인스턴스 생성
+        GameObject rootInstance = Instantiate(rootPrefab, position, Quaternion.identity, plantRoot);
+        
+        // 표면 법선에 맞춰 회전 (로컬 Y축이 법선 방향)
+        rootInstance.transform.rotation = Quaternion.FromToRotation(Vector3.up, normal);
+        
+        // 초기 가지 노드들 생성
+        for (int i = 0; i < maxBranchesPerNode && currentBranchCount < totalBranchCount; i++)
+        {
+            CreateInitialBranch(position, normal, rootInstance.transform);
+        }
+    }
+
+    /// <summary>
+    /// Root에서 초기 가지 생성
+    /// </summary>
+    private void CreateInitialBranch(Vector3 rootPosition, Vector3 rootNormal, Transform parent)
+    {
+        // XZ 평면에서 랜덤 방향 (표면을 따라)
+        Quaternion surfaceRotation = Quaternion.FromToRotation(Vector3.up, rootNormal);
+        float randomAngle = Random.Range(0f, 360f);
+        Vector3 randomDir = surfaceRotation * Quaternion.Euler(0, randomAngle, 0) * Vector3.forward;
+        
+        // 표면을 따라 이동할 방향
+        Vector3 tangentDir = Vector3.ProjectOnPlane(randomDir, rootNormal).normalized;
+        
+        BranchNode branch = new BranchNode
+        {
+            position = rootPosition,
+            normal = rootNormal,
+            direction = tangentDir,
+            generation = 0
+        };
+
+        allBranches.Add(branch);
+        currentBranchCount++;
+    }
+
+    /// <summary>
+    /// 식물 성장 코루틴
+    /// </summary>
+    private IEnumerator GrowPlant()
+    {
+        Queue<BranchNode> branchQueue = new Queue<BranchNode>();
+        
+        // 초기 가지들을 큐에 추가
+        foreach (var branch in allBranches)
+        {
+            branchQueue.Enqueue(branch);
+        }
+
+        while (branchQueue.Count > 0 && currentBranchCount < totalBranchCount)
+        {
+            BranchNode currentBranch = branchQueue.Dequeue();
+            
+            // 다음 가지 위치 계산
+            if (TryGrowBranch(currentBranch, out BranchNode newBranch))
+            {
+                // 가지 생성 성공
+                allBranches.Add(newBranch);
+                currentBranchCount++;
+
+                // 다음 세대 가지 생성 가능 여부 확인
+                int childBranchCount = Random.Range(1, maxBranchesPerNode + 1);
+                
+                for (int i = 0; i < childBranchCount && currentBranchCount < totalBranchCount; i++)
+                {
+                    branchQueue.Enqueue(newBranch);
+                }
+
+                yield return new WaitForSeconds(0.05f); // 시각적 효과를 위한 딜레이
+            }
+        }
+
+        Debug.Log($"식물 생성 완료! 총 {currentBranchCount}개의 가지가 생성되었습니다.");
+    }
+
+    /// <summary>
+    /// 가지 성장 시도
+    /// </summary>
+    private bool TryGrowBranch(BranchNode parentBranch, out BranchNode newBranch)
+    {
+        newBranch = null;
+
+        // 1단계: 다음 가지 위치를 먼저 계산
+        Vector3 growthDirection = CalculateGrowthDirection(parentBranch);
+        Vector3 targetPosition = parentBranch.position + growthDirection * branchLength;
+
+        // 2단계: 표면 추적으로 실제 다음 위치 확정
+        if (TraceSurface(parentBranch.position, targetPosition, parentBranch.normal,
+            out Vector3 nextPosition, out Vector3 nextNormal))
+        {
+            // 3단계: 충돌 체크
+            if (!CheckCollisionWithOtherBranches(nextPosition))
+            {
+                // 4단계: 현재 위치에서 다음 위치로 향하는 방향 계산
+                Vector3 currentToNextDir = (nextPosition - parentBranch.position).normalized;
+                Vector3 branchForward = Vector3.ProjectOnPlane(currentToNextDir, parentBranch.normal).normalized;
+
+                if (branchForward.magnitude < 0.1f)
+                {
+                    branchForward = Vector3.ProjectOnPlane(Vector3.forward, parentBranch.normal).normalized;
+                }
+
+                // 5단계: 현재 위치에 가지 프리팹 생성 (다음 위치를 향하도록)
+                GameObject branchInstance = Instantiate(branchPrefab, parentBranch.position, Quaternion.identity, plantRoot);
+                branchInstance.transform.rotation = Quaternion.LookRotation(branchForward, parentBranch.normal);
+
+                // 6단계: 다음 노드 정보 생성 (다음 위치에 대한 정보)
+                Vector3 nextDirection = Vector3.ProjectOnPlane(currentToNextDir, nextNormal).normalized;
+                if (nextDirection.magnitude < 0.1f)
+                {
+                    nextDirection = Vector3.ProjectOnPlane(Vector3.forward, nextNormal).normalized;
+                }
+
+                newBranch = new BranchNode
+                {
+                    position = nextPosition,
+                    normal = nextNormal,
+                    direction = nextDirection,
+                    generation = parentBranch.generation + 1,
+                    gameObject = branchInstance
+                };
+
+                if (showDebugRays)
+                {
+                    Debug.DrawLine(parentBranch.position, nextPosition, Color.cyan, 10f);
+                    Debug.DrawRay(parentBranch.position, branchForward * 0.5f, Color.green, 10f);
+                    Debug.DrawRay(nextPosition, nextNormal * 0.3f, Color.yellow, 10f);
                 }
 
                 return true;
             }
-
-            return false;
         }
 
-        void GetSocketPositionAndRotation(Branch parent, int socketIndex, out Vector3 socketLocalPos, out Quaternion socketLocalRot)
-        {
-            if (socketIndex >= parent.Template.Sockets.Count)
-            {
-                Debug.LogError($"존재하지 않는 소켓 {socketIndex + 1} on {parent.Template.name}");
-                socketLocalPos = Vector3.zero;
-                socketLocalRot = Quaternion.identity;
-                return;
-            }
-
-            var socket = parent.Template.Sockets[socketIndex];
-            var socketTransform = socket.transform;
-            socketLocalPos = socketTransform.localPosition;
-            socketLocalRot = socketTransform.localRotation;
-        }
-
-        Branch AddBranch(Branch parent, int socketIndex, BranchType branchType, Vector3 localPosition, Quaternion localRotation)
-        {
-            var branch = branchType.Template.CreateBranch();
-            var branchTransform = branch.transform;
-
-            if (parent != null)
-            {
-                parent.Children[socketIndex] = branch;
-                branch.transform.SetParent(parent.transform, false);
-                branch.Depth = parent.Depth + 1;
-            }
-            else
-            {
-                branchTransform.SetParent(transform, false);
-            }
-
-            branchTransform.SetLocalPositionAndRotation(localPosition, localRotation);
-            branch.name = $"D{branch.Depth} {branchType.Template.name}";
-            branch.Template = branchType.Template;
-
-            branches.Add(branch);
-            branchType.TotalCount++;
-            return branch;
-        }
-
-        void UpdateGrowableBranchTypes()
-        {
-            bool anyGrowable = false;
-
-            foreach (var branchType in branchTypes)
-            {
-                var template = branchType.Template;
-                if (branches.Count >= template.MinTotalOtherBranches &&
-                    branchType.TotalCount < template.MaxCount &&
-                    (branchType.TotalCount + 1f) / (branches.Count + 1f) <= template.QuotaPercent / 100f)
-                {
-                    anyGrowable = true;
-                    branchType.Growable = true;
-                }
-                else
-                {
-                    branchType.Growable = false;
-                }
-            }
-
-            if (!anyGrowable)
-            {
-                OnGrowComplete();
-            }
-        }
-
-        void OnGrowSuccess()
-        {
-            failedAttemptsSinceBranchAdded = 0;
-        }
-
-        void OnGrowFailed()
-        {
-            failedAttemptsSinceBranchAdded++;
-        }
-
-        void OnGrowComplete()
-        {
-            state = PlantState.Done;
-            Debug.Log($"식물 생성 완료: {branches.Count}개 브랜치", this);
-
-            if (!keepColliders || !keepBranchComponents)
-            {
-                CleanupOnDone();
-            }
-        }
-
-        void CleanupOnDone()
-        {
-            foreach (var branch in branches)
-            {
-                if (branch == null)
-                    continue;
-
-                if (!keepColliders && branch.TryGetComponent(out CapsuleCollider capsule))
-                {
-                    DestroyImmediate(capsule);
-                }
-
-                if (!keepBranchComponents)
-                {
-                    DestroyImmediate(branch);
-                }
-            }
-
-            if (!keepBranchComponents)
-            {
-                branches.Clear();
-                rootBranch = null;
-            }
-        }
-
-        /// <summary>
-        /// 가중치 기반 랜덤 선택
-        /// </summary>
-        static T PickWeighted<T>(List<T> items, Func<T, float> weightSelector)
-        {
-            float totalWeight = items.Sum(weightSelector);
-            float randomValue = UnityEngine.Random.Range(0f, totalWeight);
-
-            float cumulative = 0f;
-            foreach (var item in items)
-            {
-                cumulative += weightSelector(item);
-                if (randomValue <= cumulative)
-                    return item;
-            }
-
-            return items[items.Count - 1];
-        }
-
-        /// <summary>
-        /// 브랜치 타입 추적용 내부 클래스
-        /// </summary>
-        public class BranchType
-        {
-            public readonly BranchTemplate Template;
-            public int TotalCount { get; set; }
-            public bool Growable { get; set; }
-
-            public BranchType(BranchTemplate template)
-            {
-                Template = template;
-            }
-        }
+        return false;
     }
 
-    public enum PlantState
+    /// <summary>
+    /// 성장 방향 계산
+    /// </summary>
+    private Vector3 CalculateGrowthDirection(BranchNode branch)
     {
-        MissingData,
-        Growing,
-        Done
+        // 표면을 따라 이동하는 방향 (접선 방향)
+        Vector3 tangent = branch.direction;
+        
+        // 랜덤 편차 추가
+        Quaternion randomRotation = Quaternion.AngleAxis(
+            Random.Range(-directionRandomness, directionRandomness), 
+            branch.normal
+        );
+        
+        Vector3 newDirection = randomRotation * tangent;
+        return Vector3.ProjectOnPlane(newDirection, branch.normal).normalized;
+    }
+
+    /// <summary>
+    /// 표면 추적
+    /// </summary>
+    private bool TraceSurface(Vector3 startPos, Vector3 targetPos, Vector3 currentNormal, 
+        out Vector3 finalPosition, out Vector3 finalNormal)
+    {
+        finalPosition = targetPos;
+        finalNormal = currentNormal;
+
+        Vector3 direction = (targetPos - startPos).normalized;
+        float distance = Vector3.Distance(startPos, targetPos);
+
+        // 전진 방향으로 레이캐스트
+        if (Physics.Raycast(startPos + currentNormal * 0.1f, direction, out RaycastHit forwardHit, 
+            distance + surfaceDetectionDistance, surfaceLayer))
+        {
+            // 새로운 표면 발견
+            finalPosition = forwardHit.point;
+            finalNormal = forwardHit.normal;
+            return true;
+        }
+
+        // 현재 표면을 유지하면서 이동
+        Vector3 checkPosition = targetPos + currentNormal * surfaceDetectionDistance;
+        
+        if (Physics.Raycast(checkPosition, -currentNormal, out RaycastHit downHit, 
+            surfaceDetectionDistance * 2f, surfaceLayer))
+        {
+            finalPosition = downHit.point;
+            finalNormal = downHit.normal;
+            return true;
+        }
+
+        // 표면을 찾지 못한 경우 주변 탐색
+        Vector3[] searchDirections = new Vector3[]
+        {
+            -currentNormal,
+            Quaternion.AngleAxis(45, Vector3.Cross(currentNormal, direction)) * -currentNormal,
+            Quaternion.AngleAxis(-45, Vector3.Cross(currentNormal, direction)) * -currentNormal
+        };
+
+        foreach (Vector3 searchDir in searchDirections)
+        {
+            if (Physics.Raycast(targetPos, searchDir, out RaycastHit searchHit, 
+                surfaceDetectionDistance * 2f, surfaceLayer))
+            {
+                finalPosition = searchHit.point;
+                finalNormal = searchHit.normal;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// 다른 가지들과의 충돌 체크
+    /// </summary>
+    private bool CheckCollisionWithOtherBranches(Vector3 position)
+    {
+        foreach (var branch in allBranches)
+        {
+            if (Vector3.Distance(position, branch.position) < minDistanceBetweenBranches)
+            {
+                return true; // 충돌 발생
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// 기존 식물 제거
+    /// </summary>
+    private void ClearPlant()
+    {
+        if (plantRoot != null)
+        {
+            Destroy(plantRoot.gameObject);
+        }
+        
+        allBranches.Clear();
+        currentBranchCount = 0;
+    }
+
+    /// <summary>
+    /// 가지 노드 클래스
+    /// </summary>
+    private class BranchNode
+    {
+        public Vector3 position;
+        public Vector3 normal;
+        public Vector3 direction;
+        public int generation;
+        public GameObject gameObject;
+    }
+
+    // 에디터에서 재생성
+    [ContextMenu("Regenerate Plant")]
+    public void RegeneratePlant()
+    {
+        GeneratePlant();
     }
 }
