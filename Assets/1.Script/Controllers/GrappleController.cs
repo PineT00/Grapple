@@ -63,6 +63,7 @@ public class GrappleController : MonoBehaviour
 
     void Start()
     {
+        cam = Camera.main;
         joint = anchorRb.gameObject.AddComponent<SpringJoint>();
         joint.autoConfigureConnectedAnchor = false;
         joint.anchor = joint.transform.InverseTransformPoint(firePoint.position);

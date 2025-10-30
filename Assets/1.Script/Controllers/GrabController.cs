@@ -35,6 +35,7 @@ public class GrabController : MonoBehaviour
 
     void Start()
     {
+        cam = Camera.main;
         joint = playerRb.gameObject.AddComponent<SpringJoint>();
         joint.autoConfigureConnectedAnchor = false;
         joint.anchor = joint.transform.InverseTransformPoint(firePoint.position);
