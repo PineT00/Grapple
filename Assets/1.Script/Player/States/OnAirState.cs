@@ -30,6 +30,10 @@ public class OnAirState : PlayerBaseState
             _controller.SwitchState(new GlidingState(_controller));
         }
     }
+    public override void OnLaunch(InputAction.CallbackContext context)
+    {
+        _controller.plantLauncher.OnLaunch(context);
+    }
 
     public override void OnClick(InputAction.CallbackContext context)
     {

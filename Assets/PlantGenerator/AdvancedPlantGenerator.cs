@@ -80,7 +80,7 @@ public class AdvancedPlantGenerator : MonoBehaviour
     private int currentBranchCount = 0;
     private bool isGrowing = false;
 
-    private void Start()
+    private void OnEnable()
     {
         if (generateOnStart)
         {

@@ -43,6 +43,10 @@ public class StandingState : PlayerBaseState
             _controller.SwitchState(new OnAirState(_controller));
         }
     }
+    public override void OnLaunch(InputAction.CallbackContext context)
+    {
+        _controller.plantLauncher.OnLaunch(context);
+    }
     public override void OnClick(InputAction.CallbackContext context)
     {
         HandleInput(context, _controller.grappleController_Left, _controller.grabController_Left, _controller.grappleController_Right);

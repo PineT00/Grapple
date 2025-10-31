@@ -39,6 +39,7 @@ public class RagdollCharacterController : MonoBehaviour
     public GrappleController grappleController_Right;
     public GrabController grabController_Left;
     public GrabController grabController_Right;
+    public PlantLauncher plantLauncher;
 
     [Header("Input")]
     [HideInInspector] public Vector2 moveInput;
@@ -156,12 +157,10 @@ public class RagdollCharacterController : MonoBehaviour
     {
         moveInput = context.ReadValue<Vector2>();
     }
-
     public void OnJump(InputAction.CallbackContext context)
     {
         CurrentState?.OnJump(context);
     }
-
     public void OnGlide(InputAction.CallbackContext context)
     {
         CurrentState?.OnGlide(context);
@@ -173,6 +172,10 @@ public class RagdollCharacterController : MonoBehaviour
     public void OnRightClick(InputAction.CallbackContext context)
     {
         CurrentState?.OnRightClick(context);
+    }
+    public void OnLaunch(InputAction.CallbackContext context)
+    {
+        CurrentState?.OnLaunch(context);
     }
 
     public void UpdateMoveInfo()

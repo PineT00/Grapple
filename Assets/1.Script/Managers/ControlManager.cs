@@ -69,6 +69,11 @@ public class ControlManager : MonoBehaviour
         characterController.OnRightClick(context);
     }
 
+    public void OnLaunch(InputAction.CallbackContext context)
+    {
+        characterController.OnLaunch(context);
+    }
+
     public bool IsPointerOverUI(Vector2 screenPosition)
     {
         PointerEventData eventData = new PointerEventData(EventSystem.current)

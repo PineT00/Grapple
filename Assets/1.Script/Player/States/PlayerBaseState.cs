@@ -21,4 +21,5 @@ public class PlayerBaseState
     public virtual void OnGlide(InputAction.CallbackContext context) { }
     public virtual void OnClick(InputAction.CallbackContext context) { }
     public virtual void OnRightClick(InputAction.CallbackContext context) { }
+    public virtual void OnLaunch(InputAction.CallbackContext context) { }
 }
