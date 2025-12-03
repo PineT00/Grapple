@@ -1,10 +1,9 @@
 using UnityEngine;
 using Yarn.Unity;
-using System.Collections.Generic;
 
 /// <summary>
-/// 다이얼로그 시스템의 전반을 관리하는 싱글톤 매니저입니다.
-/// 커스텀 커맨드 등록, 다이얼로그 시작 등의 API를 제공합니다.
+/// 다이얼로그 시스템의 전반을 관리하는 싱글톤 매니저
+/// 커스텀 커맨드 등록, 다이얼로그 시작 등의 API 제공함
 /// </summary>
 public class DialogueManager : MonoBehaviour
 {
@@ -36,12 +35,12 @@ public class DialogueManager : MonoBehaviour
             if (dialogueRunner == null) Debug.LogError("Scene에 DialogueRunner가 없습니다!");
         }
 
-        // Yarn 커스텀 커맨드를 등록합니다.
+        // Yarn 커스텀 커맨드를 등록
         RegisterCommands();
     }
 
     /// <summary>
-    /// .yarn 파일에서 사용할 커스텀 커맨드를 정의하고 등록합니다.
+    /// .yarn 파일에서 사용할 커스텀 커맨드를 정의하고 등록
     /// </summary>
     private void RegisterCommands()
     {
@@ -49,10 +48,7 @@ public class DialogueManager : MonoBehaviour
         dialogueRunner.AddCommandHandler<string, int>("start_quest", StartQuest);
     }
 
-    /// <summary>
-    /// 다이얼로그를 시작합니다.
-    /// </summary>
-    /// <param name="targetNode">.yarn 파일에 정의된 시작 노드 이름</param>
+    /// 다이얼로그 시작
     public void StartDialogue(string targetNode)
     {
         if (dialogueRunner.IsDialogueRunning)
@@ -63,19 +59,19 @@ public class DialogueManager : MonoBehaviour
         dialogueRunner.StartDialogue(targetNode);
     }
 
-    // --- Custom Command Implementations ---
+    // --- Custom Commands ---
 
     private void GiveItem(string itemName, int amount)
     {
         Debug.Log($"아이템 획득: {itemName}, {amount}개");
-        // 여기에 실제 인벤토리 시스템과 연동하는 코드를 작성합니다.
+        // 여기에 실제 인벤토리 시스템과 연동하는 코드 작성
         // inventorySystem.AddItem(itemName, amount);
     }
 
     private void StartQuest(string questID, int requiredAmount)
     {
         Debug.Log($"퀘스트 시작: {questID}, 목표: {requiredAmount}");
-        // 여기에 실제 퀘스트 시스템과 연동하는 코드를 작성합니다.
+        // 여기에 실제 퀘스트 시스템과 연동하는 코드 작성
         // questSystem.StartNewQuest(questID, requiredAmount);
     }
 }
