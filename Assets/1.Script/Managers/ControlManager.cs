@@ -5,11 +5,11 @@ using UnityEngine.InputSystem;
 
 public class ControlManager : MonoBehaviour
 {
-
     public static ControlManager Instance;
     public Transform playerTransform;
     public ThirdPersonCameraController thirdPersonCameraController;
     private RagdollCharacterController characterController;
+    private bool isPaused = false;
 
     private void Awake()
     {
@@ -72,6 +72,12 @@ public class ControlManager : MonoBehaviour
     public void OnLaunch(InputAction.CallbackContext context)
     {
         characterController.OnLaunch(context);
+    }
+
+    public void OnPause(InputAction.CallbackContext context)
+    {
+        isPaused = !isPaused;
+        Time.timeScale = isPaused ? 0f : 1.0f;
     }
 
     public bool IsPointerOverUI(Vector2 screenPosition)
