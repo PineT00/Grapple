@@ -106,10 +106,16 @@ public class RagdollCharacterController : MonoBehaviour
 
     [Header("Momentum System")]
     public float momentumBonus = 0f;
-    public float momentumDecayRate = 2f;
+    public float momentumDecayRate = 1f;
     public float momentumConversionRatio = 0.3f;
     public float maxMomentumBonus = 20f;
     public float minSpeedForMomentum = 5f;
+
+    [Header("Item Momentum")]
+    public float momentumItemDecayRate = 0.5f;
+    public float maxItemBonus = 50f;
+    public float itemMomentumBonus = 0f;
+
 
     [Header("Hovering Settings")]
     public float hoverHeight = 2f;
@@ -207,7 +213,7 @@ public class RagdollCharacterController : MonoBehaviour
     public void HandleMovement(float force, float maxForce, float turnSpeed, float breakForce)
     {
         Vector3 velocityChange = Vector3.zero;
-        float effectiveMaxSpeed = maxForce + momentumBonus;
+        float effectiveMaxSpeed = maxForce + momentumBonus + itemMomentumBonus;
 
         if (worldDirection.sqrMagnitude > 0.01f)
         {
@@ -304,7 +310,6 @@ public class RagdollCharacterController : MonoBehaviour
         ApplyGlidingForce(newForward);
         RotateForGliding(newForward);
         AntiGravity(targetGlideGravity);
-        //AntiGravity(targetGlideGravity + CurrentGlideBoost);
     }
 
     public void HandleDivingMovement()
@@ -361,7 +366,7 @@ public class RagdollCharacterController : MonoBehaviour
 
     private void ApplyGlidingForce(Vector3 direction)
     {
-        float currentMaxSpeed = maxGlideSpeed + CurrentGlideBoost + momentumBonus;
+        float currentMaxSpeed = maxGlideSpeed + CurrentGlideBoost + momentumBonus + itemMomentumBonus;
         Vector3 targetVelocity = direction * currentMaxSpeed;
         Vector3 velocityChange = targetVelocity - mainRb.linearVelocity;
         velocityChange.y = 0;
@@ -508,23 +513,40 @@ public class RagdollCharacterController : MonoBehaviour
         }
     }
 
+    public void AddTemporalAccelBonus(float bonus)
+    {
+        itemMomentumBonus += bonus;
+        if(itemMomentumBonus > maxItemBonus)
+            itemMomentumBonus = maxItemBonus;
+    }
+
     private void UpdateMomentumDecay()
     {
+        float DecayRate = momentumDecayRate;
         if (momentumBonus > 0f)
         {
-            float decayRate = momentumDecayRate;
             switch (CurrentState)
             {
                 case StandingState:
                 case WalkingState:
-                    decayRate *= 1.5f;
+                    DecayRate *= 1.5f;
                     break;
             }
 
-            momentumBonus -= decayRate * Time.fixedDeltaTime;
+            momentumBonus -= momentumDecayRate * Time.fixedDeltaTime;
+
             if (momentumBonus < 0f)
             {
                 momentumBonus = 0f;
+            }
+        }
+
+        if(itemMomentumBonus > 0f)
+        {
+            itemMomentumBonus -= momentumItemDecayRate * Time.fixedDeltaTime;
+            if (itemMomentumBonus < 0f)
+            {
+                itemMomentumBonus = 0f;
             }
         }
     }

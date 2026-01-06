@@ -26,6 +26,8 @@ public class ScoreManager : MonoBehaviour
 
     public TextMeshProUGUI scoreText;
 
+    public TextMeshProUGUI currSpeedText;
+
     [Header("References")]
     public RagdollCharacterController playerController;
 
@@ -93,6 +95,8 @@ public class ScoreManager : MonoBehaviour
 
             AddScore(baseScore);
         }
+
+        currSpeedText.text = currentSpeed.ToString("F0");
     }
 
     /// <summary>
