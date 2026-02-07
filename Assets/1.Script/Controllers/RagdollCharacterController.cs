@@ -515,6 +515,8 @@ public class RagdollCharacterController : MonoBehaviour
 
     public void AddTemporalAccelBonus(float bonus)
     {
+        speedLineFeedback.PlayFeedbacks();
+
         itemMomentumBonus += bonus;
         if(itemMomentumBonus > maxItemBonus)
             itemMomentumBonus = maxItemBonus;
@@ -547,6 +549,7 @@ public class RagdollCharacterController : MonoBehaviour
             if (itemMomentumBonus < 0f)
             {
                 itemMomentumBonus = 0f;
+                speedLineFeedback.StopFeedbacks();
             }
         }
     }
